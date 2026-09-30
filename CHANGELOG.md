@@ -7,6 +7,7 @@ verze podle [sémantického verzování](https://semver.org/lang/cs/).
 ## [Nevydáno]
 
 ### Změněno
+- Manifest: `http` uveden v závislostech (používá se pro `/mar-schema/`). Chování beze změny.
 - Příručka: nové oddíly ve Statistice (tabulka dnes/včera/7 dnů, co znamenají řádky, statistika po dnech), FVE TUV „Jak číst grafy“, další obrázky.
 
 ## [0.17.5] - 2026-09-30
