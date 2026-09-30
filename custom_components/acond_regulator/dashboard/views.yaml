@@ -3348,7 +3348,6 @@
   icon: mdi:cog-outline
   max_columns: 2
   subview: true
-  back_path: /acond-dashboard/mar_schema
   sections:
   - type: grid
     column_span: 2

@@ -13,6 +13,7 @@ verze podle [sémantického verzování](https://semver.org/lang/cs/).
 
 ### Změněno
 - Manifest: `http` uveden v závislostech (používá se pro `/mar-schema/`). Chování beze změny.
+- Nastavení: šipka zpět vrací tam, odkud jsi přišel (Schéma v okně Pohled nebo podokno Schéma), místo pevně na podokno Schéma.
 - Příručka: nové oddíly ve Statistice (tabulka dnes/včera/7 dnů, co znamenají řádky, statistika po dnech), FVE TUV „Jak číst grafy“, další obrázky.
 
 ## [0.17.5] - 2026-09-30

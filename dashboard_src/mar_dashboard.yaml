@@ -3406,7 +3406,6 @@ views:
   icon: mdi:cog-outline
   max_columns: 2
   subview: true
-  back_path: /dashboard-pokus2/schema
   sections:
   - type: grid
     column_span: 2
