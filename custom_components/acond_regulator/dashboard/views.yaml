@@ -1,0 +1,2736 @@
+- type: sections
+  title: Režimy
+  path: mar_rezimy
+  icon: mdi:tune-variant
+  max_columns: 2
+  sections:
+  - type: grid
+    column_span: 2
+    cards:
+    - type: horizontal-stack
+      cards:
+      - type: button
+        name: ● Režimy
+        icon: mdi:tune-variant
+        tap_action:
+          action: none
+      - type: button
+        name: Ekviterma
+        icon: mdi:chart-bell-curve-cumulative
+        tap_action:
+          action: navigate
+          navigation_path: /acond-dashboard/mar_regulace
+  - type: grid
+    column_span: 2
+    cards:
+    - type: horizontal-stack
+      cards:
+      - type: tile
+        entity: button.mar_zapnout_jiste
+        name: Topit
+        icon: mdi:play-circle-outline
+        tap_action:
+          action: perform-action
+          perform_action: button.press
+          target:
+            entity_id: button.mar_zapnout_jiste
+          confirmation:
+            text: Opravdu spustit topení (Topit)?
+      - type: tile
+        entity: button.mar_vypnout_setrne
+        name: Netopit
+        icon: mdi:stop-circle-outline
+        tap_action:
+          action: perform-action
+          perform_action: button.press
+          target:
+            entity_id: button.mar_vypnout_setrne
+          confirmation:
+            text: Opravdu přejít do klidu (Netopit)?
+  - type: grid
+    column_span: 2
+    cards:
+    - type: markdown
+      content: "{% set e = 'sensor.mar_stav' %}\n{% set stav = state_attr(e, 'stav_zeleza') -%}\n{%- set bezi = is_state('binary_sensor.acond_30045_hp_comp_bit_0',\
+        \ 'on') -%}\n{#- otáčky: stupeň se odvozuje z rozsahu konkrétního stroje (min/max slideru) -#}\n{%- set rpm = states('sensor.acond_30024_comp_rpm_actual')\
+        \ | float(0) -%}\n{%- set lo = state_attr('number.acond_40014_comp_capacity_max_set', 'min') | float(1500) -%}\n{%-\
+        \ set hi = state_attr('number.acond_40014_comp_capacity_max_set', 'max') | float(6000) -%}\n{%- set t3 = (hi - lo)\
+        \ / 3 -%}\n{%- set stupen = 1 if rpm < lo + t3 else (2 if rpm < lo + 2 * t3 else 3) -%}\n{#- teplotní pásmo: krajní\
+        \ body ekvitermní křivky, tedy měřítko tohoto domu -#}\n{%- set tv = states('sensor.acond_30018_t_act_water_outlet')\
+        \ | float(0) -%}\n{%- set dolni = states('number.mar_bod_p15') | float(25) -%}\n{%- set horni = states('number.mar_bod_m15')\
+        \ | float(45) -%}\n{%- set krok = (horni - dolni) / 3 -%}\n{%- set pasmo = 'a' if tv < dolni else ('b' if tv < dolni\
+        \ + krok\n      else ('c' if tv < dolni + 2 * krok else ('d' if tv < horni else 'e'))) -%}\n{#- klid: nápis podle\
+        \ zvoleného režimu, barva podle sezóny -#}\n{%- set leto = is_state('binary_sensor.acond_30007_tc_status_bit_10',\
+        \ 'on') -%}\n{%- set rez = 'vyp' if is_state('switch.acond_40006_tc_set_bit_3', 'on')\n      else ('chl' if is_state('switch.acond_40006_tc_set_bit_4',\
+        \ 'on')\n      else ('biv' if is_state('switch.acond_40006_tc_set_bit_2', 'on')\n      else ('tc' if is_state('switch.acond_40006_tc_set_bit_1',\
+        \ 'on') else 'aut'))) -%}\n{#- pořadí stavů je stejné jako ve statistice, aby obrázek nelhal proti číslům -#}\n{%-\
+        \ set obr = 'odmrazovani' if stav == 'odmrazování'\n      else ('chlazeni' if stav == 'chlazení'\n      else ('tuv-'\
+        \ ~ stupen ~ pasmo if stav == 'ohřev TUV'\n      else ('topeni-' ~ stupen ~ pasmo if bezi\n      else ('klid-porucha'\
+        \ if is_state('binary_sensor.acond_30007_tc_status_bit_2', 'on')\n      else ('klid-chl-z' if rez == 'chl'\n     \
+        \ else 'klid-' ~ rez ~ ('-l' if leto else '-z')))))) %}\n\n| <h3>Stav regulace</h3> | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\
+        \ |\n|---|---:|\n| **{{ state_attr(e, 'strategie') }}** — {{ state_attr(e, 'veta') | replace('|', '/') }} | <img src=\"\
+        /mar-kompresor/{{ obr }}.svg\" width=\"124\"> |\n\n{% set banner = state_attr(e, 'stav_zeleza') %}\n{% set topi =\
+        \ state_attr(e, 'topi') %}\n{% set reg = state_attr(e, 'reguluje') %}\n{% set duvod = state_attr(e, 'duvod') %}\n\
+        {% set aktiv = state_attr(e, 'faze_aktivni') %}\n{% set faze = state_attr(e, 'faze') %}\n{% if reg %}\n> ✍️ **Ekviterma\
+        \ – zapisuje**\n{% elif reg is none %}\n> ✍️ **Ekviterma:** stav zápisu ještě neznám (MaR se načítá)\n{% else %}\n\
+        > ✍️ **Ekviterma – nezapisuje** — {{ duvod if duvod else 'vede FVE topení, na registru je návnada' }}\n{% endif %}\n\
+        {% if aktiv %}\n> ⏳ **Probíhá {{ 'zapínání' if aktiv == 'start' else 'vypínání' }}:** {{ faze }}\n{% elif banner %}\n\
+        > ℹ️ **{{ banner }}** — kompresor běží, netopí dům.\n{% endif %}\n{% set z = state_attr(e, 'zebra') %}\n{% if z and\
+        \ z.aktivni %}\n{% set ra = states('sensor.acond_30002_t_act_indoor1') | float(0) %}\n{% set rs = states('number.acond_40001_t_set_indoor1')\
+        \ | float(0) %}\n{% set konec = z.konec_faze %}\n{% set zbyva = (((as_timestamp(konec) - as_timestamp(now())) / 60)\
+        \ | round(0)) if konec else '?' %}\n> \U0001F993 **Zebra:** {{ z.faze or '—' }} · konec fáze za **{{ zbyva }} min**\
+        \ · startů dnes: {{ z.starty_dnes }}\n>\n{% if z.faze == 'pauza' %}> Po pauze → **vždy Zapnout jistě** (topí dál nezávisle\
+        \ na termostatu)\n{% else %}> Pokoj {{ ra }} °C / žádá {{ rs }} °C → {{ 'natopeno → po intervalu pauza' if ra > rs\
+        \ else 'netopeno → topí dál (pauza až když pokoj > žádá)' }}\n{% endif %}              {% endif %}\n{% set dn = state_attr(e,\
+        \ 'dennoc') %}\n{% if dn and dn.aktivni %}\n{% set zmena = dn.pristi_zmena %}\n{% set zm = (zmena | as_datetime |\
+        \ as_local).strftime('%H:%M') if zmena else '—' %}\n> \U0001F317 **Den/noc:** {{ 'v okně → topí se dle strategie'\
+        \ if dn.uvnitr_okna else 'mimo okno → TČ vypnuté (protizámraz jede)' }} · platných oken: {{ dn.oken_platnych }} ·\
+        \ příští změna v **{{ zm }}**\n{% endif %}\n{% set ot = state_attr(e, 'okna_teploty') %}\n{% if ot and ot.aktivni\
+        \ %}\n{% set ozm = ot.pristi_zmena %}\n{% set ozm2 = (ozm | as_datetime | as_local).strftime('%H:%M') if ozm else\
+        \ '—' %}\n{% if ot.aktivni_okno %}\n> \U0001F321️ **Okna +/− teploty:** okno {{ ot.aktivni_okno }} běží → posun **{{\
+        \ '%+.1f' | format(ot.delta) }} °C** (z {{ ot.base }} °C) · vrátím v **{{ ozm2 }}**\n{% else %}\n> \U0001F321️ **Okna\
+        \ +/− teploty:** mimo okno · platných oken: {{ ot.oken_platnych }} · příští v **{{ ozm2 }}**\n{% endif %}\n{% endif\
+        \ %}\n{% set dv = state_attr(e, 'dovolena') %}\n{% if dv and dv.aktivni %}\n{% set dod = (dv.od | as_datetime | as_local).strftime('%-d.\
+        \ %-m. %H:%M') if dv.od else '—' %}\n{% set ddo = (dv.do | as_datetime | as_local).strftime('%-d. %-m. %H:%M') if\
+        \ dv.do else '—' %}\n{% if dv.probiha %}\n> \U0001F3D6️ **Dovolená běží:** místnost **{{ dv.cil_mistnost }} °C**,\
+        \ TUV **{{ dv.cil_tuv }} °C** · vrátím {{ ddo }} (na {{ dv.base_mistnost }} / {{ dv.base_tuv }} °C)\n{% else %}\n\
+        > \U0001F3D6️ **Dovolená:** naplánováno {{ dod }} → {{ ddo }} (místnost {{ dv.cil_mistnost }} °C, TUV {{ dv.cil_tuv\
+        \ }} °C)\n{% endif %}\n{% endif %}\n{%- set e = 'sensor.mar_stav' -%}\n{#- desetinná čárka a pomlčka místo „unknown\"\
+        \ na jednom místě -#}\n{%- macro c(v, jed='', des=1) -%}\n{%- if v is none or v in ['unknown', 'unavailable', '']\
+        \ -%}–{%- else -%}{{ ('%.' ~ des ~ 'f') | format(v | float(0)) | replace('.', ',') }}{{ ' ' ~ jed if jed else '' }}{%-\
+        \ endif -%}\n{%- endmacro -%}\n{%- set tv = states('sensor.acond_30018_t_act_water_outlet') | float(0) -%}\n{%- set\
+        \ zp = states('sensor.acond_30009_t_act_water_back') | float(0) -%}\n{%- set delta = tv - zp -%}\n\n\n| | | | |\n\
+        |---|--:|---|--:|\n| Zpátečka | {{ c(states('sensor.acond_30009_t_act_water_back'), '°C', 1) }} | Topná voda | {{\
+        \ c(states('sensor.acond_30018_t_act_water_outlet'), '°C', 1) }} |\n| Žádaná zpátečka | {{ c(state_attr(e, 'zpatecka_cil'),\
+        \ '°C') }} | Zapsaná | {{ c(state_attr(e, 'zpatecka_na_registru'), '°C') }} |\n| Z křivky | {{ c(state_attr(e, 'zpatecka_z_krivky'),\
+        \ '°C') }} | Korekce | {{ c(state_attr(e, 'korekce'), '°C') }} |\n| Vnitřní | {{ c(states('sensor.acond_30002_t_act_indoor1'),\
+        \ '°C', 1) }} | Žádaná | {{ c(states('number.acond_40001_t_set_indoor1'), '°C', 1) }} |\n| Venkovní | {{ c(states('sensor.acond_30010_t_act_air'),\
+        \ '°C', 1) }} | Modelová | {{ c(state_attr(e, 'model_teplota'), '°C') }} |\n| TUV | {{ c(states('sensor.acond_30006_t_act_tuv'),\
+        \ '°C', 1) }} | Žádaná | {{ c(states('number.acond_40005_t_set_tuv'), '°C', 1) }} |\n| Otáčky | {{ c(states('sensor.acond_30024_comp_rpm_actual'),\
+        \ 'rpm', 0) }} | Limit | {{ c(states('number.acond_40014_comp_capacity_max_set'), 'rpm', 0) }} |\n| Spotřeba | {{\
+        \ c(states('sensor.acond_30027_aep'), 'W', 0) }} | Výkon | {{ c(states('sensor.acond_30028_ahp'), 'W', 0) }} |\n|\
+        \ COP | {{ c(states('sensor.acond_30029_cop'), '', 2) }} | Rozdíl T | {{ c(delta, 'K') }} |\n"
+    - type: history-graph
+      title: Co dělá MaR (−12 h)
+      hours_to_show: 12
+      entities:
+      - entity: select.mar_strategie
+        name: Strategie
+      - entity: switch.mar_zebra
+        name: Zebra
+      - entity: switch.mar_dennoc
+        name: Den/noc
+      - entity: sensor.mar_stav
+        name: Stav
+      - entity: binary_sensor.acond_30045_hp_comp_bit_0
+        name: Kompresor
+  - type: grid
+    column_span: 2
+    cards:
+    - type: markdown
+      content: '## Topné režimy'
+    - type: horizontal-stack
+      cards:
+      - type: conditional
+        conditions:
+        - condition: state
+          entity: select.mar_strategie
+          state: Ekviterma
+        card:
+          type: button
+          name: ● Ekviterma
+          icon: mdi:chart-bell-curve-cumulative
+          tap_action:
+            action: perform-action
+            perform_action: select.select_option
+            target:
+              entity_id: select.mar_strategie
+            data:
+              option: Ekviterma
+      - type: conditional
+        conditions:
+        - condition: state
+          entity: select.mar_strategie
+          state_not: Ekviterma
+        card:
+          type: button
+          name: Ekviterma
+          icon: mdi:chart-bell-curve-cumulative
+          tap_action:
+            action: perform-action
+            perform_action: select.select_option
+            target:
+              entity_id: select.mar_strategie
+            data:
+              option: Ekviterma
+      - type: conditional
+        conditions:
+        - condition: state
+          entity: select.mar_strategie
+          state: Stálý výkon
+        card:
+          type: button
+          name: ● Stálý
+          icon: mdi:speedometer-medium
+          tap_action:
+            action: perform-action
+            perform_action: select.select_option
+            target:
+              entity_id: select.mar_strategie
+            data:
+              option: Stálý výkon
+      - type: conditional
+        conditions:
+        - condition: state
+          entity: select.mar_strategie
+          state_not: Stálý výkon
+        card:
+          type: button
+          name: Stálý
+          icon: mdi:speedometer-medium
+          tap_action:
+            action: perform-action
+            perform_action: select.select_option
+            target:
+              entity_id: select.mar_strategie
+            data:
+              option: Stálý výkon
+      - type: conditional
+        conditions:
+        - condition: state
+          entity: select.mar_strategie
+          state: Minimum
+        card:
+          type: button
+          name: ● Minimum
+          icon: mdi:speedometer-slow
+          tap_action:
+            action: perform-action
+            perform_action: select.select_option
+            target:
+              entity_id: select.mar_strategie
+            data:
+              option: Minimum
+      - type: conditional
+        conditions:
+        - condition: state
+          entity: select.mar_strategie
+          state_not: Minimum
+        card:
+          type: button
+          name: Minimum
+          icon: mdi:speedometer-slow
+          tap_action:
+            action: perform-action
+            perform_action: select.select_option
+            target:
+              entity_id: select.mar_strategie
+            data:
+              option: Minimum
+      - type: conditional
+        conditions:
+        - condition: state
+          entity: select.mar_strategie
+          state: BOOST
+        card:
+          type: button
+          name: ● BOOST
+          icon: mdi:rocket-launch-outline
+          tap_action:
+            action: perform-action
+            perform_action: select.select_option
+            target:
+              entity_id: select.mar_strategie
+            data:
+              option: BOOST
+            confirmation:
+              text: Vypínám časové plány, pokračovat?
+      - type: conditional
+        conditions:
+        - condition: state
+          entity: select.mar_strategie
+          state_not: BOOST
+        card:
+          type: button
+          name: BOOST
+          icon: mdi:rocket-launch-outline
+          tap_action:
+            action: perform-action
+            perform_action: select.select_option
+            target:
+              entity_id: select.mar_strategie
+            data:
+              option: BOOST
+            confirmation:
+              text: Vypínám časové plány, pokračovat?
+      - type: conditional
+        conditions:
+        - condition: state
+          entity: select.mar_strategie
+          state: Bez MaR
+        card:
+          type: button
+          name: ● Bez MaR
+          icon: mdi:hand-back-right-off-outline
+          tap_action:
+            action: perform-action
+            perform_action: select.select_option
+            target:
+              entity_id: select.mar_strategie
+            data:
+              option: Bez MaR
+            confirmation:
+              text: Vypínám časové plány, pokračovat?
+      - type: conditional
+        conditions:
+        - condition: state
+          entity: select.mar_strategie
+          state_not: Bez MaR
+        card:
+          type: button
+          name: Bez MaR
+          icon: mdi:hand-back-right-off-outline
+          tap_action:
+            action: perform-action
+            perform_action: select.select_option
+            target:
+              entity_id: select.mar_strategie
+            data:
+              option: Bez MaR
+            confirmation:
+              text: Vypínám časové plány, pokračovat?
+    - type: entities
+      entities:
+      - entity: number.acond_40014_comp_capacity_max_set
+        name: Výkon / otáčky (slider Acond)
+    - type: markdown
+      content: '## Časové režimy'
+    - type: entities
+      title: Zebra
+      entities:
+      - entity: switch.mar_zebra
+        name: Topení s pauzami
+        icon: mdi:sine-wave
+    - type: conditional
+      conditions:
+      - condition: state
+        entity: switch.mar_zebra
+        state: 'on'
+      card:
+        type: entities
+        entities:
+        - entity: number.mar_zebra_topeni
+          name: Interval topení (min)
+          icon: mdi:fire
+        - entity: number.mar_zebra_pauza
+          name: Interval pauzy (min)
+          icon: mdi:pause-circle-outline
+    - type: entities
+      title: Den/noc
+      entities:
+      - entity: switch.mar_dennoc
+        name: Topit jen ve vymezených oknech
+        icon: mdi:theme-light-dark
+    - type: conditional
+      conditions:
+      - condition: state
+        entity: switch.mar_dennoc
+        state: 'on'
+      card:
+        type: entities
+        title: Okno 1
+        entities:
+        - entity: time.mar_dennoc_okno_1_od
+          name: Od
+        - entity: time.mar_dennoc_okno_1_do
+          name: Do
+    - type: conditional
+      conditions:
+      - condition: state
+        entity: switch.mar_dennoc
+        state: 'on'
+      - condition: state
+        entity: binary_sensor.mar_dennoc_okno_1_nastaveno
+        state: 'on'
+      card:
+        type: entities
+        title: Okno 2
+        entities:
+        - entity: time.mar_dennoc_okno_2_od
+          name: Od
+        - entity: time.mar_dennoc_okno_2_do
+          name: Do
+    - type: conditional
+      conditions:
+      - condition: state
+        entity: switch.mar_dennoc
+        state: 'on'
+      - condition: state
+        entity: binary_sensor.mar_dennoc_okno_2_nastaveno
+        state: 'on'
+      card:
+        type: entities
+        title: Okno 3
+        entities:
+        - entity: time.mar_dennoc_okno_3_od
+          name: Od
+        - entity: time.mar_dennoc_okno_3_do
+          name: Do
+    - type: conditional
+      conditions:
+      - condition: state
+        entity: switch.mar_dennoc
+        state: 'on'
+      - condition: state
+        entity: binary_sensor.mar_dennoc_okno_3_nastaveno
+        state: 'on'
+      card:
+        type: entities
+        title: Okno 4
+        entities:
+        - entity: time.mar_dennoc_okno_4_od
+          name: Od
+        - entity: time.mar_dennoc_okno_4_do
+          name: Do
+    - type: conditional
+      conditions:
+      - condition: state
+        entity: switch.mar_dennoc
+        state: 'on'
+      - condition: state
+        entity: binary_sensor.mar_dennoc_okno_4_nastaveno
+        state: 'on'
+      card:
+        type: entities
+        title: Okno 5
+        entities:
+        - entity: time.mar_dennoc_okno_5_od
+          name: Od
+        - entity: time.mar_dennoc_okno_5_do
+          name: Do
+    - type: entities
+      title: Okna +/− teploty
+      entities:
+      - entity: switch.mar_okna_teploty
+        name: Časově posouvat požadovanou teplotu
+        icon: mdi:swap-vertical-bold
+    - type: conditional
+      conditions:
+      - condition: state
+        entity: switch.mar_okna_teploty
+        state: 'on'
+      card:
+        type: entities
+        title: Okno 1
+        entities:
+        - entity: time.mar_okna_teploty_1_od
+          name: Od
+        - entity: time.mar_okna_teploty_1_do
+          name: Do
+        - entity: number.mar_okna_teploty_1_delta
+          name: Změna teploty (°C)
+          icon: mdi:thermometer-plus
+    - type: conditional
+      conditions:
+      - condition: state
+        entity: switch.mar_okna_teploty
+        state: 'on'
+      - condition: state
+        entity: binary_sensor.mar_okna_teploty_1_nastaveno
+        state: 'on'
+      card:
+        type: entities
+        title: Okno 2
+        entities:
+        - entity: time.mar_okna_teploty_2_od
+          name: Od
+        - entity: time.mar_okna_teploty_2_do
+          name: Do
+        - entity: number.mar_okna_teploty_2_delta
+          name: Změna teploty (°C)
+          icon: mdi:thermometer-plus
+    - type: conditional
+      conditions:
+      - condition: state
+        entity: switch.mar_okna_teploty
+        state: 'on'
+      - condition: state
+        entity: binary_sensor.mar_okna_teploty_2_nastaveno
+        state: 'on'
+      card:
+        type: entities
+        title: Okno 3
+        entities:
+        - entity: time.mar_okna_teploty_3_od
+          name: Od
+        - entity: time.mar_okna_teploty_3_do
+          name: Do
+        - entity: number.mar_okna_teploty_3_delta
+          name: Změna teploty (°C)
+          icon: mdi:thermometer-plus
+    - type: entities
+      title: Dovolená
+      entities:
+      - entity: switch.mar_dovolena
+        name: Držet útlum po dobu nepřítomnosti
+        icon: mdi:beach
+    - type: conditional
+      conditions:
+      - condition: state
+        entity: switch.mar_dovolena
+        state: 'on'
+      card:
+        type: markdown
+        content: '⚠️ **Dovolená běží.** Po dobu intervalu jsou Okna +/− teploty a změna strategie zablokované. Interval a
+          cíle měň jen s vypnutou dovolenou.
+
+          '
+    - type: entities
+      title: Dovolená – interval a cíle (nastav před zapnutím)
+      entities:
+      - entity: datetime.mar_dovolena_od
+        name: Od
+      - entity: datetime.mar_dovolena_do
+        name: Do
+      - entity: number.mar_dovolena_teplota
+        name: Teplota místnosti (°C)
+        icon: mdi:home-thermometer
+      - entity: number.mar_dovolena_tuv
+        name: Teplota TUV (°C)
+        icon: mdi:water-thermometer
+    - type: entities
+      title: Režim vypínání — neměň za běhu, ovlivňuje ohřev TUV a protáčení
+      entities:
+      - entity: select.mar_rezim_vypinani
+        name: Když se nemá topit
+        icon: mdi:power-settings
+      - entity: select.mar_rezim_tc
+        name: Provozní režim TČ (zapíná kámen Topit)
+        icon: mdi:heat-pump-outline
+    - type: button
+      name: Příručka — Režimy
+      show_name: false
+      icon: mdi:help-circle-outline
+      tap_action:
+        action: url
+        url_path: /mar-prirucka/index.html#rezimy
+  - type: grid
+    column_span: 2
+    cards:
+    - type: custom:apexcharts-card
+      header:
+        show: true
+        title: Ladicí graf – zpátečka & kompresor (−6 h)
+      graph_span: 6h
+      yaxis:
+      - id: temp
+        decimals: 1
+        apex_config:
+          title:
+            text: °C
+      - id: rpm
+        opposite: true
+        decimals: 0
+        min: 0
+      series:
+      - entity: sensor.acond_30009_t_act_water_back
+        name: Skutečná zpátečka
+        yaxis_id: temp
+        stroke_width: 2
+        color: '#1f77b4'
+      - entity: sensor.acond_30008_t_set_water_back
+        name: Na registru (požadovaná)
+        yaxis_id: temp
+        curve: stepline
+        stroke_width: 2
+        color: '#d62728'
+      - entity: sensor.mar_vypoctena_zpatecka
+        name: MaR cíl (ekviterma)
+        yaxis_id: temp
+        curve: smooth
+        stroke_width: 1
+        color: '#9467bd'
+      - entity: sensor.acond_30024_comp_rpm_actual
+        name: Otáčky kompresoru
+        yaxis_id: rpm
+        type: area
+        opacity: 0.08
+        stroke_width: 1
+        color: '#2ca02c'
+- type: sections
+  title: FVE TUV
+  path: mar_fve
+  icon: mdi:solar-power-variant
+  max_columns: 2
+  sections:
+  - type: grid
+    column_span: 2
+    cards:
+    - type: horizontal-stack
+      cards:
+      - type: button
+        name: ● FVE TUV
+        icon: mdi:water-boiler
+        tap_action:
+          action: none
+      - type: button
+        name: FVE topení
+        icon: mdi:radiator
+        tap_action:
+          action: navigate
+          navigation_path: /acond-dashboard/mar_topeni
+    - type: horizontal-stack
+      cards:
+      - type: tile
+        entity: sensor.mar_fve_baterie
+        name: Baterie
+        icon: mdi:battery-70
+      - type: tile
+        entity: sensor.mar_fve_pv
+        name: Výkon panelů
+        icon: mdi:solar-power
+      - type: tile
+        entity: sensor.mar_fve_prumer_pretoku
+        name: Průměr přetoku (15 min)
+        icon: mdi:transmission-tower-export
+      - type: tile
+        entity: sensor.mar_fve_badget
+        name: Badget (průměr)
+        icon: mdi:scale-balance
+  - type: grid
+    column_span: 2
+    cards:
+    - type: entities
+      title: Ohřev TUV
+      entities:
+      - entity: switch.mar_fve_tuv
+        name: Ohřev z přebytku FVE
+        icon: mdi:water-boiler
+    - type: conditional
+      conditions:
+      - condition: state
+        entity: switch.mar_fve_tuv
+        state: 'on'
+      card:
+        type: entities
+        title: Nastavení ohřevu z přebytku
+        entities:
+        - entity: number.mar_fve_tuv_start
+          name: Zapnout při přebytku nad (W)
+          icon: mdi:play-circle-outline
+    - type: conditional
+      conditions:
+      - condition: state
+        entity: switch.mar_fve_tuv
+        state: 'on'
+      - condition: state
+        entity: sensor.mar_fve_baterie
+        state:
+        - unavailable
+        - unknown
+      card:
+        type: entities
+        entities:
+        - entity: number.mar_fve_tuv_stop
+          name: Vypnout při přebytku pod (W)
+          icon: mdi:stop-circle-outline
+    - type: conditional
+      conditions:
+      - condition: state
+        entity: switch.mar_fve_tuv
+        state: 'on'
+      - condition: state
+        entity: sensor.mar_fve_baterie
+        state_not:
+        - unavailable
+        - unknown
+      card:
+        type: entities
+        title: S baterií
+        entities:
+        - entity: number.mar_fve_tuv_baterie_prah
+          name: Vypnout, až baterie klesne pod (%)
+          icon: mdi:battery-charging-high
+        - entity: number.mar_fve_tuv_baterie_pokles
+          name: … a zároveň klesne aspoň o (%)
+          icon: mdi:battery-minus-variant
+  - type: grid
+    column_span: 2
+    cards:
+    - type: custom:apexcharts-card
+      header:
+        show: true
+        title: Badget – dostupný přebytek (−12 h)
+        show_states: true
+        colorize_states: true
+      graph_span: 12h
+      span:
+        end: minute
+      yaxis:
+      - decimals: 0
+        apex_config:
+          forceNiceScale: true
+      series:
+      - entity: sensor.mar_fve_badget_syrovy
+        name: Badget (syrový = přetok + příkon TČ)
+        type: area
+        stroke_width: 1.5
+        opacity: 0.2
+        color: '#1F77B4'
+        float_precision: 0
+      - entity: sensor.mar_fve_badget
+        name: Badget (průměr 15 min)
+        type: line
+        stroke_width: 3
+        color: '#D62728'
+        float_precision: 0
+      - entity: number.mar_fve_tuv_start
+        name: Práh sepnutí (start)
+        type: line
+        stroke_width: 2
+        curve: stepline
+        color: '#2CA02C'
+        float_precision: 0
+      - entity: sensor.active_power
+        name: Přetok
+        type: line
+        stroke_width: 1
+        opacity: 0.5
+        color: '#7F7F7F'
+        float_precision: 0
+      - entity: sensor.acond_30027_aep
+        name: Příkon TČ
+        type: line
+        stroke_width: 1
+        opacity: 0.5
+        color: '#FF7F0E'
+        float_precision: 0
+    - type: history-graph
+      title: Přebytek a ohřev (−12 h)
+      hours_to_show: 12
+      entities:
+      - entity: sensor.mar_fve_prumer_pretoku
+        name: Průměr přetoku (15 min)
+      - entity: sensor.active_power
+        name: Přetok syrový
+      - entity: sensor.mar_fve_tuv_rezim
+        name: Ohřev TUV
+      - entity: binary_sensor.acond_30007_tc_status_bit_3
+        name: TČ hřeje TUV
+    - type: history-graph
+      title: Požadovaná teplota TUV (−12 h)
+      hours_to_show: 12
+      entities:
+      - entity: number.acond_40005_t_set_tuv
+        name: Požadovaná TUV (cíl 40005)
+  - type: grid
+    column_span: 2
+    cards:
+    - type: horizontal-stack
+      cards:
+      - type: button
+        name: Nastavení zdrojů
+        icon: mdi:cog-outline
+        tap_action:
+          action: navigate
+          navigation_path: /acond-dashboard/mar_fve_nastaveni
+      - type: button
+        name: Příručka — FVE TUV
+        show_name: false
+        icon: mdi:help-circle-outline
+        tap_action:
+          action: url
+          url_path: /mar-prirucka/index.html#fve-tuv
+- type: sections
+  title: FVE topení
+  path: mar_topeni
+  icon: mdi:radiator
+  max_columns: 2
+  subview: true
+  back_path: /acond-dashboard/mar_fve
+  sections:
+  - type: grid
+    column_span: 2
+    cards:
+    - type: horizontal-stack
+      cards:
+      - type: button
+        name: FVE TUV
+        icon: mdi:water-boiler
+        tap_action:
+          action: navigate
+          navigation_path: /acond-dashboard/mar_fve
+      - type: button
+        name: ● FVE topení
+        icon: mdi:radiator
+        tap_action:
+          action: none
+    - type: horizontal-stack
+      cards:
+      - type: tile
+        entity: sensor.mar_fve_baterie
+        name: SoC baterie
+        icon: mdi:battery-heart-variant
+      - type: tile
+        entity: sensor.mar_topeni_bilance
+        name: Bilance (přebytek)
+        icon: mdi:scale-balance
+      - type: tile
+        entity: number.acond_40014_comp_capacity_max_set
+        name: Výkon 40014
+        icon: mdi:gauge
+      - type: tile
+        entity: sensor.acond_30009_t_act_water_back
+        name: Zpátečka
+        icon: mdi:thermometer-water
+  - type: grid
+    column_span: 2
+    cards:
+    - type: custom:apexcharts-card
+      header:
+        show: true
+        title: Regulace – otáčky vs. slider (−3 h)
+        show_states: true
+        colorize_states: true
+      graph_span: 3h
+      span:
+        end: minute
+      yaxis:
+      - id: rpm
+        min: 0
+        decimals: 0
+        apex_config:
+          title:
+            text: otáčky
+          forceNiceScale: true
+      - id: watt
+        opposite: true
+        decimals: 0
+        apex_config:
+          title:
+            text: W
+      - id: soc
+        opposite: true
+        min: 0
+        max: 100
+        decimals: 0
+      series:
+      - entity: sensor.acond_30024_comp_rpm_actual
+        name: Skutečné otáčky (co stroj dělá)
+        yaxis_id: rpm
+        type: line
+        stroke_width: 3
+        curve: stepline
+        color: '#D62728'
+        float_precision: 0
+      - entity: number.acond_40014_comp_capacity_max_set
+        name: Slider 40014 (co přikazuju)
+        yaxis_id: rpm
+        type: line
+        stroke_width: 1.5
+        curve: stepline
+        color: '#1F77B4'
+        float_precision: 0
+      - entity: sensor.mar_topeni_bilance
+        name: Bilance – průměr (palivo)
+        yaxis_id: watt
+        type: area
+        stroke_width: 1
+        opacity: 0.15
+        color: '#7F7F7F'
+        float_precision: 0
+      - entity: sensor.mar_fve_baterie
+        name: SoC baterie (%)
+        yaxis_id: soc
+        type: line
+        stroke_width: 2
+        curve: smooth
+        color: '#2CA02C'
+        float_precision: 0
+    - type: markdown
+      content: '**Jak číst:** červená (skutečné otáčky) sleduje modrou (slider) → stroj poslouchá. Když se **modrá odlepí
+        nad červenou a ta se nehne** → stroj je na svém stropu (víc nejde). **Bilance** kladná → přidávám otáčky, záporná
+        → ubírám. Nad **98 % SoC** slider skočí na max.
+
+        '
+  - type: grid
+    column_span: 2
+    cards:
+    - type: entities
+      title: FVE Topení
+      entities:
+      - entity: switch.mar_topeni
+        name: FVE Topení — žrout přebytků (SoC-řízený)
+        icon: mdi:radiator
+    - type: markdown
+      content: '{{ state_attr(''sensor.mar_stav'',''topeni_veta'') or ''Vypnuto — zapni ve strategii Ekviterma, když je baterka
+        plná a je přebytek.'' }}
+
+        '
+    - type: conditional
+      conditions:
+      - condition: state
+        entity: switch.mar_topeni
+        state: 'on'
+      - condition: state
+        entity: sensor.mar_fve_baterie
+        state_not:
+        - unavailable
+        - unknown
+      card:
+        type: entities
+        title: Držení SoC (s baterií)
+        entities:
+        - entity: number.mar_topeni_soc_hranice
+          name: Hranice — drž SoC kolem (%)
+          icon: mdi:battery-heart-variant
+        - entity: number.mar_topeni_soc_dolni_mez
+          name: Předej ekvitermě pod (%)
+          icon: mdi:battery-low
+        - entity: number.mar_topeni_tah
+          name: Tah k hranici (W na %)
+          icon: mdi:arrow-collapse-down
+        - entity: number.mar_topeni_okno
+          name: Okno průměru bilance (min)
+          icon: mdi:timer-sand
+    - type: conditional
+      conditions:
+      - condition: state
+        entity: switch.mar_topeni
+        state: 'on'
+      - condition: state
+        entity: sensor.mar_fve_baterie
+        state:
+        - unavailable
+        - unknown
+      card:
+        type: entities
+        title: Přebytek (bez baterie)
+        entities:
+        - entity: number.mar_topeni_stop
+          name: Vytrvalost — drž přetok nad (W)
+          icon: mdi:stop-circle-outline
+        - entity: number.mar_topeni_start
+          name: Hojnost — převezmi běžící stroj nad (W)
+          icon: mdi:play-circle-outline
+        - entity: number.mar_topeni_start_studeny
+          name: Rozjezd stojícího stroje nad (W)
+          icon: mdi:engine-outline
+        - entity: number.mar_topeni_prodleva
+          name: Na minimu vydrž (min)
+          icon: mdi:timer-sand
+        - entity: number.mar_topeni_blok
+          name: Blok zápisů směrem nahoru (min)
+          icon: mdi:content-save-cog-outline
+        - entity: number.mar_topeni_okno
+          name: Okno průměru bilance (min)
+          icon: mdi:chart-bell-curve
+    - type: entities
+      title: Návnady a stropy
+      entities:
+      - entity: number.mar_topeni_navnada
+        name: Návnada zpátečky — nad ekvitermu (°C)
+        icon: mdi:fishing
+      - entity: number.mar_topeni_navnada_pokojovka
+        name: Návnada pokojovkou — nad požadovanou (°C)
+        icon: mdi:home-thermometer-outline
+      - entity: number.mar_topeni_strop_zpatecka
+        name: Nejvyšší zpátečka — podlaha (°C)
+        icon: mdi:pipe
+      - entity: number.mar_topeni_strop_mistnost
+        name: Strop místnosti — tvrdý stop (°C)
+        icon: mdi:home-thermometer
+      - entity: number.mar_topeni_cidlo_timeout
+        name: Ztráta čidla — konec po (min)
+        icon: mdi:timer-alert-outline
+      - entity: switch.mar_topeni_hlidac
+        name: Hlídač restartu po předání
+        icon: mdi:restart-alert
+    - type: conditional
+      conditions:
+      - condition: state
+        entity: sensor.mar_stav
+        attribute: strop_padl
+        state: mistnost
+      card:
+        type: markdown
+        content: '**Program ukončil strop místnosti.** Dům je vytopený nad nastavenou mez, tak jsem předal ekvitermě a vypnul
+          se — spouštěcí podmínky (plná baterka, přebytek) totiž trvají dál a jinak bych do stropu mlátil dokola. Zkontroluj
+          nastavení nad tímhle textem a program si zapni sám; tímhle zapnutím hláška zmizí.
+
+          '
+    - type: conditional
+      conditions:
+      - condition: state
+        entity: sensor.mar_stav
+        attribute: strop_padl
+        state: cidlo
+      card:
+        type: markdown
+        content: '**Program ukončila ztráta čidla.** Zdroj SoC / výkonu baterie (nebo bilance sítě) byl nedostupný déle než
+          nastavený limit — topit naslepo nechci, tak jsem vrátil slider, předal ekvitermě a vypnul se. Zkontroluj entity_id
+          zdrojů (přejmenování po aktualizaci integrace měniče?) a program si zapni sám; tímhle zapnutím hláška zmizí.
+
+          '
+  - type: grid
+    column_span: 2
+    cards:
+    - type: custom:apexcharts-card
+      header:
+        show: true
+        title: Bilance a SoC (−12 h)
+        show_states: true
+        colorize_states: true
+      graph_span: 12h
+      span:
+        end: minute
+      yaxis:
+      - id: watt
+        decimals: 0
+        apex_config:
+          forceNiceScale: true
+      - id: soc
+        opposite: true
+        min: 0
+        max: 100
+        decimals: 0
+      series:
+      - entity: sensor.mar_topeni_bilance_syrova
+        name: Bilance (syrová = přetok + výkon baterie)
+        yaxis_id: watt
+        type: area
+        stroke_width: 1.5
+        opacity: 0.2
+        color: '#1F77B4'
+        float_precision: 0
+      - entity: sensor.mar_topeni_bilance
+        name: Bilance (časově vážený průměr)
+        yaxis_id: watt
+        type: line
+        stroke_width: 3
+        color: '#D62728'
+        float_precision: 0
+      - entity: sensor.mar_fve_baterie
+        name: SoC baterie (%)
+        yaxis_id: soc
+        type: line
+        stroke_width: 2
+        curve: smooth
+        color: '#2CA02C'
+        float_precision: 0
+    - type: history-graph
+      title: Výkon a zpátečka (−12 h)
+      hours_to_show: 12
+      entities:
+      - entity: number.acond_40014_comp_capacity_max_set
+        name: Slider výkonu 40014
+      - entity: sensor.acond_30024_comp_rpm_actual
+        name: Otáčky skutečné
+      - entity: sensor.acond_30009_t_act_water_back
+        name: Zpátečka skutečná
+      - entity: sensor.mar_topeni_rezim
+        name: Topení přebytkem
+  - type: grid
+    column_span: 2
+    cards:
+    - type: entities
+      title: Zdroj výkonu baterie (znaménkový)
+      entities:
+      - entity: text.mar_topeni_zdroj_baterie_vykon
+        name: entity_id výkonu baterie
+        icon: mdi:battery-charging
+      - entity: switch.mar_topeni_baterie_vybijeni_kladne
+        name: Vybíjení je kladné (GoodWe → zapnuto)
+        icon: mdi:plus-minus-variant
+    - type: markdown
+      content: 'Přetok a SoC baterie se sdílí s FVE ohřevem (nastav je ve FVE → Nastavení). Tady stačí vložit **výkon baterie**
+        (znaménkový, nabíjení kladné).
+
+
+        **Tímhle polem se volí větev.** Vyplněné = řízení podle stavu baterie. Prázdné = **bezbaterková větev** — řídí se
+        přímo bilancí sítě. Rozhoduje to, jestli je pole vyplněné, ne jestli senzor zrovna odpovídá; výpadek střídače tedy
+        regulaci uprostřed mraku nepřepne.
+
+        '
+  - type: grid
+    column_span: 2
+    cards:
+    - type: horizontal-stack
+      cards:
+      - type: button
+        name: Příručka — FVE topení
+        show_name: false
+        icon: mdi:help-circle-outline
+        tap_action:
+          action: url
+          url_path: /mar-prirucka/index.html#fve-topeni
+- type: sections
+  title: FVE – Nastavení
+  path: mar_fve_nastaveni
+  icon: mdi:cog-outline
+  max_columns: 2
+  subview: true
+  back_path: /acond-dashboard/mar_fve
+  sections:
+  - type: grid
+    column_span: 2
+    cards:
+    - type: markdown
+      content: '## Zdroje dat pro FVE
+
+
+        Regulace potřebuje vědět, ze kterých senzorů číst **okamžitý přetok** (kladné = export), **výrobu panelů** a **stav
+        baterie**. Vlož sem `entity_id` — nejlíp zkopírovaný z **Vývojářské nástroje → Stavy** a vložený ze schránky (Ctrl+V),
+        ať se vyhneš překlepu.
+
+
+        Předvyplněno pro **Goodwe** (`sensor.active_power`, `sensor.pv_power`, `sensor.battery_state_of_charge`). Jiný střídač
+        → přepiš. Nemáš-li baterii, nech pole baterie prázdné — regulace pojede s tvrdším defaultem.
+
+        '
+    - type: entities
+      title: Nastavení zdrojů (vlož entity_id)
+      entities:
+      - entity: text.mar_fve_zdroj_pretok
+        name: Přetok (kladné = export)
+        icon: mdi:transmission-tower-export
+      - entity: text.mar_fve_zdroj_vyroba
+        name: Výroba panelů
+        icon: mdi:solar-power
+      - entity: text.mar_fve_zdroj_baterie
+        name: Baterie (SoC v %)
+        icon: mdi:battery-70
+    - type: entities
+      title: Kontrola – co se právě čte
+      entities:
+      - entity: sensor.mar_fve_prumer_pretoku
+        name: Přetok – klouzavý průměr 15 min
+        icon: mdi:transmission-tower-export
+      - entity: sensor.mar_fve_pv
+        name: Výroba panelů – aktuální
+        icon: mdi:solar-power
+      - entity: sensor.mar_fve_baterie
+        name: Baterie – aktuální stav
+        icon: mdi:battery-70
+  - type: grid
+    column_span: 2
+    cards:
+    - type: button
+      name: Příručka
+      show_name: false
+      icon: mdi:help-circle-outline
+      tap_action:
+        action: url
+        url_path: /mar-prirucka/index.html#fve-tuv-zdroje
+- type: sections
+  title: Ekviterma
+  path: mar_regulace
+  icon: mdi:chart-bell-curve-cumulative
+  max_columns: 2
+  subview: true
+  back_path: /acond-dashboard/mar_rezimy
+  sections:
+  - type: grid
+    column_span: 2
+    cards:
+    - type: horizontal-stack
+      cards:
+      - type: button
+        name: Režimy
+        icon: mdi:tune-variant
+        tap_action:
+          action: navigate
+          navigation_path: /acond-dashboard/mar_rezimy
+      - type: button
+        name: ● Ekviterma
+        icon: mdi:chart-bell-curve-cumulative
+        tap_action:
+          action: none
+  - type: grid
+    column_span: 2
+    cards:
+    - type: custom:apexcharts-card
+      all_series_config:
+        float_precision: 1
+      header:
+        show: true
+        title: Teplotní vývoj & předpověď (−24 h / +12 h)
+        show_states: true
+        colorize_states: true
+      graph_span: 36h
+      span:
+        offset: +12h
+      now:
+        show: true
+        label: teď
+        color: '#888888'
+      apex_config:
+        chart:
+          height: 340
+          toolbar:
+            show: false
+        grid:
+          borderColor: '#e2e8f0'
+          strokeDashArray: 4
+        legend:
+          position: bottom
+          horizontalAlign: center
+          fontSize: 13px
+        tooltip:
+          x:
+            format: dd.MM. HH:mm
+        xaxis:
+          labels:
+            datetimeFormatter:
+              day: dd.MM.
+              hour: HH:mm
+      yaxis:
+      - id: temp
+        decimals: 1
+        apex_config:
+          title:
+            text: °C
+      - id: okno
+        show: false
+        min: 0
+        max: 10
+      series:
+      - entity: sensor.acond_30010_t_act_air
+        name: Skutečná venkovní
+        type: line
+        stroke_width: 2
+        color: '#1f77b4'
+        yaxis_id: temp
+        extend_to: now
+      - entity: sensor.mar_ekvitermni_teplota
+        name: Průměr do ekvi
+        type: line
+        stroke_width: 3
+        color: '#9467bd'
+        yaxis_id: temp
+        extend_to: now
+      - entity: sensor.mar_predpoved_1
+        name: Předpověď 1 (open-meteo)
+        type: line
+        stroke_width: 1
+        curve: smooth
+        color: '#ff7f0e'
+        yaxis_id: temp
+        extend_to: false
+        show:
+          in_header: false
+        data_generator: "return (entity.attributes.forecast || []).map(\n  p => [new Date(p.datetime).getTime(), p.temperature]);\n"
+      - entity: sensor.mar_predpoved_2
+        name: Předpověď 2 (met.no)
+        type: line
+        stroke_width: 1
+        curve: smooth
+        color: '#2ca02c'
+        yaxis_id: temp
+        extend_to: false
+        show:
+          in_header: false
+        data_generator: "return (entity.attributes.forecast || []).map(\n  p => [new Date(p.datetime).getTime(), p.temperature]);\n"
+      - entity: sensor.mar_predpoved_prumer
+        name: Průměr předpovědí
+        type: line
+        stroke_width: 3
+        curve: smooth
+        color: '#d62728'
+        yaxis_id: temp
+        extend_to: false
+        show:
+          in_header: false
+        data_generator: "return (entity.attributes.forecast || []).map(\n  p => [new Date(p.datetime).getTime(), p.temperature]);\n"
+      - entity: sensor.mar_zpatecka_z_ekvitermy
+        name: Z ekvitermy
+        color: '#17becf'
+        yaxis_id: temp
+        show:
+          in_chart: false
+          in_header: true
+          legend_value: true
+      - entity: sensor.mar_vypoctena_zpatecka
+        name: S korekcí
+        color: '#e377c2'
+        yaxis_id: temp
+        show:
+          in_chart: false
+          in_header: true
+          legend_value: true
+      - entity: sensor.acond_30009_t_act_water_back
+        name: Skutečná zpátečka
+        color: '#8c564b'
+        yaxis_id: temp
+        show:
+          in_chart: false
+          in_header: true
+          legend_value: true
+      - entity: number.mar_hodiny_minulost
+        name: Okno průměru
+        type: line
+        stroke_width: 6
+        color: '#f1c40f'
+        yaxis_id: okno
+        extend_to: false
+        show:
+          in_header: false
+          legend_value: false
+        data_generator: 'const past = Number(entity.state) || 0;
+
+          const fwd  = Number(hass.states[''number.mar_hodiny_predpoved''].state) || 0;
+
+          const now  = Date.now();
+
+          return [[now - past * 3600000, 0], [now + fwd * 3600000, 0]];
+
+          '
+  - type: grid
+    column_span: 2
+    cards:
+    - type: button
+      name: Velký graf
+      icon: mdi:chart-line
+      tap_action:
+        action: navigate
+        navigation_path: /acond-dashboard/mar_graf
+  - type: grid
+    column_span: 2
+    cards:
+    - type: custom:apexcharts-card
+      all_series_config:
+        float_precision: 1
+      header:
+        show: true
+        title: Topná strana – teploty (−24 h)
+        show_states: false
+      graph_span: 24h
+      now:
+        show: true
+        label: teď
+        color: '#888888'
+      apex_config:
+        chart:
+          height: 380
+          toolbar:
+            show: false
+        grid:
+          borderColor: '#e2e8f0'
+          strokeDashArray: 4
+        legend:
+          position: bottom
+          horizontalAlign: center
+          fontSize: 13px
+        tooltip:
+          x:
+            format: dd.MM. HH:mm
+        xaxis:
+          labels:
+            datetimeFormatter:
+              hour: HH:mm
+      yaxis:
+      - decimals: 1
+        apex_config:
+          tickAmount: 8
+          forceNiceScale: true
+          title:
+            text: °C
+      series:
+      - entity: sensor.acond_30009_t_act_water_back
+        name: Teplota zpátečky
+        type: line
+        stroke_width: 2
+        color: '#1f77b4'
+      - entity: sensor.acond_30008_t_set_water_back
+        name: Požadovaná zpátečka
+        type: line
+        curve: stepline
+        stroke_width: 2
+        color: '#f1c40f'
+      - entity: sensor.acond_30002_t_act_indoor1
+        name: Teplota okruh 1
+        type: line
+        stroke_width: 2
+        color: '#d62728'
+      - entity: sensor.acond_30001_t_set_indoor1
+        name: Požadovaná okruh 1
+        type: line
+        curve: stepline
+        stroke_width: 2
+        color: '#2ca02c'
+      - entity: sensor.acond_30018_t_act_water_outlet
+        name: Teplota topné vody
+        type: line
+        stroke_width: 2
+        color: '#9467bd'
+  - type: grid
+    cards:
+    - type: picture-entity
+      entity: image.mar_ekviterm_krivka
+      show_name: false
+      show_state: false
+      aspect_ratio: 480x300
+    - type: entities
+      title: Body křivky – zpátečka při venkovní teplotě
+      entities:
+      - entity: number.mar_bod_m15
+        name: při −15 °C
+      - entity: number.mar_bod_m5
+        name: při −5 °C
+      - entity: number.mar_bod_0
+        name: při 0 °C
+      - entity: number.mar_bod_p5
+        name: při +5 °C
+      - entity: number.mar_bod_p15
+        name: při +15 °C
+      - type: section
+        label: Korekce na místnost
+      - entity: number.mar_koeficient_korekce
+        name: Koeficient korekce (0–6)
+  - type: grid
+    cards:
+    - type: heading
+      heading: Regulace & výpočet
+    - type: entities
+      title: Okna průměrování
+      entities:
+      - entity: number.mar_hodiny_minulost
+        name: Hodiny – minulost
+      - entity: number.mar_hodiny_predpoved
+        name: Hodiny – předpověď (do regulace)
+      - entity: sensor.mar_ekvitermni_teplota
+        name: Ekvitermní (modelová) teplota
+    - type: entities
+      title: Výpočet zpátečky
+      state_color: true
+      entities:
+      - entity: sensor.mar_zpatecka_z_ekvitermy
+        name: Z křivky (čistá ekviterma)
+      - type: attribute
+        entity: sensor.mar_vypoctena_zpatecka
+        attribute: korekce
+        name: Korekce (koef × Δ místnost)
+      - entity: sensor.mar_vypoctena_zpatecka
+        name: Vypočtená zpátečka (po clampu)
+      - type: attribute
+        entity: sensor.mar_vypoctena_zpatecka
+        attribute: letni_rezim
+        name: Letní režim (blokuje zápis)
+  - type: grid
+    column_span: 2
+    cards:
+    - type: button
+      name: Příručka
+      show_name: false
+      icon: mdi:help-circle-outline
+      tap_action:
+        action: url
+        url_path: /mar-prirucka/index.html#ekviterma
+- type: sections
+  title: Velký graf
+  path: mar_graf
+  max_columns: 1
+  subview: true
+  back_path: /acond-dashboard/mar_regulace
+  sections:
+  - type: grid
+    cards:
+    - type: custom:apexcharts-card
+      all_series_config:
+        float_precision: 1
+      header:
+        show: true
+        title: Topná strana – detail (−12 h, strop 35 °C)
+        show_states: true
+        colorize_states: true
+      graph_span: 12h
+      now:
+        show: true
+        label: teď
+        color: '#888888'
+      apex_config:
+        chart:
+          height: 480
+          toolbar:
+            show: false
+        grid:
+          borderColor: '#e2e8f0'
+          strokeDashArray: 4
+        legend:
+          position: bottom
+          horizontalAlign: center
+          fontSize: 13px
+        tooltip:
+          x:
+            format: dd.MM. HH:mm
+        xaxis:
+          labels:
+            datetimeFormatter:
+              hour: HH:mm
+      yaxis:
+      - min: 10
+        max: 35
+        decimals: 1
+        apex_config:
+          tickAmount: 10
+          title:
+            text: °C
+      series:
+      - entity: sensor.acond_30009_t_act_water_back
+        name: Teplota zpátečky
+        type: line
+        stroke_width: 2
+        color: '#1f77b4'
+      - entity: sensor.acond_30008_t_set_water_back
+        name: Požadovaná zpátečka
+        type: line
+        curve: stepline
+        stroke_width: 2
+        color: '#f1c40f'
+      - entity: sensor.acond_30002_t_act_indoor1
+        name: Teplota okruh 1
+        type: line
+        stroke_width: 2
+        color: '#d62728'
+      - entity: sensor.acond_30001_t_set_indoor1
+        name: Požadovaná okruh 1
+        type: line
+        curve: stepline
+        stroke_width: 2
+        color: '#2ca02c'
+      - entity: sensor.acond_30018_t_act_water_outlet
+        name: Teplota topné vody
+        type: line
+        stroke_width: 2
+        color: '#9467bd'
+    - type: custom:apexcharts-card
+      all_series_config:
+        float_precision: 1
+      header:
+        show: true
+        title: Energetika – výkon, příkon, COP (−24 h)
+        show_states: true
+        colorize_states: true
+      graph_span: 24h
+      now:
+        show: true
+        label: teď
+        color: '#888888'
+      apex_config:
+        chart:
+          height: 320
+          toolbar:
+            show: false
+        grid:
+          borderColor: '#e2e8f0'
+          strokeDashArray: 4
+        legend:
+          position: bottom
+          horizontalAlign: center
+          fontSize: 13px
+        tooltip:
+          x:
+            format: dd.MM. HH:mm
+        xaxis:
+          labels:
+            datetimeFormatter:
+              hour: HH:mm
+      yaxis:
+      - id: power
+        min: 0
+        decimals: 1
+        apex_config:
+          forceNiceScale: true
+          title:
+            text: výkon / příkon
+      - id: cop
+        opposite: true
+        min: 0
+        max: 7
+        decimals: 1
+        apex_config:
+          title:
+            text: COP
+      series:
+      - entity: sensor.acond_30028_ahp
+        name: Tepelný výkon
+        type: line
+        stroke_width: 2
+        color: '#d62728'
+        yaxis_id: power
+      - entity: sensor.acond_30027_aep
+        name: Elektrický příkon
+        type: line
+        stroke_width: 2
+        color: '#1f77b4'
+        yaxis_id: power
+      - entity: sensor.acond_30029_cop
+        name: COP
+        type: line
+        curve: smooth
+        stroke_width: 2
+        color: '#2ca02c'
+        yaxis_id: cop
+    - type: history-graph
+      title: Provozní stavy (−24 h)
+      hours_to_show: 24
+      entities:
+      - entity: binary_sensor.acond_30007_tc_status_bit_1
+        name: TČ v provozu
+      - entity: binary_sensor.acond_30007_tc_status_bit_4
+        name: Topení (okruh 1)
+      - entity: binary_sensor.acond_30007_tc_status_bit_3
+        name: Ohřev TUV
+      - entity: binary_sensor.acond_30007_tc_status_bit_8
+        name: Odmrazování
+    - type: history-graph
+      title: Co dělá MaR (−24 h)
+      hours_to_show: 24
+      entities:
+      - entity: select.mar_strategie
+        name: Strategie
+      - entity: switch.mar_zebra
+        name: Zebra
+      - entity: switch.mar_dennoc
+        name: Den/noc
+      - entity: sensor.mar_stav
+        name: Stav
+      - entity: binary_sensor.acond_30045_hp_comp_bit_0
+        name: Kompresor
+- type: sections
+  title: Statistika
+  path: mar_statistika
+  icon: mdi:counter
+  max_columns: 2
+  sections:
+  - type: grid
+    column_span: 2
+    cards:
+    - type: horizontal-stack
+      cards:
+      - type: button
+        name: ● Statistika
+        icon: mdi:counter
+        tap_action:
+          action: none
+      - type: button
+        name: Trendy
+        icon: mdi:chart-bar
+        tap_action:
+          action: navigate
+          navigation_path: /acond-dashboard/mar_statistika2
+  - type: grid
+    column_span: 2
+    cards:
+    - type: markdown
+      content: '{%- set P = [''sensor.mar_stat_dnes'',''sensor.mar_stat_vcera'',''sensor.mar_stat_7dni''] -%}
+
+        {%- macro row(label, key, nd, indent=false) -%}
+
+        | {% if indent %}&nbsp;&nbsp;&nbsp;{% endif %}{{ label }} |
+
+        {%- for e in P -%}
+
+        {%- set x = state_attr(e, key) -%}
+
+        {%- if x is none %} – |
+
+        {%- elif nd is none %} {{ x }} |
+
+        {%- elif nd == 0 %} {{ x | int }} |
+
+        {%- else %} {{ (''%.'' ~ nd ~ ''f'') | format(x | float) | replace(''.'', '','') }} |
+
+        {%- endif -%}
+
+        {%- endfor %}
+
+        {% endmacro -%}
+
+        {%- macro head(title) -%}
+
+        | **{{ title }}** | | | |
+
+        {% endmacro -%}
+
+        ### Statistika – porovnání
+
+
+        | | DNES&nbsp;\* | VČERA | 7 DNŮ |
+
+        |:---|---:|---:|---:|
+
+        {{ head(''Vyrobená energie [kWh]'') -}}
+
+        {{ row(''**Celkem**'', ''tep_celkem'', 2) -}}
+
+        {{ row(''Topení'', ''tep_topeni'', 2) -}}
+
+        {{ row(''TUV'', ''tep_tuv'', 2) -}}
+
+        {{ row(''Odmrazování'', ''tep_odmraz'', 2) -}}
+
+        {{ head(''Spotřebovaná energie [kWh]'') -}}
+
+        {{ row(''**Celkem**'', ''el_celkem'', 2) -}}
+
+        {{ row(''Topení'', ''el_topeni'', 2) -}}
+
+        {{ row(''TUV'', ''el_tuv'', 2) -}}
+
+        {{ row(''Odmrazování'', ''el_odmraz'', 2) -}}
+
+        {{ head(''COP'') -}}
+
+        {{ row(''**Celkem**'', ''cop_celkem'', 2) -}}
+
+        {{ row(''Topení'', ''cop_topeni'', 2) -}}
+
+        {{ row(''TUV'', ''cop_tuv'', 2) -}}
+
+        {{ head(''Průměrná teplota [°C]'') -}}
+
+        {{ row(''Venkovní'', ''t_venkovni'', 1) -}}
+
+        {{ row(''Vnitřní'', ''t_vnitrni'', 1) -}}
+
+        {{ head(''Motohodiny'') -}}
+
+        {{ row(''Topení'', ''hodiny_topeni'', none) -}}
+
+        {{ row(''TUV'', ''hodiny_tuv'', none) -}}
+
+        {{ row(''Odmrazování'', ''hodiny_odmraz'', none) -}}
+
+        {{ head(''Počet'') -}}
+
+        {{ row(''Starty kompresoru'', ''starty_kompresor'', 0) -}}
+
+        {{ row(''z toho kvůli TUV'', ''starty_tuv'', 0, true) -}}
+
+        {{ row(''Odmrazování'', ''starty_odmraz'', 0) -}}
+
+        {{ head(''Chlazení'') -}}
+
+        {{ row(''Vyrobeno [kWh]'', ''tep_chlazeni'', 2) -}}
+
+        {{ row(''Spotřebováno [kWh]'', ''el_chlazeni'', 2) -}}
+
+        {{ row(''COP chlazení'', ''cop_chlazeni'', 2) -}}
+
+        {{ row(''Motohodiny'', ''hodiny_chlazeni'', none) -}}
+
+        {{ head(''Vyrobeno programy FVE z přetoků [kWh]'') -}}
+
+        {{ row(''Topení'', ''fve_tep_topeni'', 2) -}}
+
+        {{ row(''TUV'', ''fve_tep_tuv'', 2) -}}
+
+
+
+
+        {%- macro kontrola(key) -%}
+
+        {%- set x = state_attr(''sensor.mar_stat_dnes'', key) -%}
+
+        {% if x is none %}–{% else %}{{ ''%.2f'' | format(x | float) | replace(''.'', '','') }}{% endif %}
+
+        {%- endmacro -%}
+
+        <small>\* dnešní sloupec je neúplný den · kontrola (má být 0,00): el. ostatní {{ kontrola(''el_ostatni'') }} · tep.
+        ostatní {{ kontrola(''tep_ostatni'') }}</small>
+
+        '
+    - type: markdown
+      content: 'Stejné členění jako appka Acondac, ale všechny tři sloupce naráz. Součty vycházejí z denních čítačů jednotky,
+        takže **Celkem sedí na appku**; rozdělení topení/TUV je naše aproximace podle stavových bitů a nejmenší přiřaditelná
+        dávka je jeden krok čítače (0,1 kWh). Statistika běží **od nasazení MaR**, ne od narození jednotky.
+
+        '
+    - type: button
+      name: Export snímku pro skupinu
+      icon: mdi:camera-outline
+      tap_action:
+        action: navigate
+        navigation_path: /acond-dashboard/mar_statistika_export
+  - type: grid
+    column_span: 2
+    cards:
+    - type: custom:apexcharts-card
+      all_series_config:
+        float_precision: 1
+        type: column
+        group_by:
+          func: diff
+          duration: 1d
+        show:
+          legend_value: true
+      header:
+        show: true
+        title: Dnes (od půlnoci)
+      graph_span: 1d
+      span:
+        start: day
+      apex_config:
+        chart:
+          height: 260
+          type: bar
+          toolbar:
+            show: true
+        legend:
+          position: bottom
+          fontSize: 13px
+        plotOptions:
+          bar:
+            columnWidth: 65%
+      yaxis:
+      - decimals: 1
+        apex_config:
+          title:
+            text: kWh
+      series:
+      - entity: sensor.mar_tep_topeni
+        name: Výroba topení
+        color: '#d62728'
+      - entity: sensor.mar_el_topeni
+        name: Spotřeba topení
+        color: '#1f77b4'
+      - entity: sensor.mar_tep_tuv
+        name: Výroba TUV
+        color: '#ff7f0e'
+      - entity: sensor.mar_el_tuv
+        name: Spotřeba TUV
+        color: '#17becf'
+      - entity: sensor.mar_el_odmraz
+        name: Spotřeba odmraz
+        color: '#9467bd'
+      - entity: sensor.mar_el_ostatni
+        name: Spotřeba standby
+        color: '#7f7f7f'
+  - type: grid
+    column_span: 2
+    cards:
+    - type: custom:apexcharts-card
+      all_series_config:
+        float_precision: 1
+        type: column
+        group_by:
+          func: diff
+          duration: 1d
+        show:
+          legend_value: true
+      header:
+        show: true
+        title: Včera (celý kalendářní den)
+      graph_span: 1d
+      span:
+        start: day
+        offset: -1d
+      apex_config:
+        chart:
+          height: 260
+          type: bar
+          toolbar:
+            show: true
+        legend:
+          position: bottom
+          fontSize: 13px
+        plotOptions:
+          bar:
+            columnWidth: 65%
+      yaxis:
+      - decimals: 1
+        apex_config:
+          title:
+            text: kWh
+      series:
+      - entity: sensor.mar_tep_topeni
+        name: Výroba topení
+        color: '#d62728'
+      - entity: sensor.mar_el_topeni
+        name: Spotřeba topení
+        color: '#1f77b4'
+      - entity: sensor.mar_tep_tuv
+        name: Výroba TUV
+        color: '#ff7f0e'
+      - entity: sensor.mar_el_tuv
+        name: Spotřeba TUV
+        color: '#17becf'
+      - entity: sensor.mar_el_odmraz
+        name: Spotřeba odmraz
+        color: '#9467bd'
+      - entity: sensor.mar_el_ostatni
+        name: Spotřeba standby
+        color: '#7f7f7f'
+  - type: grid
+    column_span: 2
+    cards:
+    - type: custom:apexcharts-card
+      all_series_config:
+        float_precision: 1
+        type: column
+        group_by:
+          func: diff
+          duration: 7d
+        show:
+          legend_value: true
+      header:
+        show: true
+        title: Posledních 7 uzavřených dnů (dnešek ven)
+      graph_span: 7d
+      span:
+        start: day
+        offset: -7d
+      apex_config:
+        chart:
+          height: 260
+          type: bar
+          toolbar:
+            show: true
+        legend:
+          position: bottom
+          fontSize: 13px
+        plotOptions:
+          bar:
+            columnWidth: 65%
+      yaxis:
+      - decimals: 1
+        apex_config:
+          title:
+            text: kWh
+      series:
+      - entity: sensor.mar_tep_topeni
+        name: Výroba topení
+        color: '#d62728'
+      - entity: sensor.mar_el_topeni
+        name: Spotřeba topení
+        color: '#1f77b4'
+      - entity: sensor.mar_tep_tuv
+        name: Výroba TUV
+        color: '#ff7f0e'
+      - entity: sensor.mar_el_tuv
+        name: Spotřeba TUV
+        color: '#17becf'
+      - entity: sensor.mar_el_odmraz
+        name: Spotřeba odmraz
+        color: '#9467bd'
+      - entity: sensor.mar_el_ostatni
+        name: Spotřeba standby
+        color: '#7f7f7f'
+  - type: grid
+    column_span: 2
+    cards:
+    - type: button
+      name: Příručka
+      show_name: false
+      icon: mdi:help-circle-outline
+      tap_action:
+        action: url
+        url_path: /mar-prirucka/index.html#statistika
+- type: sections
+  title: Trendy
+  path: mar_statistika2
+  icon: mdi:chart-bar
+  max_columns: 2
+  subview: true
+  back_path: /acond-dashboard/mar_statistika
+  sections:
+  - type: grid
+    column_span: 2
+    cards:
+    - type: horizontal-stack
+      cards:
+      - type: button
+        name: Statistika
+        icon: mdi:counter
+        tap_action:
+          action: navigate
+          navigation_path: /acond-dashboard/mar_statistika
+      - type: button
+        name: ● Trendy
+        icon: mdi:chart-bar
+        tap_action:
+          action: none
+  - type: grid
+    cards:
+    - type: heading
+      heading: Celkem od instalace
+    - type: entities
+      title: Souhrn
+      state_color: true
+      entities:
+      - entity: sensor.mar_cop_celkem
+        name: COP celkem
+      - entity: sensor.acond_30075_compressor_starts
+        name: Počet startů kompresoru
+      - type: section
+        label: COP podle režimu
+      - entity: sensor.mar_cop_topeni
+        name: COP topení
+      - entity: sensor.mar_cop_tuv
+        name: COP TUV
+      - type: section
+        label: Motohodiny
+      - entity: sensor.mar_hodiny_topeni
+        name: Topení
+      - entity: sensor.mar_hodiny_tuv
+        name: TUV
+      - entity: sensor.mar_hodiny_odmraz
+        name: Odmrazování
+    - type: entities
+      title: Energie celkem (kWh)
+      entities:
+      - type: section
+        label: Výroba (tepelná)
+      - entity: sensor.mar_tep_topeni
+        name: Topení
+      - entity: sensor.mar_tep_tuv
+        name: TUV
+      - type: section
+        label: Spotřeba (elektrická)
+      - entity: sensor.mar_el_topeni
+        name: Topení
+      - entity: sensor.mar_el_tuv
+        name: TUV
+      - entity: sensor.mar_el_odmraz
+        name: Odmrazování
+      - entity: sensor.mar_el_ostatni
+        name: Standby / ostatní
+  - type: grid
+    cards:
+    - type: custom:apexcharts-card
+      all_series_config:
+        float_precision: 1
+        type: column
+        group_by:
+          func: diff
+          duration: 1d
+      header:
+        show: true
+        title: Výroba (tepelná) po dnech – 14 dní
+      graph_span: 14d
+      span:
+        start: day
+        offset: -14d
+      apex_config:
+        chart:
+          height: 300
+          type: bar
+          stacked: true
+          toolbar:
+            show: true
+        legend:
+          position: bottom
+          fontSize: 13px
+        xaxis:
+          labels:
+            datetimeFormatter:
+              day: dd.MM.
+      yaxis:
+      - decimals: 1
+        apex_config:
+          title:
+            text: kWh
+      series:
+      - entity: sensor.mar_tep_topeni
+        name: Topení
+        color: '#d62728'
+      - entity: sensor.mar_tep_tuv
+        name: TUV
+        color: '#ff7f0e'
+      - entity: sensor.mar_tep_odmraz
+        name: Odmraz
+        color: '#9467bd'
+    - type: custom:apexcharts-card
+      all_series_config:
+        float_precision: 1
+        type: column
+        group_by:
+          func: diff
+          duration: 1d
+      header:
+        show: true
+        title: Spotřeba (elektrická) po dnech – 14 dní
+      graph_span: 14d
+      span:
+        start: day
+        offset: -14d
+      apex_config:
+        chart:
+          height: 300
+          type: bar
+          stacked: true
+          toolbar:
+            show: true
+        legend:
+          position: bottom
+          fontSize: 13px
+        xaxis:
+          labels:
+            datetimeFormatter:
+              day: dd.MM.
+      yaxis:
+      - decimals: 1
+        apex_config:
+          title:
+            text: kWh
+      series:
+      - entity: sensor.mar_el_topeni
+        name: Topení
+        color: '#1f77b4'
+      - entity: sensor.mar_el_tuv
+        name: TUV
+        color: '#17becf'
+      - entity: sensor.mar_el_odmraz
+        name: Odmraz
+        color: '#9467bd'
+      - entity: sensor.mar_el_ostatni
+        name: Standby
+        color: '#7f7f7f'
+  - type: grid
+    column_span: 2
+    cards:
+    - type: button
+      name: Příručka
+      show_name: false
+      icon: mdi:help-circle-outline
+      tap_action:
+        action: url
+        url_path: /mar-prirucka/index.html#trendy
+- type: sections
+  title: Export statistiky
+  path: mar_statistika_export
+  icon: mdi:image-outline
+  max_columns: 1
+  subview: true
+  back_path: /acond-dashboard/mar_statistika
+  sections:
+  - type: grid
+    cards:
+    - type: markdown
+      content: '### Snímek pro sdílení
+
+
+        **1.** Vyrob snímek. **2.** Otevři ho v prohlížeči. **3.** Tam nad ním klepni pravým tlačítkem (na mobilu podrž prst)
+        a dej **Uložit obrázek** — pak ho přiložíš do skupiny jako každou fotku.
+
+
+        Ten druhý krok musí být, protože přímo tady v Home Assistantu systémové menu nevyskočí ani na počítači, ani na tabletu.
+        Snímek se ukládá i na disk do `config/www/mar/`, takže se k němu dostaneš i přes sdílenou složku.
+
+
+        Snímek vzniká až na stisk a čísla bere v ten okamžik, takže nemůže být zastaralý. Čas pořízení i rozsah dat jsou přímo
+        v obrázku.
+
+        '
+    - type: button
+      name: 1 · Vyrobit snímek
+      icon: mdi:camera-outline
+      tap_action:
+        action: perform-action
+        perform_action: button.press
+        target:
+          entity_id: button.mar_statistika_obnovit
+    - type: markdown
+      content: '### 2 · Otevřít snímek
+
+
+        <a href="{{ state_attr(''image.mar_statistika'',''snimek_url'') or ''/local/mar/statistika.png'' }}" target="_blank"
+        rel="noreferrer">Otevřít snímek v prohlížeči</a>
+
+
+        Kdyby odkaz nefungoval, adresa ke zkopírování je: `{{ state_attr(''image.mar_statistika'',''snimek_url'') or ''/local/mar/statistika.png''
+        }}`'
+    - type: button
+      name: Otevřít snímek — záloha
+      icon: mdi:open-in-new
+      tap_action:
+        action: url
+        url_path: /local/mar/statistika.png
+    - type: picture-entity
+      entity: image.mar_statistika
+      show_state: false
+      show_name: false
+      tap_action:
+        action: more-info
+    - type: markdown
+      content: '### Statistika po dnech
+
+
+        Dnešek a sedm zavřených dnů vedle sebe — na porovnání s jinou instalací. V součtu za týden se ztratí, že jeden den
+        bylo pět startů a druhý dvacet.
+
+
+        Osm sloupců se na displej nevejde, takže je to **jen soubor ke stažení**, ne obrázek na dashboardu.
+
+        '
+    - type: button
+      name: 1 · Vyrobit rozpad po dnech
+      icon: mdi:table-large
+      tap_action:
+        action: perform-action
+        perform_action: button.press
+        target:
+          entity_id: button.mar_statistika_po_dnech
+    - type: markdown
+      content: '### 2 · Otevřít rozpad
+
+
+        <a href="{{ state_attr(''image.mar_statistika_po_dnech'',''snimek_url'') or ''/local/mar/statistika-dny.png'' }}"
+        target="_blank" rel="noreferrer">Otevřít rozpad po dnech</a>'
+    - type: picture-entity
+      entity: image.mar_statistika_po_dnech
+      show_state: false
+      show_name: false
+      tap_action:
+        action: more-info
+  - type: grid
+    column_span: 2
+    cards:
+    - type: button
+      name: Příručka
+      show_name: false
+      icon: mdi:help-circle-outline
+      tap_action:
+        action: url
+        url_path: /mar-prirucka/index.html#statistika-export
+- type: panel
+  title: Schéma
+  path: mar_schema
+  icon: mdi:sitemap-outline
+  cards:
+  - type: picture-elements
+    image: /mar-schema/v-prazdno.svg
+    elements:
+    - type: image
+      entity: binary_sensor.mar_ma_fve
+      image: /mar-schema/v-prazdno.svg
+      state_image:
+        'on': /mar-schema/podklad.svg
+        'off': /mar-schema/podklad-bez-fve.svg
+      style:
+        top: 50%
+        left: 50%
+        width: 100%
+    - type: conditional
+      conditions:
+      - entity: binary_sensor.acond_30045_hp_comp_bit_2
+        state: 'on'
+      - entity: binary_sensor.acond_30007_tc_status_bit_3
+        state: 'off'
+      elements:
+      - type: image
+        image: /mar-schema/v-kul-primar.svg
+        style:
+          top: 50%
+          left: 50%
+          width: 100%
+    - type: conditional
+      conditions:
+      - entity: binary_sensor.acond_30045_hp_comp_bit_2
+        state: 'on'
+      - entity: binary_sensor.acond_30007_tc_status_bit_3
+        state: 'on'
+      elements:
+      - type: image
+        image: /mar-schema/v-kul-tuv.svg
+        style:
+          top: 50%
+          left: 50%
+          width: 100%
+    - type: conditional
+      conditions: &id001
+      - entity: select.mar_schema_sekundar
+        state: Podle čerpadla
+      - entity: binary_sensor.acond_30007_tc_status_bit_4
+        state: 'on'
+      elements:
+      - type: image
+        image: /mar-schema/v-kul-sekundar.svg
+        style:
+          top: 50%
+          left: 50%
+          width: 100%
+    - type: conditional
+      conditions: &id002
+      - entity: select.mar_schema_sekundar
+        state: Stále
+      elements:
+      - type: image
+        image: /mar-schema/v-kul-sekundar.svg
+        style:
+          top: 50%
+          left: 50%
+          width: 100%
+    - type: conditional
+      conditions: &id003
+      - entity: select.mar_schema_sekundar
+        state: Podle primáru
+      - entity: binary_sensor.acond_30045_hp_comp_bit_2
+        state: 'on'
+      elements:
+      - type: image
+        image: /mar-schema/v-kul-sekundar.svg
+        style:
+          top: 50%
+          left: 50%
+          width: 100%
+    - type: conditional
+      conditions:
+      - entity: binary_sensor.mar_ma_fve
+        state: 'on'
+      - condition: numeric_state
+        entity: sensor.pv_power
+        above: 10
+      elements:
+      - type: image
+        image: /mar-schema/v-el-panely.svg
+        style:
+          top: 50%
+          left: 50%
+          width: 100%
+    - type: conditional
+      conditions:
+      - entity: binary_sensor.mar_ma_fve
+        state: 'on'
+      - condition: numeric_state
+        entity: sensor.house_consumption
+        above: 10
+      elements:
+      - type: image
+        image: /mar-schema/v-el-dum.svg
+        style:
+          top: 50%
+          left: 50%
+          width: 100%
+    - type: conditional
+      conditions:
+      - entity: binary_sensor.mar_ma_fve
+        state: 'on'
+      - condition: numeric_state
+        entity: sensor.active_power
+        above: 10
+      elements:
+      - type: image
+        image: /mar-schema/v-el-sit-ven.svg
+        style:
+          top: 50%
+          left: 50%
+          width: 100%
+    - type: conditional
+      conditions:
+      - entity: binary_sensor.mar_ma_fve
+        state: 'on'
+      - condition: numeric_state
+        entity: sensor.active_power
+        below: -10
+      elements:
+      - type: image
+        image: /mar-schema/v-el-sit-dovnitr.svg
+        style:
+          top: 50%
+          left: 50%
+          width: 100%
+    - type: conditional
+      conditions:
+      - entity: binary_sensor.mar_ma_fve
+        state: 'on'
+      - condition: numeric_state
+        entity: sensor.battery_power
+        above: 10
+      elements:
+      - type: image
+        image: /mar-schema/v-el-bat-vybij.svg
+        style:
+          top: 50%
+          left: 50%
+          width: 100%
+    - type: conditional
+      conditions:
+      - entity: binary_sensor.mar_ma_fve
+        state: 'on'
+      - condition: numeric_state
+        entity: sensor.battery_power
+        below: -10
+      elements:
+      - type: image
+        image: /mar-schema/v-el-bat-nabij.svg
+        style:
+          top: 50%
+          left: 50%
+          width: 100%
+    - type: image
+      entity: binary_sensor.acond_30045_hp_comp_bit_1
+      image: /mar-schema/v-prazdno.svg
+      state_image:
+        'on': /mar-schema/v-vetrak-toci.svg
+        'off': /mar-schema/v-vetrak-stoji.svg
+      style:
+        top: 50%
+        left: 50%
+        width: 100%
+    - type: image
+      entity: binary_sensor.acond_30045_hp_comp_bit_2
+      image: /mar-schema/v-prazdno.svg
+      state_image:
+        'on': /mar-schema/v-cerp1-toci.svg
+        'off': /mar-schema/v-cerp1-stoji.svg
+      style:
+        top: 50%
+        left: 50%
+        width: 100%
+    - type: image
+      image: /mar-schema/v-cerp2-stoji.svg
+      style:
+        top: 50%
+        left: 50%
+        width: 100%
+    - type: conditional
+      conditions: *id001
+      elements:
+      - type: image
+        image: /mar-schema/v-cerp2-toci.svg
+        style:
+          top: 50%
+          left: 50%
+          width: 100%
+    - type: conditional
+      conditions: *id002
+      elements:
+      - type: image
+        image: /mar-schema/v-cerp2-toci.svg
+        style:
+          top: 50%
+          left: 50%
+          width: 100%
+    - type: conditional
+      conditions: *id003
+      elements:
+      - type: image
+        image: /mar-schema/v-cerp2-toci.svg
+        style:
+          top: 50%
+          left: 50%
+          width: 100%
+    - type: image
+      entity: binary_sensor.acond_30007_tc_status_bit_3
+      image: /mar-schema/v-prazdno.svg
+      state_image:
+        'on': /mar-schema/v-ventil-tuv.svg
+        'off': /mar-schema/v-ventil-aku.svg
+      style:
+        top: 50%
+        left: 50%
+        width: 100%
+    - type: image
+      entity: binary_sensor.acond_30007_tc_status_bit_9
+      image: /mar-schema/v-prazdno.svg
+      state_image:
+        'on': /mar-schema/v-biv-topi.svg
+        'off': /mar-schema/v-biv-klid.svg
+      style:
+        top: 50%
+        left: 50%
+        width: 100%
+    - type: image
+      entity: sensor.mar_kompresor_vizual
+      image: /mar-schema/v-prazdno.svg
+      state_image:
+        chlazeni: /mar-kompresor/chlazeni.svg
+        klid-aut-l: /mar-kompresor/klid-aut-l.svg
+        klid-aut-z: /mar-kompresor/klid-aut-z.svg
+        klid-biv-l: /mar-kompresor/klid-biv-l.svg
+        klid-biv-z: /mar-kompresor/klid-biv-z.svg
+        klid-chl-z: /mar-kompresor/klid-chl-z.svg
+        klid-porucha: /mar-kompresor/klid-porucha.svg
+        klid-tc-l: /mar-kompresor/klid-tc-l.svg
+        klid-tc-z: /mar-kompresor/klid-tc-z.svg
+        klid-vyp-l: /mar-kompresor/klid-vyp-l.svg
+        klid-vyp-z: /mar-kompresor/klid-vyp-z.svg
+        odmrazovani: /mar-kompresor/odmrazovani.svg
+        topeni-1a: /mar-kompresor/topeni-1a.svg
+        topeni-1b: /mar-kompresor/topeni-1b.svg
+        topeni-1c: /mar-kompresor/topeni-1c.svg
+        topeni-1d: /mar-kompresor/topeni-1d.svg
+        topeni-1e: /mar-kompresor/topeni-1e.svg
+        topeni-2a: /mar-kompresor/topeni-2a.svg
+        topeni-2b: /mar-kompresor/topeni-2b.svg
+        topeni-2c: /mar-kompresor/topeni-2c.svg
+        topeni-2d: /mar-kompresor/topeni-2d.svg
+        topeni-2e: /mar-kompresor/topeni-2e.svg
+        topeni-3a: /mar-kompresor/topeni-3a.svg
+        topeni-3b: /mar-kompresor/topeni-3b.svg
+        topeni-3c: /mar-kompresor/topeni-3c.svg
+        topeni-3d: /mar-kompresor/topeni-3d.svg
+        topeni-3e: /mar-kompresor/topeni-3e.svg
+        tuv-1a: /mar-kompresor/tuv-1a.svg
+        tuv-1b: /mar-kompresor/tuv-1b.svg
+        tuv-1c: /mar-kompresor/tuv-1c.svg
+        tuv-1d: /mar-kompresor/tuv-1d.svg
+        tuv-1e: /mar-kompresor/tuv-1e.svg
+        tuv-2a: /mar-kompresor/tuv-2a.svg
+        tuv-2b: /mar-kompresor/tuv-2b.svg
+        tuv-2c: /mar-kompresor/tuv-2c.svg
+        tuv-2d: /mar-kompresor/tuv-2d.svg
+        tuv-2e: /mar-kompresor/tuv-2e.svg
+        tuv-3a: /mar-kompresor/tuv-3a.svg
+        tuv-3b: /mar-kompresor/tuv-3b.svg
+        tuv-3c: /mar-kompresor/tuv-3c.svg
+        tuv-3d: /mar-kompresor/tuv-3d.svg
+        tuv-3e: /mar-kompresor/tuv-3e.svg
+      style:
+        top: 63.6%
+        left: 20.9%
+        width: 7.7%
+    - type: state-label
+      entity: sensor.acond_30010_t_act_air
+      tap_action:
+        action: more-info
+      style:
+        top: 30.9%
+        left: 31.7%
+        font-size: 12px
+        font-weight: '700'
+        color: '#101418'
+        text-shadow: '0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff'
+        white-space: nowrap
+    - type: state-label
+      entity: sensor.acond_30002_t_act_indoor1
+      tap_action:
+        action: more-info
+      style:
+        top: 30.9%
+        left: 43.7%
+        font-size: 12px
+        font-weight: '700'
+        color: '#101418'
+        text-shadow: '0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff'
+        white-space: nowrap
+    - type: state-label
+      entity: number.acond_40001_t_set_indoor1
+      tap_action:
+        action: more-info
+      style:
+        top: 33.7%
+        left: 43.7%
+        font-size: 9px
+        font-weight: '600'
+        color: '#5a6068'
+        text-shadow: '0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff'
+        white-space: nowrap
+      prefix: (
+      suffix: )
+    - type: state-label
+      entity: sensor.acond_30027_aep
+      tap_action:
+        action: more-info
+      style:
+        top: 31.7%
+        left: 8.3%
+        font-size: 12px
+        font-weight: '700'
+        color: '#101418'
+        text-shadow: '0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff'
+        white-space: nowrap
+    - type: state-label
+      entity: sensor.acond_30028_ahp
+      tap_action:
+        action: more-info
+      style:
+        top: 38.9%
+        left: 8.3%
+        font-size: 12px
+        font-weight: '700'
+        color: '#101418'
+        text-shadow: '0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff'
+        white-space: nowrap
+    - type: state-label
+      entity: sensor.acond_30029_cop
+      tap_action:
+        action: more-info
+      style:
+        top: 46.0%
+        left: 8.3%
+        font-size: 12px
+        font-weight: '700'
+        color: '#101418'
+        text-shadow: '0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff'
+        white-space: nowrap
+    - type: state-label
+      entity: sensor.acond_30018_t_act_water_outlet
+      tap_action:
+        action: more-info
+      style:
+        top: 51.4%
+        left: 24.6%
+        font-size: 12px
+        font-weight: '700'
+        color: '#101418'
+        text-shadow: '0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff'
+        white-space: nowrap
+    - type: state-label
+      entity: sensor.acond_30024_comp_rpm_actual
+      tap_action:
+        action: more-info
+      style:
+        top: 61.7%
+        left: 28.8%
+        font-size: 12px
+        font-weight: '700'
+        color: '#101418'
+        text-shadow: '0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff'
+        white-space: nowrap
+    - type: state-label
+      entity: sensor.acond_30009_t_act_water_back
+      tap_action:
+        action: more-info
+      style:
+        top: 67.1%
+        left: 30.0%
+        font-size: 12px
+        font-weight: '700'
+        color: '#101418'
+        text-shadow: '0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff'
+        white-space: nowrap
+    - type: state-label
+      entity: sensor.acond_30008_t_set_water_back
+      tap_action:
+        action: more-info
+      style:
+        top: 70.3%
+        left: 30.0%
+        font-size: 9px
+        font-weight: '600'
+        color: '#5a6068'
+        text-shadow: '0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff'
+        white-space: nowrap
+      prefix: (
+      suffix: )
+    - type: state-label
+      entity: sensor.acond_30006_t_act_tuv
+      tap_action:
+        action: more-info
+      style:
+        top: 60.3%
+        left: 48.5%
+        font-size: 12px
+        font-weight: '700'
+        color: '#ffffff'
+        text-shadow: '0 0 3px #16324f, 0 0 3px #16324f, 0 0 4px #16324f'
+        white-space: nowrap
+    - type: state-label
+      entity: sensor.acond_30005_t_set_tuv
+      tap_action:
+        action: more-info
+      style:
+        top: 63.1%
+        left: 48.5%
+        font-size: 9px
+        font-weight: '600'
+        color: '#dfe8f5'
+        text-shadow: '0 0 3px #16324f, 0 0 3px #16324f, 0 0 4px #16324f'
+        white-space: nowrap
+      prefix: (
+      suffix: )
+    - type: conditional
+      conditions:
+      - entity: binary_sensor.mar_ma_fve
+        state: 'on'
+      elements:
+      - type: state-label
+        entity: sensor.today_s_pv_generation
+        tap_action:
+          action: more-info
+        style:
+          top: 14.3%
+          left: 88.3%
+          font-size: 12px
+          font-weight: '700'
+          color: '#101418'
+          text-shadow: '0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff'
+          white-space: nowrap
+    - type: conditional
+      conditions:
+      - entity: binary_sensor.mar_ma_fve
+        state: 'on'
+      elements:
+      - type: state-label
+        entity: sensor.active_power
+        tap_action:
+          action: more-info
+        style:
+          top: 10.6%
+          left: 55.0%
+          font-size: 12px
+          font-weight: '700'
+          color: '#101418'
+          text-shadow: '0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff'
+          white-space: nowrap
+    - type: conditional
+      conditions:
+      - entity: binary_sensor.mar_ma_fve
+        state: 'on'
+      elements:
+      - type: state-label
+        entity: sensor.pv_power
+        tap_action:
+          action: more-info
+        style:
+          top: 18.1%
+          left: 46.7%
+          font-size: 12px
+          font-weight: '700'
+          color: '#101418'
+          text-shadow: '0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff'
+          white-space: nowrap
+    - type: conditional
+      conditions:
+      - entity: binary_sensor.mar_ma_fve
+        state: 'on'
+      elements:
+      - type: state-label
+        entity: sensor.battery_power
+        tap_action:
+          action: more-info
+        style:
+          top: 18.1%
+          left: 65.0%
+          font-size: 12px
+          font-weight: '700'
+          color: '#101418'
+          text-shadow: '0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff'
+          white-space: nowrap
+    - type: conditional
+      conditions:
+      - entity: binary_sensor.mar_ma_fve
+        state: 'on'
+      elements:
+      - type: state-label
+        entity: sensor.house_consumption
+        tap_action:
+          action: more-info
+        style:
+          top: 27.1%
+          left: 55.0%
+          font-size: 12px
+          font-weight: '700'
+          color: '#101418'
+          text-shadow: '0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff'
+          white-space: nowrap
+    - type: conditional
+      conditions:
+      - entity: binary_sensor.mar_ma_fve
+        state: 'on'
+      elements:
+      - type: state-label
+        entity: sensor.mar_fve_baterie
+        tap_action:
+          action: more-info
+        style:
+          top: 18.1%
+          left: 79.8%
+          font-size: 12px
+          font-weight: '700'
+          color: '#101418'
+          text-shadow: '0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff'
+          white-space: nowrap

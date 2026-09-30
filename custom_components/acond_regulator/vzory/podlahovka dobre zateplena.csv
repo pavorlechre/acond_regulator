@@ -1,0 +1,14 @@
+# MaR vzor · schema 1 · VÝCHOZÍ BOD, ne doporučení
+# Podlahové vytápění, dobře zateplený dům. Odsud začni a doluj.
+# Opřeno o ověřenou instalaci (offset 28,0 / strmost -0,16 / koeficient 1),
+# ale posunuto o půl stupně DOLŮ: nízká křivka je nepohodlí, které do dne
+# poznáš a dorovnáš, vysoká tiše platí peníze měsíce.
+sekce;klic;hodnota
+ekviterma;bod_m15;30.0
+ekviterma;bod_m5;28.5
+ekviterma;bod_0;27.5
+ekviterma;bod_p5;26.5
+ekviterma;bod_p15;25.0
+ekviterma;koeficient_korekce;1
+ekviterma;hodiny_minulost;24
+ekviterma;hodiny_predpoved;12

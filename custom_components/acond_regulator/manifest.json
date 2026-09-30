@@ -1,0 +1,18 @@
+{
+  "domain": "acond_regulator",
+  "name": "Acond Regulator (MaR)",
+  "version": "0.17.5",
+  "documentation": "https://github.com/pavorlechre/acond_regulator",
+  "issue_tracker": "https://github.com/pavorlechre/acond_regulator/issues",
+  "codeowners": [
+    "@pavorlechre"
+  ],
+  "config_flow": true,
+  "integration_type": "service",
+  "iot_class": "local_polling",
+  "dependencies": [],
+  "requirements": [],
+  "after_dependencies": [
+    "acond"
+  ]
+}

@@ -1,0 +1,6 @@
+DejaVuSans.ttf — DejaVu Fonts
+Licence: Bitstream Vera Fonts License + Arev Fonts License (permisivní, volně redistribuovatelné).
+Zdroj a plné znění: https://dejavu-fonts.github.io/License.html
+Přibaleno kvůli vykreslení české diakritiky a znaku → v grafu ekvitermní křivky
+a v tabulce statistiky. Tučný řez se ZÁMĚRNĚ nepřibaluje – 708 kB kvůli třem
+souhrnným řádkům se nevyplatí, zvýraznění dělá podklad a barva textu.

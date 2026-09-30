@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1200 700" width="1200" height="700">
+<path id="t_sh" d="M744 364 L784 364 L784 520 L880 520" fill="none" stroke="none"/>
+<circle r="6" fill="#8f2216" opacity="0.92"><animateMotion dur="8.59s" repeatCount="indefinite" begin="-0.00s"><mpath href="#t_sh"/></animateMotion></circle>
+<circle r="6" fill="#8f2216" opacity="0.92"><animateMotion dur="8.59s" repeatCount="indefinite" begin="-2.86s"><mpath href="#t_sh"/></animateMotion></circle>
+<circle r="6" fill="#8f2216" opacity="0.92"><animateMotion dur="8.59s" repeatCount="indefinite" begin="-5.73s"><mpath href="#t_sh"/></animateMotion></circle>
+<path id="t_sc" d="M1100 520 L1130 520 L1130 600 L702 600 L702 556" fill="none" stroke="none"/>
+<circle r="6" fill="#123f7d" opacity="0.92"><animateMotion dur="17.12s" repeatCount="indefinite" begin="-0.00s"><mpath href="#t_sc"/></animateMotion></circle>
+<circle r="6" fill="#123f7d" opacity="0.92"><animateMotion dur="17.12s" repeatCount="indefinite" begin="-5.71s"><mpath href="#t_sc"/></animateMotion></circle>
+<circle r="6" fill="#123f7d" opacity="0.92"><animateMotion dur="17.12s" repeatCount="indefinite" begin="-11.41s"><mpath href="#t_sc"/></animateMotion></circle>
+</svg>

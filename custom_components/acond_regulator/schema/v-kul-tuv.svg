@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1200 700" width="1200" height="700">
+<path id="t_th" d="M251 403 L251 296 L582 296 L582 364" fill="none" stroke="none"/>
+<circle r="6" fill="#8f2216" opacity="0.92"><animateMotion dur="14.88s" repeatCount="indefinite" begin="-0.00s"><mpath href="#t_th"/></animateMotion></circle>
+<circle r="6" fill="#8f2216" opacity="0.92"><animateMotion dur="14.88s" repeatCount="indefinite" begin="-7.44s"><mpath href="#t_th"/></animateMotion></circle>
+<path id="t_tc" d="M582 515 L582 600 L486 600 L486 505 L304 505" fill="none" stroke="none"/>
+<circle r="6" fill="#123f7d" opacity="0.92"><animateMotion dur="13.47s" repeatCount="indefinite" begin="-0.00s"><mpath href="#t_tc"/></animateMotion></circle>
+<circle r="6" fill="#123f7d" opacity="0.92"><animateMotion dur="13.47s" repeatCount="indefinite" begin="-4.49s"><mpath href="#t_tc"/></animateMotion></circle>
+<circle r="6" fill="#123f7d" opacity="0.92"><animateMotion dur="13.47s" repeatCount="indefinite" begin="-8.98s"><mpath href="#t_tc"/></animateMotion></circle>
+</svg>

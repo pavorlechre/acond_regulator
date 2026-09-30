@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 700" width="1200" height="700">
+  <g>
+    <rect x="45" y="586" width="124" height="38" rx="9" ry="9"
+          fill="#e3e6ea" stroke="#b6bcc4" stroke-width="2"/>
+    <text x="107" y="612.2" text-anchor="middle"
+          font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700"
+          fill="#3b424a">Topit</text>
+  </g>
+  <g>
+    <rect x="179" y="586" width="124" height="38" rx="9" ry="9"
+          fill="#e3e6ea" stroke="#b6bcc4" stroke-width="2"/>
+    <text x="241" y="612.2" text-anchor="middle"
+          font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700"
+          fill="#3b424a">Netopit</text>
+  </g>
+  <g>
+    <rect x="20" y="648" width="88" height="36" rx="9" ry="9"
+          fill="#e3e6ea" stroke="#b6bcc4" stroke-width="2"/>
+    <text x="64" y="672.12" text-anchor="middle"
+          font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="700"
+          fill="#3b424a">Ekviterma</text>
+  </g>
+  <g>
+    <rect x="118" y="648" width="88" height="36" rx="9" ry="9"
+          fill="#e3e6ea" stroke="#b6bcc4" stroke-width="2"/>
+    <text x="162" y="672.12" text-anchor="middle"
+          font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="700"
+          fill="#3b424a">Stálý</text>
+  </g>
+  <g>
+    <rect x="216" y="648" width="88" height="36" rx="9" ry="9"
+          fill="#e3e6ea" stroke="#b6bcc4" stroke-width="2"/>
+    <text x="260" y="672.12" text-anchor="middle"
+          font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="700"
+          fill="#3b424a">Minimum</text>
+  </g>
+  <g>
+    <rect x="314" y="648" width="88" height="36" rx="9" ry="9"
+          fill="#e3e6ea" stroke="#b6bcc4" stroke-width="2"/>
+    <text x="358" y="672.12" text-anchor="middle"
+          font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="700"
+          fill="#3b424a">BOOST</text>
+  </g>
+  <g>
+    <rect x="412" y="648" width="88" height="36" rx="9" ry="9"
+          fill="#e3e6ea" stroke="#b6bcc4" stroke-width="2"/>
+    <text x="456" y="672.12" text-anchor="middle"
+          font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="700"
+          fill="#3b424a">Bez MaR</text>
+  </g>
+  <g>
+    <rect x="605" y="648" width="88" height="36" rx="9" ry="9"
+          fill="#e3e6ea" stroke="#b6bcc4" stroke-width="2"/>
+    <text x="649" y="672.12" text-anchor="middle"
+          font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="700"
+          fill="#3b424a">Nastavení</text>
+  </g>
+  <g>
+    <rect x="798" y="648" width="88" height="36" rx="9" ry="9"
+          fill="#e3e6ea" stroke="#b6bcc4" stroke-width="2"/>
+    <text x="842" y="672.12" text-anchor="middle"
+          font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="700"
+          fill="#3b424a">Zebra</text>
+  </g>
+  <g>
+    <rect x="896" y="648" width="88" height="36" rx="9" ry="9"
+          fill="#e3e6ea" stroke="#b6bcc4" stroke-width="2"/>
+    <text x="940" y="672.12" text-anchor="middle"
+          font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="700"
+          fill="#3b424a">Den/noc</text>
+  </g>
+  <g>
+    <rect x="994" y="648" width="88" height="36" rx="9" ry="9"
+          fill="#e3e6ea" stroke="#b6bcc4" stroke-width="2"/>
+    <text x="1038" y="672.12" text-anchor="middle"
+          font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="700"
+          fill="#3b424a">Okna ±°C</text>
+  </g>
+  <g>
+    <rect x="1092" y="648" width="88" height="36" rx="9" ry="9"
+          fill="#e3e6ea" stroke="#b6bcc4" stroke-width="2"/>
+    <text x="1136" y="672.12" text-anchor="middle"
+          font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="700"
+          fill="#3b424a">Dovolená</text>
+  </g>
+  <g>
+    <rect x="950" y="12" width="110" height="36" rx="9" ry="9"
+          fill="#e3e6ea" stroke="#b6bcc4" stroke-width="2"/>
+    <text x="1005" y="36.12" text-anchor="middle"
+          font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="700"
+          fill="#3b424a">FVE TUV</text>
+  </g>
+  <g>
+    <rect x="1070" y="12" width="110" height="36" rx="9" ry="9"
+          fill="#e3e6ea" stroke="#b6bcc4" stroke-width="2"/>
+    <text x="1125" y="36.12" text-anchor="middle"
+          font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="700"
+          fill="#3b424a">FVE topení</text>
+  </g>
+</svg>

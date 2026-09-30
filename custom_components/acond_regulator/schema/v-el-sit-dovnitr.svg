@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1200 700" width="1200" height="700">
+<path id="t_esd" d="M138 44 L660 44 L660 95" fill="none" stroke="none"/>
+<circle r="5" fill="#a86a10" opacity="0.92"><animateMotion dur="16.85s" repeatCount="indefinite" begin="-0.00s"><mpath href="#t_esd"/></animateMotion></circle>
+<circle r="5" fill="#a86a10" opacity="0.92"><animateMotion dur="16.85s" repeatCount="indefinite" begin="-5.62s"><mpath href="#t_esd"/></animateMotion></circle>
+<circle r="5" fill="#a86a10" opacity="0.92"><animateMotion dur="16.85s" repeatCount="indefinite" begin="-11.24s"><mpath href="#t_esd"/></animateMotion></circle>
+</svg>

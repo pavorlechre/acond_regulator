@@ -1,0 +1,16 @@
+# MaR vzor · schema 1 · VÝCHOZÍ BOD, ne doporučení
+# POZOR: tenhle vzor je ČISTÝ VÝPOČET. Za podlahovými vzory stojí odzkoušené
+# domy, za tímhle ani jeden — ověřené instalace jsou obě podlahové. Ber to jako
+# hrubý odhad, který se musí doladit, ne jako nastavení.
+# Radiátor má proti podlaze větší spád (45/20 = 25 K vs. 30/20 = 10 K), proto
+# strmější křivka a vyšší koeficient korekce: na stejný přírůstek výkonu
+# potřebuje asi dvojnásobný zdvih vody.
+sekce;klic;hodnota
+ekviterma;bod_m15;38.0
+ekviterma;bod_m5;34.0
+ekviterma;bod_0;32.0
+ekviterma;bod_p5;29.5
+ekviterma;bod_p15;24.0
+ekviterma;koeficient_korekce;4
+ekviterma;hodiny_minulost;24
+ekviterma;hodiny_predpoved;12

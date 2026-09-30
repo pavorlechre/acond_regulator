@@ -1,0 +1,20 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Regulace (MaR)",
+        "description": "Zadej polohu pro předpověď počasí (klikni do mapy).",
+        "data": { "location": "Poloha" }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Poloha",
+        "description": "Přenastavení polohy pro předpověď.",
+        "data": { "location": "Poloha" }
+      }
+    }
+  }
+}
