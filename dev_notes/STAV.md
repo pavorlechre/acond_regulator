@@ -4,7 +4,7 @@
 předávky (`*_predavka.md`). Repo je veřejné: **žádné IP adresy, ID Google tabulek
 ani osobní údaje.**
 
-Poslední aktualizace: 2026-09-30 · verze v `dev`: 0.17.6b1 (0.17.5 + nová příručka)
+Poslední aktualizace: 2026-09-30 · verze v `dev`: 0.18.0b1 (dashboard pro skládání s Acond 0.3.0)
 
 ---
 
@@ -24,8 +24,10 @@ Poslední aktualizace: 2026-09-30 · verze v `dev`: 0.17.6b1 (0.17.5 + nová př
 - 0.17.5 nasazená a ověřená na železe (kód beze změny přenesen ze zipu).
 - **Schéma je první okno**, Pavle ho používá místo tabulek entit. Cache-buster `?v=0172`
   (při změně SVG ručně zvednout).
-- Pracovní dashboard `dev_notes/pokus2.yaml` — **jen vzor**, k uživatelům se nedostane.
-  Pavle i Honza ho mají zatím nasazený v HA.
+- **Dashboard MaR:** jediný zdroj `dashboard_src/mar_dashboard.yaml` (převzatý z `pokus2`).
+  `python3 dashboard_src/gen_views.py` z něj vygeneruje `dashboard/views.yaml` a
+  `dashboard/pohled_schema.yaml` — ty se ručně neupravují. Změny dashboardu = změna zdroje.
+- `pokus2` v HA (Pavle, Honza) je zmrazený; ruší se po releasu Acond 0.3.0 + MaR 0.18.0.
 
 ## Zásady (neměnit bez výslovné domluvy)
 
@@ -43,11 +45,10 @@ Poslední aktualizace: 2026-09-30 · verze v `dev`: 0.17.6b1 (0.17.5 + nová př
 
 1. **Přechod z `pokus2` na skládaný dashboard Acond** (cíl: Acond 3 okna + 3 okna MaR,
    Schéma nahoře v okně Přehled; `pokus2` se pak ruší).
-   - `views.yaml` srovnat s `pokus2`; přepsat 23 odkazů `/dashboard-pokus2/…` na cesty dashboardu Acond.
-   - Nový soubor kontraktu pro kartu Schématu v Přehledu (pracovní název `dashboard/prehled_top.yaml`).
-   - Generátor v Acond repu — zpětně kompatibilní se starším MaR.
+   - HOTOVO v `dev` (čeká na test na železe): Acond 0.3.0b1 — lišta Pohled/Entity/Servis
+     + podokna, okno MaR s odkazem bez MaR, vsuvka Schématu do Pohledu (slot `pohled_stav`);
+     MaR 0.18.0b1 — `views.yaml` a `pohled_schema.yaml` z generátoru.
    - Honza přejde až s releasem obou integrací; do té doby `pokus2` nerušit.
-   - Otázky pro Pavla: která 3 okna Acondu zůstanou, adresa dashboardu Acond, typ okna Přehled.
 2. **Příručka:** zbývá 8× `XXX` k doplnění. FVE topení — grafy až v zimě (Honza dostal instrukce).
 3. Chlazení: kuličky nemění barvu — neřešeno (chlazení se jen měří).
 Body 4–6 jsou ze starších poznámek — ověřit, jestli už nejsou hotové:

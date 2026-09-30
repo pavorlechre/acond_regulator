@@ -1,0 +1,1055 @@
+# VYGENEROVÁNO z dashboard_src/mar_dashboard.yaml skriptem
+# dashboard_src/gen_views.py – NEUPRAVOVAT RUČNĚ, změnit zdroj a přegenerovat.
+- type: grid
+  column_span: 4
+  cards:
+  - type: picture-elements
+    image: /mar-schema/v-prazdno.svg?v=0172
+    elements:
+    - type: image
+      entity: binary_sensor.mar_ma_fve
+      image: /mar-schema/v-prazdno.svg?v=0172
+      state_image:
+        'on': /mar-schema/podklad.svg?v=0172
+        'off': /mar-schema/podklad-bez-fve.svg?v=0172
+      style:
+        top: 50%
+        left: 50%
+        width: 100%
+    - type: conditional
+      conditions:
+      - entity: binary_sensor.acond_30045_hp_comp_bit_2
+        state: 'on'
+      - entity: binary_sensor.acond_30007_tc_status_bit_3
+        state: 'off'
+      elements:
+      - type: image
+        entity: sensor.mar_schema_smer
+        image: /mar-schema/v-kul-primar.svg?v=0172
+        state_image:
+          normal: /mar-schema/v-kul-primar.svg?v=0172
+          odmraz: /mar-schema/v-kul-primar-zpetne.svg?v=0172
+          chlazeni: /mar-schema/v-kul-primar-zpetne.svg?v=0172
+        style:
+          top: 50%
+          left: 50%
+          width: 100%
+    - type: conditional
+      conditions:
+      - entity: binary_sensor.acond_30045_hp_comp_bit_2
+        state: 'on'
+      - entity: binary_sensor.acond_30007_tc_status_bit_3
+        state: 'on'
+      elements:
+      - type: image
+        entity: sensor.mar_schema_smer
+        image: /mar-schema/v-kul-tuv.svg?v=0172
+        state_image:
+          normal: /mar-schema/v-kul-tuv.svg?v=0172
+          odmraz: /mar-schema/v-kul-tuv-zpetne.svg?v=0172
+          chlazeni: /mar-schema/v-kul-tuv-zpetne.svg?v=0172
+        style:
+          top: 50%
+          left: 50%
+          width: 100%
+    - type: conditional
+      conditions:
+      - entity: select.mar_schema_sekundar
+        state: Podle čerpadla
+      - entity: binary_sensor.acond_30007_tc_status_bit_4
+        state: 'on'
+      elements:
+      - type: image
+        entity: sensor.mar_schema_smer
+        image: /mar-schema/v-kul-sekundar.svg?v=0172
+        state_image:
+          normal: /mar-schema/v-kul-sekundar.svg?v=0172
+          odmraz: /mar-schema/v-kul-sekundar.svg?v=0172
+          chlazeni: /mar-schema/v-kul-sekundar-zpetne.svg?v=0172
+        style:
+          top: 50%
+          left: 50%
+          width: 100%
+    - type: conditional
+      conditions:
+      - entity: select.mar_schema_sekundar
+        state: Stále
+      elements:
+      - type: image
+        entity: sensor.mar_schema_smer
+        image: /mar-schema/v-kul-sekundar.svg?v=0172
+        state_image:
+          normal: /mar-schema/v-kul-sekundar.svg?v=0172
+          odmraz: /mar-schema/v-kul-sekundar.svg?v=0172
+          chlazeni: /mar-schema/v-kul-sekundar-zpetne.svg?v=0172
+        style:
+          top: 50%
+          left: 50%
+          width: 100%
+    - type: conditional
+      conditions:
+      - entity: select.mar_schema_sekundar
+        state: Podle primáru
+      - entity: binary_sensor.acond_30045_hp_comp_bit_2
+        state: 'on'
+      elements:
+      - type: image
+        entity: sensor.mar_schema_smer
+        image: /mar-schema/v-kul-sekundar.svg?v=0172
+        state_image:
+          normal: /mar-schema/v-kul-sekundar.svg?v=0172
+          odmraz: /mar-schema/v-kul-sekundar.svg?v=0172
+          chlazeni: /mar-schema/v-kul-sekundar-zpetne.svg?v=0172
+        style:
+          top: 50%
+          left: 50%
+          width: 100%
+    - type: conditional
+      conditions:
+      - entity: binary_sensor.mar_ma_fve
+        state: 'on'
+      - condition: numeric_state
+        entity: sensor.pv_power
+        above: 10
+      elements:
+      - type: image
+        image: /mar-schema/v-el-panely.svg?v=0172
+        style:
+          top: 50%
+          left: 50%
+          width: 100%
+    - type: conditional
+      conditions:
+      - entity: binary_sensor.mar_ma_fve
+        state: 'on'
+      - condition: numeric_state
+        entity: sensor.house_consumption
+        above: 10
+      elements:
+      - type: image
+        image: /mar-schema/v-el-dum.svg?v=0172
+        style:
+          top: 50%
+          left: 50%
+          width: 100%
+    - type: conditional
+      conditions:
+      - entity: binary_sensor.mar_ma_fve
+        state: 'on'
+      - condition: numeric_state
+        entity: sensor.active_power
+        above: 10
+      elements:
+      - type: image
+        image: /mar-schema/v-el-sit-ven.svg?v=0172
+        style:
+          top: 50%
+          left: 50%
+          width: 100%
+    - type: conditional
+      conditions:
+      - entity: binary_sensor.mar_ma_fve
+        state: 'on'
+      - condition: numeric_state
+        entity: sensor.active_power
+        below: -10
+      elements:
+      - type: image
+        image: /mar-schema/v-el-sit-dovnitr.svg?v=0172
+        style:
+          top: 50%
+          left: 50%
+          width: 100%
+    - type: conditional
+      conditions:
+      - entity: binary_sensor.mar_ma_fve
+        state: 'on'
+      - condition: numeric_state
+        entity: sensor.battery_power
+        above: 10
+      elements:
+      - type: image
+        image: /mar-schema/v-el-bat-vybij.svg?v=0172
+        style:
+          top: 50%
+          left: 50%
+          width: 100%
+    - type: conditional
+      conditions:
+      - entity: binary_sensor.mar_ma_fve
+        state: 'on'
+      - condition: numeric_state
+        entity: sensor.battery_power
+        below: -10
+      elements:
+      - type: image
+        image: /mar-schema/v-el-bat-nabij.svg?v=0172
+        style:
+          top: 50%
+          left: 50%
+          width: 100%
+    - type: image
+      entity: binary_sensor.acond_30045_hp_comp_bit_1
+      image: /mar-schema/v-prazdno.svg?v=0172
+      state_image:
+        'on': /mar-schema/v-vetrak-toci.svg?v=0172
+        'off': /mar-schema/v-vetrak-stoji.svg?v=0172
+      style:
+        top: 50%
+        left: 50%
+        width: 100%
+    - type: image
+      entity: binary_sensor.acond_30045_hp_comp_bit_2
+      image: /mar-schema/v-prazdno.svg?v=0172
+      state_image:
+        'on': /mar-schema/v-cerp1-toci.svg?v=0172
+        'off': /mar-schema/v-cerp1-stoji.svg?v=0172
+      style:
+        top: 50%
+        left: 50%
+        width: 100%
+    - type: conditional
+      conditions:
+      - entity: select.mar_schema_sekundar
+        state: Podle čerpadla
+      - entity: binary_sensor.acond_30007_tc_status_bit_4
+        state: 'off'
+      elements:
+      - type: image
+        image: /mar-schema/v-cerp2-stoji.svg?v=0172
+        style:
+          top: 50%
+          left: 50%
+          width: 100%
+    - type: conditional
+      conditions:
+      - entity: select.mar_schema_sekundar
+        state: Podle primáru
+      - entity: binary_sensor.acond_30045_hp_comp_bit_2
+        state: 'off'
+      elements:
+      - type: image
+        image: /mar-schema/v-cerp2-stoji.svg?v=0172
+        style:
+          top: 50%
+          left: 50%
+          width: 100%
+    - type: conditional
+      conditions:
+      - entity: select.mar_schema_sekundar
+        state: Podle čerpadla
+      - entity: binary_sensor.acond_30007_tc_status_bit_4
+        state: 'on'
+      elements:
+      - type: image
+        image: /mar-schema/v-cerp2-toci.svg?v=0172
+        style:
+          top: 50%
+          left: 50%
+          width: 100%
+    - type: conditional
+      conditions:
+      - entity: select.mar_schema_sekundar
+        state: Stále
+      elements:
+      - type: image
+        image: /mar-schema/v-cerp2-toci.svg?v=0172
+        style:
+          top: 50%
+          left: 50%
+          width: 100%
+    - type: conditional
+      conditions:
+      - entity: select.mar_schema_sekundar
+        state: Podle primáru
+      - entity: binary_sensor.acond_30045_hp_comp_bit_2
+        state: 'on'
+      elements:
+      - type: image
+        image: /mar-schema/v-cerp2-toci.svg?v=0172
+        style:
+          top: 50%
+          left: 50%
+          width: 100%
+    - type: image
+      entity: binary_sensor.acond_30007_tc_status_bit_3
+      image: /mar-schema/v-prazdno.svg?v=0172
+      state_image:
+        'on': /mar-schema/v-ventil-tuv.svg?v=0172
+        'off': /mar-schema/v-ventil-aku.svg?v=0172
+      style:
+        top: 50%
+        left: 50%
+        width: 100%
+    - type: image
+      entity: binary_sensor.acond_30007_tc_status_bit_9
+      image: /mar-schema/v-prazdno.svg?v=0172
+      state_image:
+        'on': /mar-schema/v-biv-topi.svg?v=0172
+        'off': /mar-schema/v-biv-klid.svg?v=0172
+      style:
+        top: 50%
+        left: 50%
+        width: 100%
+    - type: image
+      entity: sensor.mar_kompresor_vizual
+      image: /mar-schema/v-prazdno.svg?v=0172
+      state_image:
+        chlazeni: /mar-kompresor/chlazeni.svg
+        klid-aut-l: /mar-kompresor/klid-aut-l.svg
+        klid-aut-z: /mar-kompresor/klid-aut-z.svg
+        klid-biv-l: /mar-kompresor/klid-biv-l.svg
+        klid-biv-z: /mar-kompresor/klid-biv-z.svg
+        klid-chl-z: /mar-kompresor/klid-chl-z.svg
+        klid-porucha: /mar-kompresor/klid-porucha.svg
+        klid-tc-l: /mar-kompresor/klid-tc-l.svg
+        klid-tc-z: /mar-kompresor/klid-tc-z.svg
+        klid-vyp-l: /mar-kompresor/klid-vyp-l.svg
+        klid-vyp-z: /mar-kompresor/klid-vyp-z.svg
+        odmrazovani: /mar-kompresor/odmrazovani.svg
+        topeni-1a: /mar-kompresor/topeni-1a.svg
+        topeni-1b: /mar-kompresor/topeni-1b.svg
+        topeni-1c: /mar-kompresor/topeni-1c.svg
+        topeni-1d: /mar-kompresor/topeni-1d.svg
+        topeni-1e: /mar-kompresor/topeni-1e.svg
+        topeni-2a: /mar-kompresor/topeni-2a.svg
+        topeni-2b: /mar-kompresor/topeni-2b.svg
+        topeni-2c: /mar-kompresor/topeni-2c.svg
+        topeni-2d: /mar-kompresor/topeni-2d.svg
+        topeni-2e: /mar-kompresor/topeni-2e.svg
+        topeni-3a: /mar-kompresor/topeni-3a.svg
+        topeni-3b: /mar-kompresor/topeni-3b.svg
+        topeni-3c: /mar-kompresor/topeni-3c.svg
+        topeni-3d: /mar-kompresor/topeni-3d.svg
+        topeni-3e: /mar-kompresor/topeni-3e.svg
+        tuv-1a: /mar-kompresor/tuv-1a.svg
+        tuv-1b: /mar-kompresor/tuv-1b.svg
+        tuv-1c: /mar-kompresor/tuv-1c.svg
+        tuv-1d: /mar-kompresor/tuv-1d.svg
+        tuv-1e: /mar-kompresor/tuv-1e.svg
+        tuv-2a: /mar-kompresor/tuv-2a.svg
+        tuv-2b: /mar-kompresor/tuv-2b.svg
+        tuv-2c: /mar-kompresor/tuv-2c.svg
+        tuv-2d: /mar-kompresor/tuv-2d.svg
+        tuv-2e: /mar-kompresor/tuv-2e.svg
+        tuv-3a: /mar-kompresor/tuv-3a.svg
+        tuv-3b: /mar-kompresor/tuv-3b.svg
+        tuv-3c: /mar-kompresor/tuv-3c.svg
+        tuv-3d: /mar-kompresor/tuv-3d.svg
+        tuv-3e: /mar-kompresor/tuv-3e.svg
+      style:
+        top: 63.6%
+        left: 20.9%
+        width: 7.7%
+    - type: state-label
+      entity: sensor.acond_30010_t_act_air
+      tap_action:
+        action: more-info
+      style:
+        top: 36.6%
+        left: 31.7%
+        font-size: 11px
+        font-weight: '700'
+        color: '#101418'
+        text-shadow: '0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff'
+        white-space: nowrap
+    - type: state-label
+      entity: sensor.acond_30002_t_act_indoor1
+      tap_action:
+        action: more-info
+      style:
+        top: 36.6%
+        left: 43.7%
+        font-size: 11px
+        font-weight: '700'
+        color: '#101418'
+        text-shadow: '0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff'
+        white-space: nowrap
+    - type: state-label
+      entity: number.acond_40001_t_set_indoor1
+      tap_action:
+        action: more-info
+      style:
+        top: 36.6%
+        left: 43.7%
+        font-size: 9px
+        font-weight: '600'
+        color: '#5a6068'
+        text-shadow: '0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff'
+        white-space: nowrap
+        transform: translate(-50%, calc(-50% + 13px))
+      prefix: (
+      suffix: )
+    - type: state-label
+      entity: sensor.acond_30027_aep
+      tap_action:
+        action: more-info
+      style:
+        top: 31.7%
+        left: 8.3%
+        font-size: 11px
+        font-weight: '700'
+        color: '#101418'
+        text-shadow: '0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff'
+        white-space: nowrap
+    - type: state-label
+      entity: sensor.acond_30028_ahp
+      tap_action:
+        action: more-info
+      style:
+        top: 38.9%
+        left: 8.3%
+        font-size: 11px
+        font-weight: '700'
+        color: '#101418'
+        text-shadow: '0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff'
+        white-space: nowrap
+    - type: state-label
+      entity: sensor.acond_30029_cop
+      tap_action:
+        action: more-info
+      style:
+        top: 46.0%
+        left: 8.3%
+        font-size: 11px
+        font-weight: '700'
+        color: '#101418'
+        text-shadow: '0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff'
+        white-space: nowrap
+    - type: state-label
+      entity: sensor.mar_stat_dnes
+      attribute: el_celkem
+      tap_action:
+        action: more-info
+      style:
+        top: 50.0%
+        left: 8.3%
+        font-size: 11px
+        font-weight: '700'
+        color: '#101418'
+        text-shadow: '0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff'
+        white-space: nowrap
+      prefix: 'Dnes '
+      suffix: ' kWh'
+    - type: state-label
+      entity: sensor.aku_goodwe_import_dnes
+      tap_action:
+        action: more-info
+      style:
+        top: 9.1%
+        left: 23.3%
+        font-size: 11px
+        font-weight: '700'
+        color: '#101418'
+        text-shadow: '0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff'
+        white-space: nowrap
+      prefix: 'Import '
+    - type: state-label
+      entity: sensor.aku_goodwe_export_dnes
+      tap_action:
+        action: more-info
+      style:
+        top: 11.7%
+        left: 23.3%
+        font-size: 11px
+        font-weight: '700'
+        color: '#101418'
+        text-shadow: '0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff'
+        white-space: nowrap
+      prefix: 'Export '
+    - type: state-label
+      entity: sensor.acond_30018_t_act_water_outlet
+      tap_action:
+        action: more-info
+      style:
+        top: 51.4%
+        left: 24.6%
+        font-size: 11px
+        font-weight: '700'
+        color: '#101418'
+        text-shadow: '0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff'
+        white-space: nowrap
+    - type: state-label
+      entity: sensor.acond_30024_comp_rpm_actual
+      tap_action:
+        action: more-info
+      style:
+        top: 57.5%
+        left: 31.0%
+        font-size: 11px
+        font-weight: '700'
+        color: '#101418'
+        text-shadow: '0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff'
+        white-space: nowrap
+    - type: state-label
+      entity: number.acond_40014_comp_capacity_max_set
+      tap_action:
+        action: more-info
+      style:
+        top: 57.5%
+        left: 31.0%
+        font-size: 9px
+        font-weight: '600'
+        color: '#5a6068'
+        text-shadow: '0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff'
+        white-space: nowrap
+        transform: translate(-50%, calc(-50% + 13px))
+      prefix: (
+      suffix: )
+    - type: state-label
+      entity: sensor.acond_30009_t_act_water_back
+      tap_action:
+        action: more-info
+      style:
+        top: 64.9%
+        left: 31.0%
+        font-size: 11px
+        font-weight: '700'
+        color: '#101418'
+        text-shadow: '0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff'
+        white-space: nowrap
+    - type: state-label
+      entity: sensor.acond_30008_t_set_water_back
+      tap_action:
+        action: more-info
+      style:
+        top: 64.9%
+        left: 31.0%
+        font-size: 9px
+        font-weight: '600'
+        color: '#5a6068'
+        text-shadow: '0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff'
+        white-space: nowrap
+        transform: translate(-50%, calc(-50% + 13px))
+      prefix: (
+      suffix: )
+    - type: state-label
+      entity: sensor.acond_30006_t_act_tuv
+      tap_action:
+        action: more-info
+      style:
+        top: 65.1%
+        left: 48.5%
+        font-size: 11px
+        font-weight: '700'
+        color: '#ffffff'
+        text-shadow: '0 0 3px #16324f, 0 0 3px #16324f, 0 0 4px #16324f'
+        white-space: nowrap
+    - type: state-label
+      entity: sensor.acond_30005_t_set_tuv
+      tap_action:
+        action: more-info
+      style:
+        top: 65.1%
+        left: 48.5%
+        font-size: 9px
+        font-weight: '600'
+        color: '#dfe8f5'
+        text-shadow: '0 0 3px #16324f, 0 0 3px #16324f, 0 0 4px #16324f'
+        white-space: nowrap
+        transform: translate(-50%, calc(-50% + 13px))
+      prefix: (
+      suffix: )
+    - type: conditional
+      conditions:
+      - entity: binary_sensor.mar_ma_fve
+        state: 'on'
+      elements:
+      - type: state-label
+        entity: sensor.today_s_pv_generation
+        tap_action:
+          action: more-info
+        style:
+          top: 32.0%
+          left: 23.7%
+          font-size: 11px
+          font-weight: '700'
+          color: '#101418'
+          text-shadow: '0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff'
+          white-space: nowrap
+    - type: conditional
+      conditions:
+      - entity: binary_sensor.mar_ma_fve
+        state: 'on'
+      elements:
+      - type: state-label
+        entity: sensor.active_power
+        tap_action:
+          action: more-info
+        style:
+          top: 10.6%
+          left: 55.0%
+          font-size: 11px
+          font-weight: '700'
+          color: '#101418'
+          text-shadow: '0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff'
+          white-space: nowrap
+    - type: conditional
+      conditions:
+      - entity: binary_sensor.mar_ma_fve
+        state: 'on'
+      elements:
+      - type: state-label
+        entity: sensor.pv_power
+        tap_action:
+          action: more-info
+        style:
+          top: 18.1%
+          left: 44.5%
+          font-size: 11px
+          font-weight: '700'
+          color: '#101418'
+          text-shadow: '0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff'
+          white-space: nowrap
+    - type: conditional
+      conditions:
+      - entity: binary_sensor.mar_ma_fve
+        state: 'on'
+      elements:
+      - type: state-label
+        entity: sensor.battery_power
+        tap_action:
+          action: more-info
+        style:
+          top: 18.1%
+          left: 65.0%
+          font-size: 11px
+          font-weight: '700'
+          color: '#101418'
+          text-shadow: '0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff'
+          white-space: nowrap
+    - type: conditional
+      conditions:
+      - entity: binary_sensor.mar_ma_fve
+        state: 'on'
+      elements:
+      - type: state-label
+        entity: sensor.house_consumption
+        tap_action:
+          action: more-info
+        style:
+          top: 27.1%
+          left: 55.0%
+          font-size: 11px
+          font-weight: '700'
+          color: '#101418'
+          text-shadow: '0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff'
+          white-space: nowrap
+    - type: conditional
+      conditions:
+      - entity: binary_sensor.mar_ma_fve
+        state: 'on'
+      elements:
+      - type: state-label
+        entity: sensor.mar_fve_baterie
+        tap_action:
+          action: more-info
+        style:
+          top: 18.1%
+          left: 79.8%
+          font-size: 11px
+          font-weight: '700'
+          color: '#101418'
+          text-shadow: '0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff'
+          white-space: nowrap
+    - type: image
+      entity: sensor.mar_stav
+      image: /mar-schema/v-prazdno.svg?v=0172
+      image_entity: image.mar_stav_regulace
+      tap_action:
+        action: more-info
+      style:
+        top: 39.0%
+        left: 82.5%
+        width: 32.5%
+    - type: image
+      image: /mar-schema/t-podklad.svg?v=0172
+      style:
+        top: 50%
+        left: 50%
+        width: 100%
+        pointer-events: none
+    - type: conditional
+      conditions:
+      - condition: state
+        entity: sensor.mar_stav
+        state:
+        - startuju
+      elements:
+      - type: image
+        image: /mar-schema/t-topit-on.svg?v=0172
+        style:
+          top: 50%
+          left: 50%
+          width: 100%
+          pointer-events: none
+    - type: conditional
+      conditions:
+      - condition: state
+        entity: sensor.mar_stav
+        state:
+        - vypinam
+      elements:
+      - type: image
+        image: /mar-schema/t-netopit-on.svg?v=0172
+        style:
+          top: 50%
+          left: 50%
+          width: 100%
+          pointer-events: none
+    - type: conditional
+      conditions:
+      - condition: state
+        entity: select.mar_strategie
+        state:
+        - Ekviterma
+      elements:
+      - type: image
+        image: /mar-schema/t-ekviterma-on.svg?v=0172
+        style:
+          top: 50%
+          left: 50%
+          width: 100%
+          pointer-events: none
+    - type: conditional
+      conditions:
+      - condition: state
+        entity: select.mar_strategie
+        state:
+        - Stálý výkon
+      elements:
+      - type: image
+        image: /mar-schema/t-staly-on.svg?v=0172
+        style:
+          top: 50%
+          left: 50%
+          width: 100%
+          pointer-events: none
+    - type: conditional
+      conditions:
+      - condition: state
+        entity: select.mar_strategie
+        state:
+        - Minimum
+      elements:
+      - type: image
+        image: /mar-schema/t-minimum-on.svg?v=0172
+        style:
+          top: 50%
+          left: 50%
+          width: 100%
+          pointer-events: none
+    - type: conditional
+      conditions:
+      - condition: state
+        entity: select.mar_strategie
+        state:
+        - BOOST
+      elements:
+      - type: image
+        image: /mar-schema/t-boost-on.svg?v=0172
+        style:
+          top: 50%
+          left: 50%
+          width: 100%
+          pointer-events: none
+    - type: conditional
+      conditions:
+      - condition: state
+        entity: select.mar_strategie
+        state:
+        - Bez MaR
+      elements:
+      - type: image
+        image: /mar-schema/t-bezmar-on.svg?v=0172
+        style:
+          top: 50%
+          left: 50%
+          width: 100%
+          pointer-events: none
+    - type: conditional
+      conditions:
+      - condition: state
+        entity: switch.mar_zebra
+        state:
+        - 'on'
+      elements:
+      - type: image
+        image: /mar-schema/t-zebra-on.svg?v=0172
+        style:
+          top: 50%
+          left: 50%
+          width: 100%
+          pointer-events: none
+    - type: conditional
+      conditions:
+      - condition: state
+        entity: switch.mar_dennoc
+        state:
+        - 'on'
+      elements:
+      - type: image
+        image: /mar-schema/t-dennoc-on.svg?v=0172
+        style:
+          top: 50%
+          left: 50%
+          width: 100%
+          pointer-events: none
+    - type: conditional
+      conditions:
+      - condition: state
+        entity: switch.mar_okna_teploty
+        state:
+        - 'on'
+      elements:
+      - type: image
+        image: /mar-schema/t-okna-on.svg?v=0172
+        style:
+          top: 50%
+          left: 50%
+          width: 100%
+          pointer-events: none
+    - type: conditional
+      conditions:
+      - condition: state
+        entity: switch.mar_dovolena
+        state:
+        - 'on'
+      elements:
+      - type: image
+        image: /mar-schema/t-dovolena-on.svg?v=0172
+        style:
+          top: 50%
+          left: 50%
+          width: 100%
+          pointer-events: none
+    - type: conditional
+      conditions:
+      - condition: state
+        entity: switch.mar_fve_tuv
+        state:
+        - 'on'
+      elements:
+      - type: image
+        image: /mar-schema/t-fvetuv-on.svg?v=0172
+        style:
+          top: 50%
+          left: 50%
+          width: 100%
+          pointer-events: none
+    - type: conditional
+      conditions:
+      - condition: state
+        entity: switch.mar_topeni
+        state:
+        - 'on'
+      elements:
+      - type: image
+        image: /mar-schema/t-fvetopeni-on.svg?v=0172
+        style:
+          top: 50%
+          left: 50%
+          width: 100%
+          pointer-events: none
+    - type: image
+      image: /mar-schema/t-klik-kamen.svg?v=0172
+      tap_action:
+        action: perform-action
+        perform_action: button.press
+        target:
+          entity_id: button.mar_zapnout_jiste
+        confirmation:
+          text: Opravdu spustit topení (Topit)?
+      style:
+        top: 86.429%
+        left: 8.917%
+        width: 10.333%
+        cursor: pointer
+    - type: image
+      image: /mar-schema/t-klik-kamen.svg?v=0172
+      tap_action:
+        action: perform-action
+        perform_action: button.press
+        target:
+          entity_id: button.mar_vypnout_setrne
+        confirmation:
+          text: Opravdu přejít do klidu (Netopit)?
+      style:
+        top: 86.429%
+        left: 20.083%
+        width: 10.333%
+        cursor: pointer
+    - type: image
+      image: /mar-schema/t-klik-rezim.svg?v=0172
+      tap_action:
+        action: perform-action
+        perform_action: select.select_option
+        target:
+          entity_id: select.mar_strategie
+        data:
+          option: Ekviterma
+        confirmation:
+          text: Přepnout regulaci na Ekvitermu?
+      style:
+        top: 95.143%
+        left: 5.333%
+        width: 7.333%
+        cursor: pointer
+    - type: image
+      image: /mar-schema/t-klik-rezim.svg?v=0172
+      tap_action:
+        action: perform-action
+        perform_action: select.select_option
+        target:
+          entity_id: select.mar_strategie
+        data:
+          option: Stálý výkon
+        confirmation:
+          text: Přepnout na Stálý výkon?
+      style:
+        top: 95.143%
+        left: 13.500%
+        width: 7.333%
+        cursor: pointer
+    - type: image
+      image: /mar-schema/t-klik-rezim.svg?v=0172
+      tap_action:
+        action: perform-action
+        perform_action: select.select_option
+        target:
+          entity_id: select.mar_strategie
+        data:
+          option: Minimum
+        confirmation:
+          text: Přepnout na Minimum?
+      style:
+        top: 95.143%
+        left: 21.667%
+        width: 7.333%
+        cursor: pointer
+    - type: image
+      image: /mar-schema/t-klik-rezim.svg?v=0172
+      tap_action:
+        action: perform-action
+        perform_action: select.select_option
+        target:
+          entity_id: select.mar_strategie
+        data:
+          option: BOOST
+        confirmation:
+          text: BOOST vypíná časové plány. Pokračovat?
+      style:
+        top: 95.143%
+        left: 29.833%
+        width: 7.333%
+        cursor: pointer
+    - type: image
+      image: /mar-schema/t-klik-rezim.svg?v=0172
+      tap_action:
+        action: perform-action
+        perform_action: select.select_option
+        target:
+          entity_id: select.mar_strategie
+        data:
+          option: Bez MaR
+        confirmation:
+          text: Bez MaR přestane zapisovat zpátečku. Pokračovat?
+      style:
+        top: 95.143%
+        left: 38.000%
+        width: 7.333%
+        cursor: pointer
+    - type: image
+      image: /mar-schema/t-klik-rezim.svg?v=0172
+      tap_action:
+        action: navigate
+        navigation_path: /acond-dashboard/mar_nastaveni
+      style:
+        top: 95.143%
+        left: 54.083%
+        width: 7.333%
+        cursor: pointer
+    - type: image
+      image: /mar-schema/t-klik-rezim.svg?v=0172
+      tap_action:
+        action: perform-action
+        perform_action: switch.toggle
+        target:
+          entity_id: switch.mar_zebra
+        confirmation:
+          text: Přepnout topení s pauzami (Zebra)?
+      style:
+        top: 95.143%
+        left: 70.167%
+        width: 7.333%
+        cursor: pointer
+    - type: image
+      image: /mar-schema/t-klik-rezim.svg?v=0172
+      tap_action:
+        action: perform-action
+        perform_action: switch.toggle
+        target:
+          entity_id: switch.mar_dennoc
+        confirmation:
+          text: Přepnout topení jen v oknech (Den/noc)?
+      style:
+        top: 95.143%
+        left: 78.333%
+        width: 7.333%
+        cursor: pointer
+    - type: image
+      image: /mar-schema/t-klik-rezim.svg?v=0172
+      tap_action:
+        action: perform-action
+        perform_action: switch.toggle
+        target:
+          entity_id: switch.mar_okna_teploty
+        confirmation:
+          text: Přepnout okna +/− teploty?
+      style:
+        top: 95.143%
+        left: 86.500%
+        width: 7.333%
+        cursor: pointer
+    - type: image
+      image: /mar-schema/t-klik-rezim.svg?v=0172
+      tap_action:
+        action: perform-action
+        perform_action: switch.toggle
+        target:
+          entity_id: switch.mar_dovolena
+        confirmation:
+          text: Přepnout režim Dovolená?
+      style:
+        top: 95.143%
+        left: 94.667%
+        width: 7.333%
+        cursor: pointer
+    - type: image
+      image: /mar-schema/t-klik-fve.svg?v=0172
+      tap_action:
+        action: perform-action
+        perform_action: switch.toggle
+        target:
+          entity_id: switch.mar_fve_tuv
+        confirmation:
+          text: Přepnout ohřev TUV z přebytku FVE?
+      style:
+        top: 4.286%
+        left: 83.750%
+        width: 9.167%
+        cursor: pointer
+    - type: image
+      image: /mar-schema/t-klik-fve.svg?v=0172
+      tap_action:
+        action: perform-action
+        perform_action: switch.toggle
+        target:
+          entity_id: switch.mar_topeni
+        confirmation:
+          text: Přepnout FVE topení, žrout přebytků?
+      style:
+        top: 4.286%
+        left: 93.750%
+        width: 9.167%
+        cursor: pointer
