@@ -4,7 +4,7 @@
 předávky (`*_predavka.md`). Repo je veřejné: **žádné IP adresy, ID Google tabulek
 ani osobní údaje.**
 
-Poslední aktualizace: 2026-09-30 · verze v `dev`: 0.17.5 (výchozí stav přenesený do repa)
+Poslední aktualizace: 2026-09-30 · verze v `dev`: 0.17.6b1 (0.17.5 + nová příručka)
 
 ---
 

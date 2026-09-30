@@ -6,6 +6,9 @@ verze podle [sémantického verzování](https://semver.org/lang/cs/).
 
 ## [Nevydáno]
 
+### Změněno
+- Příručka: nové oddíly ve Statistice (tabulka dnes/včera/7 dnů, co znamenají řádky, statistika po dnech), FVE TUV „Jak číst grafy“, další obrázky.
+
 ## [0.17.5] - 2026-09-30
 
 První verze v tomto repozitáři. Kód odpovídá instalaci ověřené na železe.

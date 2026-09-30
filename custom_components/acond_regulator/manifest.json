@@ -1,7 +1,7 @@
 {
   "domain": "acond_regulator",
   "name": "Acond Regulator (MaR)",
-  "version": "0.17.5",
+  "version": "0.17.6b1",
   "documentation": "https://github.com/pavorlechre/acond_regulator",
   "issue_tracker": "https://github.com/pavorlechre/acond_regulator/issues",
   "codeowners": [
