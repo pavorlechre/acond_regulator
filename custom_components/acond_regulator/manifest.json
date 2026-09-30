@@ -1,20 +1,20 @@
 {
   "domain": "acond_regulator",
   "name": "Acond Regulator (MaR)",
-  "version": "0.17.6b1",
-  "documentation": "https://github.com/pavorlechre/acond_regulator",
-  "issue_tracker": "https://github.com/pavorlechre/acond_regulator/issues",
+  "after_dependencies": [
+    "acond"
+  ],
   "codeowners": [
     "@pavorlechre"
   ],
   "config_flow": true,
-  "integration_type": "service",
-  "iot_class": "local_polling",
   "dependencies": [
     "http"
   ],
+  "documentation": "https://github.com/pavorlechre/acond_regulator",
+  "integration_type": "service",
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/pavorlechre/acond_regulator/issues",
   "requirements": [],
-  "after_dependencies": [
-    "acond"
-  ]
+  "version": "0.17.6b1"
 }
