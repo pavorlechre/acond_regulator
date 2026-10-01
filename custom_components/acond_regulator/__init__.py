@@ -71,8 +71,10 @@ async def _async_serve_manual(hass: HomeAssistant) -> None:
             [
                 # Holá složka by vrátila 403 (výpis adresářů je zakázaný),
                 # proto se navíc mapuje přímo soubor na adresu bez lomítka.
-                StaticPathConfig(MANUAL_URL, index, True),
-                StaticPathConfig(f"{MANUAL_URL}/index.html", index, True),
+                # Bez dlouhé mezipaměti: po aktualizaci MaR musí aplikace
+                # hned ukázat příručku k nainstalované verzi (jako u schématu).
+                StaticPathConfig(MANUAL_URL, index, False),
+                StaticPathConfig(f"{MANUAL_URL}/index.html", index, False),
             ]
         )
         hass.data.setdefault(DOMAIN, {})["_manual_served"] = True
