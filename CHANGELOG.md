@@ -7,12 +7,17 @@ verze podle [sémantického verzování](https://semver.org/lang/cs/).
 ## [Nevydáno]
 
 ### Přidáno
+- Ouška pod schématem: Schéma, Teploty, Energie, Ekviterma, Počasí, Stroj. Funkční je zatím Teploty, ostatní jsou ztlumená. Volba `select.mar_vrstva` se po 5 minutách sama vrátí na Schéma (je společná pro všechna zařízení).
+- Graf Teploty (`image.mar_teploty`) přes celé schéma: místnost proti cíli, požadovaná a skutečná zpátečka, ekviterma bez přídavku s pravou osou T ekv, přídavek na místnost, pásy TUV a odmrazování. 12 h z recorderu, kreslí se jen při otevřeném oušku, obnova po 5 minutách. Klepnutím na graf zpět na schéma.
 - Dashboard pro skládání s integrací Acond (od Acond 0.3.0): okna MaR odpovídají pracovnímu dashboardu `pokus2` (Režimy, FVE TUV, Statistika a jejich podokna včetně Profilů a Nastavení), adresy `/acond-dashboard/mar_…`.
 - Vsuvka `dashboard/pohled_schema.yaml`: Schéma soustavy nahoře v okně Pohled integrace Acond (tlačítka režimů Acondu zůstávají). Schéma je dál i jako samostatné podokno `/acond-dashboard/mar_schema`.
 - Oba soubory generuje `dashboard_src/gen_views.py` z jediného zdroje `dashboard_src/mar_dashboard.yaml`.
 
 ### Změněno
 - Manifest: `http` uveden v závislostech (používá se pro `/mar-schema/`). Chování beze změny.
+- Schéma v okně Pohled integrace Acond přes celou šířku (`grid_options: columns: full`).
+- Příručka se posílá bez dlouhé mezipaměti, aplikace po aktualizaci hned ukáže novou.
+- Generátor schématu zapisuje SVG vedle sebe (dřív do neexistující podsložky).
 - Nastavení: šipka zpět vrací tam, odkud jsi přišel (Schéma v okně Pohled nebo podokno Schéma), místo pevně na podokno Schéma.
 - Příručka: nové oddíly ve Statistice (tabulka dnes/včera/7 dnů, co znamenají řádky, statistika po dnech), FVE TUV „Jak číst grafy“, další obrázky.
 
