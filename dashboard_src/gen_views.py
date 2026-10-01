@@ -83,6 +83,10 @@ def main() -> int:
         "column_span": 4,
         "cards": copy.deepcopy(schema["cards"]),
     }]
+    # Oddíl přes více sloupců má uvnitř 12 × column_span dílků; karta bez
+    # grid_options si vezme jen 12, tedy jeden sloupec. „full“ = celá šířka.
+    for card in insert[0]["cards"]:
+        card["grid_options"] = {"columns": "full"}
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     _dump(OUT_DIR / "views.yaml", out_views)

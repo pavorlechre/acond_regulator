@@ -1053,3 +1053,5 @@
         left: 93.750%
         width: 9.167%
         cursor: pointer
+    grid_options:
+      columns: full
