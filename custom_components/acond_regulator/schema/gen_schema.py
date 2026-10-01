@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Generátor vizuálního schématu MaR — jeden soubor pro všech 39 SVG.
+"""Generátor vizuálního schématu MaR — jeden soubor pro všechna SVG.
 
     python3 gen_schema.py            přegeneruje všechno
     python3 gen_schema.py podklad    jen podklad.svg a podklad-bez-fve.svg
     python3 gen_schema.py vrstvy     jen pohyblivé vrstvy v-*.svg
     python3 gen_schema.py tlacitka   jen tlačítka t-*.svg
+    python3 gen_schema.py ouska      jen ouška pod schématem o-*.svg
     python3 gen_schema.py --overit   nic nezapíše, jen porovná se stavem na disku
     python3 gen_schema.py --souradnice   vypíše procenta tlačítek do dashboardu
 
@@ -27,7 +28,7 @@ from pathlib import Path
 
 # ── plátno a paleta ──────────────────────────────────────────────────────
 W, H = 1200, 700
-OUT = Path(__file__).resolve().parent / "schema"
+OUT = Path(__file__).resolve().parent   # SVG leží vedle generátoru (složka schema/)
 FONT = "Arial, Helvetica, sans-serif"
 
 TMAVA = "#2b3138"        # obrysy
@@ -476,6 +477,85 @@ def tlacitka() -> dict[str, str]:
 
 
 # ══════════════════════════════════════════════════════════════════════════
+#  ČÁST 4 — OUŠKA POD SCHÉMATEM
+# ══════════════════════════════════════════════════════════════════════════
+#
+# Samostatná karta těsně pod schématem (vlastní plátno 1200 × OUSKO_H), aby
+# se nemusely přepočítávat souřadnice vrstev schématu. Klepnutí přepíná
+# select.mar_vrstva; aktivní ouško zvýrazní vrstva o-<id>-on.svg.
+# Ouška, která ještě nemají obsah (PRIPRAVUJE_SE), jsou ztlumená a bez klikací
+# plochy v dashboardu.
+
+OUSKO_H = 64
+OUSKO_W, OUSKO_MEZERA, OUSKO_X0, OUSKO_Y = 180, 12, 18, 4
+
+# id, nápis, volba selectu, ikona (path v poli 24 × 24)
+OUSKA = [
+    ("schema",    "Schéma",    "Schéma",
+     "M4 5h6v5H4zM14 14h6v5h-6zM7 10v6.5h7M17 10V5"),
+    ("teploty",   "Teploty",   "Teploty",
+     "M3 17l5-6 4 3 7-8M3 21h18"),
+    ("energie",   "Energie",   "Energie",
+     "M13 2 4 14h7l-1 8 9-12h-7z"),
+    ("ekviterma", "Ekviterma", "Ekviterma",
+     "M3 5c5 3 11 8 18 14M10 11a2 2 0 1 0 4 0a2 2 0 1 0-4 0"),
+    ("pocasi",    "Počasí",    "Počasí",
+     "M9 5.5a3.5 3.5 0 1 0 0 7M7 19h10a3.5 3.5 0 0 0 0-7 5 5 0 0 0-9.4 1.6A3 3 0 0 0 7 19z"),
+    ("stroj",     "Stroj",     "Stroj",
+     "M12 9a3 3 0 1 0 0 6a3 3 0 1 0 0-6M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2"),
+]
+PRIPRAVUJE_SE = {"energie", "ekviterma", "pocasi", "stroj"}
+
+OUSKO_VYPLN, OUSKO_RAM, OUSKO_TEXT = "#eef1f4", "#b6bcc4", "#3b424a"
+OUSKO_AKT_VYPLN, OUSKO_AKT_RAM, OUSKO_AKT_TEXT = "#1b3a63", "#122a49", "#ffffff"
+
+
+def _ousko_x(i: int) -> int:
+    return OUSKO_X0 + i * (OUSKO_W + OUSKO_MEZERA)
+
+
+def _ousko(i, napis, ikona, aktivni=False, ztlumene=False) -> str:
+    x, y, w, h = _ousko_x(i), OUSKO_Y, OUSKO_W, OUSKO_H - OUSKO_Y - 6
+    vypln, ram, barva = ((OUSKO_AKT_VYPLN, OUSKO_AKT_RAM, OUSKO_AKT_TEXT) if aktivni
+                         else (OUSKO_VYPLN, OUSKO_RAM, OUSKO_TEXT))
+    r = 12
+    # ouško pořadače: rovná horní hrana (přiléhá ke schématu), zaoblený spodek
+    d = (f"M{x} {y} H{x + w} V{y + h - r} Q{x + w} {y + h} {x + w - r} {y + h} "
+         f"H{x + r} Q{x} {y + h} {x} {y + h - r} Z")
+    op = ' opacity="0.45"' if ztlumene else ""
+    ix, iy = x + 26, y + h / 2 - 12
+    return (f'  <g{op}>\n'
+            f'    <path d="{d}" fill="{vypln}" stroke="{ram}" stroke-width="2"/>\n'
+            f'    <path d="{ikona}" transform="translate({ix:g} {iy:g})" fill="none" '
+            f'stroke="{barva}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>\n'
+            f'    <text x="{x + 58}" y="{y + h / 2 + 7:g}" font-family="{FONT}" '
+            f'font-size="20" font-weight="700" fill="{barva}">{_esc(napis)}</text>\n'
+            f'  </g>')
+
+
+def _platno_ousek(telo: list[str]) -> str:
+    return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {OUSKO_H}" '
+            f'width="{W}" height="{OUSKO_H}">\n' + "".join(r + "\n" for r in telo) + "</svg>")
+
+
+def ouska() -> dict[str, str]:
+    o: dict[str, str] = {}
+    o["o-podklad"] = _platno_ousek([
+        _ousko(i, n, ik, ztlumene=_i in PRIPRAVUJE_SE)
+        for i, (_i, n, _v, ik) in enumerate(OUSKA)])
+    for i, (_i, n, _v, ik) in enumerate(OUSKA):
+        if _i in PRIPRAVUJE_SE:
+            continue
+        o[f"o-{_i}-on"] = _platno_ousek([_ousko(i, n, ik, aktivni=True)])
+    o["o-klik"] = (
+        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {OUSKO_W} {OUSKO_H}" '
+        f'width="{OUSKO_W}" height="{OUSKO_H}">\n'
+        f'  <rect width="{OUSKO_W}" height="{OUSKO_H}" fill="none" '
+        f'pointer-events="all"/>\n</svg>')
+    return o
+
+
+# ══════════════════════════════════════════════════════════════════════════
 
 def vse(cast: str | None) -> dict[str, str]:
     s: dict[str, str] = {}
@@ -486,6 +566,8 @@ def vse(cast: str | None) -> dict[str, str]:
         s.update(vrstvy())
     if cast in (None, "tlacitka"):
         s.update(tlacitka())
+    if cast in (None, "ouska"):
+        s.update(ouska())
     return s
 
 
@@ -496,6 +578,10 @@ def souradnice() -> None:
         print(f"{_i:10s} left: {(x + w / 2) / W * 100:6.3f}%  "
               f"top: {(y + h / 2) / H * 100:6.3f}%  "
               f"width: {TVARY[tvar][0] / W * 100:5.3f}%")
+    print("\n# ouška (plátno 1200 × %d): id, left %%, šířka %%" % OUSKO_H)
+    for i, (_i, _n, _v, _ik) in enumerate(OUSKA):
+        print(f"{_i:10s} left: {(_ousko_x(i) + OUSKO_W / 2) / W * 100:6.3f}%  "
+              f"width: {OUSKO_W / W * 100:5.3f}%")
 
 
 def main() -> int:
@@ -506,7 +592,7 @@ def main() -> int:
     overit = "--overit" in args
     args = [a for a in args if not a.startswith("--")]
     cast = args[0] if args else None
-    if cast not in (None, "podklad", "vrstvy", "tlacitka"):
+    if cast not in (None, "podklad", "vrstvy", "tlacitka", "ouska"):
         print(f"neznámá část: {cast}")
         return 2
 

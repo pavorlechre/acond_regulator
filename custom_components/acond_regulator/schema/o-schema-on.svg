@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 64" width="1200" height="64">
+  <g>
+    <path d="M18 4 H198 V46 Q198 58 186 58 H30 Q18 58 18 46 Z" fill="#1b3a63" stroke="#122a49" stroke-width="2"/>
+    <path d="M4 5h6v5H4zM14 14h6v5h-6zM7 10v6.5h7M17 10V5" transform="translate(44 19)" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="76" y="38" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700" fill="#ffffff">Schéma</text>
+  </g>
+</svg>

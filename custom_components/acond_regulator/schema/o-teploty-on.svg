@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 64" width="1200" height="64">
+  <g>
+    <path d="M210 4 H390 V46 Q390 58 378 58 H222 Q210 58 210 46 Z" fill="#1b3a63" stroke="#122a49" stroke-width="2"/>
+    <path d="M3 17l5-6 4 3 7-8M3 21h18" transform="translate(236 19)" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="268" y="38" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700" fill="#ffffff">Teploty</text>
+  </g>
+</svg>

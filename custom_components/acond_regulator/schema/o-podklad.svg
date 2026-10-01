@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 64" width="1200" height="64">
+  <g>
+    <path d="M18 4 H198 V46 Q198 58 186 58 H30 Q18 58 18 46 Z" fill="#eef1f4" stroke="#b6bcc4" stroke-width="2"/>
+    <path d="M4 5h6v5H4zM14 14h6v5h-6zM7 10v6.5h7M17 10V5" transform="translate(44 19)" fill="none" stroke="#3b424a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="76" y="38" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700" fill="#3b424a">Schéma</text>
+  </g>
+  <g>
+    <path d="M210 4 H390 V46 Q390 58 378 58 H222 Q210 58 210 46 Z" fill="#eef1f4" stroke="#b6bcc4" stroke-width="2"/>
+    <path d="M3 17l5-6 4 3 7-8M3 21h18" transform="translate(236 19)" fill="none" stroke="#3b424a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="268" y="38" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700" fill="#3b424a">Teploty</text>
+  </g>
+  <g opacity="0.45">
+    <path d="M402 4 H582 V46 Q582 58 570 58 H414 Q402 58 402 46 Z" fill="#eef1f4" stroke="#b6bcc4" stroke-width="2"/>
+    <path d="M13 2 4 14h7l-1 8 9-12h-7z" transform="translate(428 19)" fill="none" stroke="#3b424a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="460" y="38" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700" fill="#3b424a">Energie</text>
+  </g>
+  <g opacity="0.45">
+    <path d="M594 4 H774 V46 Q774 58 762 58 H606 Q594 58 594 46 Z" fill="#eef1f4" stroke="#b6bcc4" stroke-width="2"/>
+    <path d="M3 5c5 3 11 8 18 14M10 11a2 2 0 1 0 4 0a2 2 0 1 0-4 0" transform="translate(620 19)" fill="none" stroke="#3b424a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="652" y="38" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700" fill="#3b424a">Ekviterma</text>
+  </g>
+  <g opacity="0.45">
+    <path d="M786 4 H966 V46 Q966 58 954 58 H798 Q786 58 786 46 Z" fill="#eef1f4" stroke="#b6bcc4" stroke-width="2"/>
+    <path d="M9 5.5a3.5 3.5 0 1 0 0 7M7 19h10a3.5 3.5 0 0 0 0-7 5 5 0 0 0-9.4 1.6A3 3 0 0 0 7 19z" transform="translate(812 19)" fill="none" stroke="#3b424a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="844" y="38" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700" fill="#3b424a">Počasí</text>
+  </g>
+  <g opacity="0.45">
+    <path d="M978 4 H1158 V46 Q1158 58 1146 58 H990 Q978 58 978 46 Z" fill="#eef1f4" stroke="#b6bcc4" stroke-width="2"/>
+    <path d="M12 9a3 3 0 1 0 0 6a3 3 0 1 0 0-6M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2" transform="translate(1004 19)" fill="none" stroke="#3b424a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="1036" y="38" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700" fill="#3b424a">Stroj</text>
+  </g>
+</svg>

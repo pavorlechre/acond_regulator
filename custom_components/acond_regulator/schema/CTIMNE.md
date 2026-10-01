@@ -7,7 +7,7 @@ co která kulička znamená, patří do příručky, ne sem.
 
 ## Jediné pravidlo
 
-**SVG soubory se nikdy neupravují ručně.** Všech 42 kreslí `gen_schema.py`.
+**SVG soubory se nikdy neupravují ručně.** Všechny kreslí `gen_schema.py`.
 Ruční oprava vydrží do nejbližšího přegenerování a pak zmizí, aniž by kdokoli
 věděl proč. Když se má něco posunout, změní se číslo v generátoru.
 
@@ -45,6 +45,12 @@ Text, který se nemění, patří do obrázku. Text, který se mění, patří d
 
 Všechno podstatné je v `gen_schema.py` nahoře, v pojmenovaných konstantách.
 
+**Ouška pod schématem** (`o-*.svg`) mají vlastní plátno 1200 × 64 a leží
+v samostatné kartě těsně pod schématem. Díky tomu se kvůli nim nemusely
+přepočítat souřadnice vrstev schématu. Graf ouška (např. Teploty) kreslí
+integrace v Pillow (`teploty_png.py`) a dashboard ho zobrazí jako poslední
+vrstvu schématu, takže schéma celé překryje.
+
 | Chci… | Změním |
 |---|---|
 | posunout nebo přejmenovat tlačítko | tabulku `TLACITKA` |
@@ -55,6 +61,8 @@ Všechno podstatné je v `gen_schema.py` nahoře, v pojmenovaných konstantách.
 | jinou barvu | paletu nahoře (`CERVENA`, `MODRA`, `ORANZ`, …) |
 | barvu kuliček při zpětném chodu | `KULICKA_TEPLA` / `KULICKA_STUDENA` (prohazují se ve `vrstvy()`) |
 | rychlost kuliček | `RYCHLOST` (px/s) |
+| přidat nebo přejmenovat ouško pod schématem | tabulku `OUSKA` |
+| zapnout ouško, které dostalo obsah | odebrat ho z `PRIPRAVUJE_SE`, přidat volbu do `VRSTVA_OPTIONS` (const.py) a klikací plochu do dashboardu |
 
 Trasy `T_*` používá **podklad i vrstva s kuličkami**. Změna trasy tedy
 automaticky posune trubku i kuličky po ní. To je záměr; nerozpojuj to.
@@ -64,8 +72,8 @@ automaticky posune trubku i kuličky po ní. To je záměr; nerozpojuj to.
 ## Postup při změně
 
 1. Změň číslo v `gen_schema.py`.
-2. `python3 gen_schema.py` — přegeneruje všech 42.
-   Nebo jen část: `podklad`, `vrstvy`, `tlacitka`.
+2. `python3 gen_schema.py` — přegeneruje všechno.
+   Nebo jen část: `podklad`, `vrstvy`, `tlacitka`, `ouska`.
 3. `python3 gen_schema.py --overit` — vypíše, co se liší proti disku.
    Před zápisem se hodí pustit nejdřív tohle: co se má lišit, se lišit má,
    a nic jiného.
