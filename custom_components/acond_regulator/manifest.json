@@ -16,5 +16,5 @@
   "iot_class": "local_polling",
   "issue_tracker": "https://github.com/pavorlechre/acond_regulator/issues",
   "requirements": [],
-  "version": "0.18.0b2"
+  "version": "0.18.0b3"
 }
