@@ -49,7 +49,8 @@ Všechno podstatné je v `gen_schema.py` nahoře, v pojmenovaných konstantách.
 v samostatné kartě těsně pod schématem. Díky tomu se kvůli nim nemusely
 přepočítat souřadnice vrstev schématu. Graf ouška (např. Teploty) kreslí
 integrace v Pillow (`teploty_png.py`) a dashboard ho zobrazí jako poslední
-vrstvu schématu, takže schéma celé překryje.
+vrstvu schématu, takže schéma celé překryje. Hotová ouška: Teploty
+(`teploty_png.py`) a Počasí (`pocasi_png.py`).
 
 | Chci… | Změním |
 |---|---|

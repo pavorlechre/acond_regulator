@@ -504,7 +504,7 @@ OUSKA = [
     ("stroj",     "Stroj",     "Stroj",
      "M12 9a3 3 0 1 0 0 6a3 3 0 1 0 0-6M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2"),
 ]
-PRIPRAVUJE_SE = {"energie", "ekviterma", "pocasi", "stroj"}
+PRIPRAVUJE_SE = {"energie", "ekviterma", "stroj"}
 
 OUSKO_VYPLN, OUSKO_RAM, OUSKO_TEXT = "#eef1f4", "#b6bcc4", "#3b424a"
 OUSKO_AKT_VYPLN, OUSKO_AKT_RAM, OUSKO_AKT_TEXT = "#1b3a63", "#122a49", "#ffffff"

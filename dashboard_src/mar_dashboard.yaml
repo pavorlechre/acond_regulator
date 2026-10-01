@@ -3421,8 +3421,29 @@ views:
             top: 50%
             left: 50%
             width: 100%
+      - type: conditional
+        conditions:
+        - condition: state
+          entity: select.mar_vrstva
+          state: Počasí
+        elements:
+        - type: image
+          entity: select.mar_vrstva
+          image: /mar-schema/v-prazdno.svg?v=0172
+          image_entity: image.mar_pocasi
+          tap_action:
+            action: perform-action
+            perform_action: select.select_option
+            target:
+              entity_id: select.mar_vrstva
+            data:
+              option: Schéma
+          style:
+            top: 50%
+            left: 50%
+            width: 100%
     - type: picture-elements
-      image: /mar-schema/o-podklad.svg?v=0180
+      image: /mar-schema/o-podklad.svg?v=0185
       elements:
       - type: conditional
         conditions:
@@ -3431,7 +3452,7 @@ views:
           state: Schéma
         elements:
         - type: image
-          image: /mar-schema/o-schema-on.svg?v=0180
+          image: /mar-schema/o-schema-on.svg?v=0185
           style:
             top: 50%
             left: 50%
@@ -3444,14 +3465,27 @@ views:
           state: Teploty
         elements:
         - type: image
-          image: /mar-schema/o-teploty-on.svg?v=0180
+          image: /mar-schema/o-teploty-on.svg?v=0185
+          style:
+            top: 50%
+            left: 50%
+            width: 100%
+            pointer-events: none
+      - type: conditional
+        conditions:
+        - condition: state
+          entity: select.mar_vrstva
+          state: Počasí
+        elements:
+        - type: image
+          image: /mar-schema/o-pocasi-on.svg?v=0185
           style:
             top: 50%
             left: 50%
             width: 100%
             pointer-events: none
       - type: image
-        image: /mar-schema/o-klik.svg?v=0180
+        image: /mar-schema/o-klik.svg?v=0185
         tap_action:
           action: perform-action
           perform_action: select.select_option
@@ -3465,7 +3499,7 @@ views:
           width: 15.000%
           cursor: pointer
       - type: image
-        image: /mar-schema/o-klik.svg?v=0180
+        image: /mar-schema/o-klik.svg?v=0185
         tap_action:
           action: perform-action
           perform_action: select.select_option
@@ -3476,6 +3510,20 @@ views:
         style:
           top: 50%
           left: 25.000%
+          width: 15.000%
+          cursor: pointer
+      - type: image
+        image: /mar-schema/o-klik.svg?v=0185
+        tap_action:
+          action: perform-action
+          perform_action: select.select_option
+          target:
+            entity_id: select.mar_vrstva
+          data:
+            option: Počasí
+        style:
+          top: 50%
+          left: 73.000%
           width: 15.000%
           cursor: pointer
   subview: true

@@ -19,7 +19,7 @@
     <path d="M3 5c5 3 11 8 18 14M10 11a2 2 0 1 0 4 0a2 2 0 1 0-4 0" transform="translate(620 19)" fill="none" stroke="#3b424a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
     <text x="652" y="38" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700" fill="#3b424a">Ekviterma</text>
   </g>
-  <g opacity="0.45">
+  <g>
     <path d="M786 4 H966 V46 Q966 58 954 58 H798 Q786 58 786 46 Z" fill="#eef1f4" stroke="#b6bcc4" stroke-width="2"/>
     <path d="M9 5.5a3.5 3.5 0 1 0 0 7M7 19h10a3.5 3.5 0 0 0 0-7 5 5 0 0 0-9.4 1.6A3 3 0 0 0 7 19z" transform="translate(812 19)" fill="none" stroke="#3b424a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
     <text x="844" y="38" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700" fill="#3b424a">Počasí</text>
