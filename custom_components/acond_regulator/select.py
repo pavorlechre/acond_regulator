@@ -21,7 +21,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.dispatcher import async_dispatcher_connect, async_dispatcher_send
+from homeassistant.helpers.event import async_call_later
 
 from .const import (
     DOMAIN,
@@ -40,8 +41,13 @@ from .const import (
     SEKUNDAR_OPTIONS,
     TCMODE_DEFAULT,
     TCMODE_OPTIONS,
+    VRSTVA_KEY,
+    VRSTVA_NAVRAT_S,
+    VRSTVA_OPTIONS,
+    VRSTVA_SCHEMA,
     device_info,
     signal_profily_updated,
+    signal_vrstva,
 )
 from .coordinator import MarCoordinator
 
@@ -57,6 +63,7 @@ async def async_setup_entry(
             TcModeSelect(data["seq"], entry),
             ProfilSelect(data["profily"], entry),
             SchemaSekundarSelect(entry),
+            VrstvaSelect(entry),
         ]
     )
 
@@ -331,3 +338,57 @@ class SchemaSekundarSelect(RestoreEntity, SelectEntity):
             return
         self._value = option
         self.async_write_ha_state()
+
+
+class VrstvaSelect(SelectEntity):
+    """select.mar_vrstva – které ouško pod schématem je otevřené.
+
+    Čistě zobrazovací, do regulace nezasahuje. Po startu vždy Schéma (bez
+    obnovy stavu). Select je společný pro všechna zařízení, proto se jiná
+    vrstva než Schéma sama vrátí po VRSTVA_NAVRAT_S sekundách — jinak by
+    přepnutí na mobilu nechalo graf viset i na tabletu na zdi.
+    """
+
+    _attr_has_entity_name = True
+    _attr_name = "Vrstva"
+    _attr_icon = "mdi:layers-outline"
+    _attr_options = VRSTVA_OPTIONS
+
+    def __init__(self, entry: ConfigEntry) -> None:
+        self._entry = entry
+        self._value = VRSTVA_SCHEMA
+        self._zrus_navrat = None
+        self._attr_unique_id = f"{entry.entry_id}_{VRSTVA_KEY}"
+        self._attr_device_info = device_info(entry.entry_id)
+
+    @property
+    def current_option(self) -> str:
+        return self._value
+
+    async def async_will_remove_from_hass(self) -> None:
+        self._zastav_navrat()
+
+    @callback
+    def _zastav_navrat(self) -> None:
+        if self._zrus_navrat is not None:
+            self._zrus_navrat()
+            self._zrus_navrat = None
+
+    @callback
+    def _navrat(self, _now=None) -> None:
+        self._zrus_navrat = None
+        self._nastav(VRSTVA_SCHEMA)
+
+    @callback
+    def _nastav(self, option: str) -> None:
+        self._zastav_navrat()
+        self._value = option
+        if option != VRSTVA_SCHEMA:
+            self._zrus_navrat = async_call_later(self.hass, VRSTVA_NAVRAT_S, self._navrat)
+        self.async_write_ha_state()
+        async_dispatcher_send(self.hass, signal_vrstva(self._entry.entry_id), option)
+
+    async def async_select_option(self, option: str) -> None:
+        if option not in VRSTVA_OPTIONS:
+            return
+        self._nastav(option)

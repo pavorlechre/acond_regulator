@@ -2,7 +2,8 @@
   "domain": "acond_regulator",
   "name": "Acond Regulator (MaR)",
   "after_dependencies": [
-    "acond"
+    "acond",
+    "recorder"
   ],
   "codeowners": [
     "@pavorlechre"
@@ -16,5 +17,5 @@
   "iot_class": "local_polling",
   "issue_tracker": "https://github.com/pavorlechre/acond_regulator/issues",
   "requirements": [],
-  "version": "0.18.0b3"
+  "version": "0.18.0b4"
 }

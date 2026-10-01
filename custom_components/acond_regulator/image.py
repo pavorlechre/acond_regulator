@@ -36,12 +36,27 @@ from homeassistant.util import dt as dt_util
 
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.event import async_call_later, async_track_state_change_event
+from homeassistant.helpers.event import (
+    async_call_later,
+    async_track_state_change_event,
+    async_track_time_interval,
+)
 
 from .const import (
+    ACOND_BIT_DEFROST,
+    ACOND_BIT_TUV,
+    ACOND_INDOOR,
+    ACOND_RETURN_ACT,
+    ACOND_RETURN_READBACK,
+    ACOND_ROOM_SET,
     ACOND_STARTS_TOTAL,
     CURVE_X,
     DOMAIN,
+    TEPLOTY_HODIN,
+    TEPLOTY_KEY,
+    TEPLOTY_KROK_MIN,
+    TEPLOTY_OBNOVA_S,
+    VRSTVA_TEPLOTY,
     PERIOD_DAY_PREFIX,
     RING_DAYS,
     PERIOD_TODAY,
@@ -54,9 +69,11 @@ from .const import (
     device_info,
     signal_stats_snapshot,
     signal_stats_snapshot_days,
+    signal_vrstva,
 )
 from .coordinator import MarCoordinator
 from .stav_png import sestav_radky, vykresli
+from .teploty_png import TeplotyData, vykresli as vykresli_teploty
 from .statistics.accumulator import StatisticsAccumulator
 from .statistics.table_png import render_days, render_table
 
@@ -285,6 +302,7 @@ async def async_setup_entry(
             StatisticsImage(hass, data["stats"], entry),
             StatisticsDaysImage(hass, data["stats"], entry),
             StavImage(hass, entry),
+            TeplotyImage(hass, coordinator, entry),
         ]
     )
 
@@ -612,3 +630,153 @@ class StavImage(ImageEntity):
             self._png = await self.hass.async_add_executor_job(vykresli, list(self._radky))
         return self._png
 
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+#  Ouško Teploty — graf 12 h přes schéma
+# ═══════════════════════════════════════════════════════════════════════════
+
+# MaR senzory hledané v registru podle unique_id (entity_id si uživatel může
+# přejmenovat, unique_id ne).
+_TEPLOTY_MAR = {
+    "t_ekv": "ekvitermni_teplota",
+    "ekv_zaklad": "zpatecka_z_ekvitermy",
+    "vypocet": "vypoctena_zpatecka",
+}
+
+
+def _cislo(stav) -> float | None:
+    try:
+        return float(stav)
+    except (TypeError, ValueError):
+        return None
+
+
+def _prevzorkuj(stavy: list, casy: list[dt.datetime], prevod):
+    """Hodnota platná v každém čase mřížky (poslední známý stav ≤ čas)."""
+    out, j, posledni = [], 0, None
+    stavy = sorted(stavy, key=lambda st: st.last_changed)
+    for t in casy:
+        while j < len(stavy) and stavy[j].last_changed <= t:
+            posledni = prevod(stavy[j].state)
+            j += 1
+        out.append(posledni)
+    return out
+
+
+class TeplotyImage(ImageEntity):
+    """image.mar_teploty — graf ouška Teploty (12 h z recorderu).
+
+    Kreslí se jen tehdy, když je ouško otevřené (select.mar_vrstva = Teploty),
+    a pak každých TEPLOTY_OBNOVA_S sekund. Zavřené ouško nestojí nic.
+    Když recorder chybí nebo dotaz selže, obrázek ukáže, co má (i prázdný
+    graf) — regulace o tom neví a nic se nezastaví.
+    """
+
+    _attr_has_entity_name = True
+    _attr_name = "Teploty"
+    _attr_content_type = "image/png"
+
+    def __init__(self, hass: HomeAssistant, coordinator: MarCoordinator, entry: ConfigEntry) -> None:
+        ImageEntity.__init__(self, hass)
+        self._coordinator = coordinator
+        self._entry = entry
+        self._png: bytes | None = None
+        self._aktivni = False
+        self._zrus_obnovu = None
+        self._attr_unique_id = f"{entry.entry_id}_{TEPLOTY_KEY}"
+        self._attr_device_info = device_info(entry.entry_id)
+        self._attr_image_last_updated = dt_util.utcnow()
+
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+        self.async_on_remove(async_dispatcher_connect(
+            self.hass, signal_vrstva(self._entry.entry_id), self._vrstva))
+
+    async def async_will_remove_from_hass(self) -> None:
+        self._zastav_obnovu()
+
+    @callback
+    def _zastav_obnovu(self) -> None:
+        if self._zrus_obnovu is not None:
+            self._zrus_obnovu()
+            self._zrus_obnovu = None
+
+    @callback
+    def _vrstva(self, volba: str) -> None:
+        self._aktivni = volba == VRSTVA_TEPLOTY
+        self._zastav_obnovu()
+        if self._aktivni:
+            self._zrus_obnovu = async_track_time_interval(
+                self.hass, self._obnov, dt.timedelta(seconds=TEPLOTY_OBNOVA_S))
+            self._obnov()
+
+    @callback
+    def _obnov(self, _now=None) -> None:
+        self._png = None
+        self._attr_image_last_updated = dt_util.utcnow()
+        self.async_write_ha_state()
+
+    def _mar_id(self, klic: str) -> str | None:
+        return er.async_get(self.hass).async_get_entity_id(
+            "sensor", DOMAIN, f"{self._entry.entry_id}_{klic}")
+
+    async def _data(self) -> TeplotyData:
+        konec = dt_util.utcnow().replace(second=0, microsecond=0)
+        konec -= dt.timedelta(minutes=konec.minute % TEPLOTY_KROK_MIN)
+        start = konec - dt.timedelta(hours=TEPLOTY_HODIN)
+        kroku = TEPLOTY_HODIN * 60 // TEPLOTY_KROK_MIN
+        casy = [start + dt.timedelta(minutes=TEPLOTY_KROK_MIN * i) for i in range(kroku + 1)]
+
+        mar = {k: self._mar_id(v) for k, v in _TEPLOTY_MAR.items()}
+        zdroje = {
+            "mistnost": ACOND_INDOOR,
+            "cil": ACOND_ROOM_SET,
+            "pozadovana": ACOND_RETURN_READBACK,
+            "skutecna": ACOND_RETURN_ACT,
+            "tuv": ACOND_BIT_TUV,
+            "odmraz": ACOND_BIT_DEFROST,
+            **{k: v for k, v in mar.items() if v},
+        }
+        historie: dict = {}
+        try:
+            from homeassistant.components.recorder import get_instance, history
+
+            historie = await get_instance(self.hass).async_add_executor_job(
+                lambda: history.get_significant_states(
+                    self.hass, start - dt.timedelta(hours=1), None,
+                    list(zdroje.values()),
+                    include_start_time_state=True,
+                    significant_changes_only=False,
+                    minimal_response=False,
+                    no_attributes=True,
+                ))
+        except Exception:  # noqa: BLE001 — graf je nadstavba, nesmí nic shodit
+            _LOGGER.warning("Teploty: historii z recorderu se nepodařilo načíst", exc_info=True)
+
+        def rada(klic, prevod=_cislo):
+            eid = zdroje.get(klic)
+            return _prevzorkuj(historie.get(eid, []) if eid else [], casy, prevod)
+
+        zap = lambda s: s == "on"
+        tuv, odmraz = rada("tuv", zap), rada("odmraz", zap)
+        mistni = [dt_util.as_local(c) for c in casy]
+        return TeplotyData(
+            casy=mistni,
+            mistnost=rada("mistnost"),
+            cil=rada("cil"),
+            t_ekv=rada("t_ekv"),
+            ekv_zaklad=rada("ekv_zaklad"),
+            vypocet=rada("vypocet"),
+            pozadovana=rada("pozadovana"),
+            skutecna=rada("skutecna"),
+            pas=[bool(a) or bool(b) for a, b in zip(tuv, odmraz)],
+            krivka_x=list(CURVE_X),
+            krivka_y=list(self._coordinator.curve_y),
+        )
+
+    async def async_image(self) -> bytes | None:
+        if self._png is None:
+            data = await self._data()
+            self._png = await self.hass.async_add_executor_job(vykresli_teploty, data)
+        return self._png

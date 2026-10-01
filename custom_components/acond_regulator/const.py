@@ -721,6 +721,26 @@ SEKUNDAR_PRIMAR = "Podle primáru"       # bez AKU – okruh kopíruje primár
 SEKUNDAR_OPTIONS = [SEKUNDAR_CERPADLO, SEKUNDAR_STALE, SEKUNDAR_PRIMAR]
 SEKUNDAR_DEFAULT = SEKUNDAR_CERPADLO
 
+# ── ouška pod schématem (select.mar_vrstva) ──
+# Volby jsou jen ouška, která mají obsah. Další ouška (Energie, Ekviterma,
+# Počasí, Stroj) jsou v obrázku ztlumená a přibudou sem, až dostanou obsah.
+# Select je společný pro všechna zařízení, proto se po VRSTVA_NAVRAT_S sám
+# vrátí na Schéma — tablet na zdi nezůstane viset v grafu.
+VRSTVA_KEY = "vrstva"                         # select.mar_vrstva
+VRSTVA_SCHEMA = "Schéma"
+VRSTVA_TEPLOTY = "Teploty"
+VRSTVA_OPTIONS = [VRSTVA_SCHEMA, VRSTVA_TEPLOTY]
+VRSTVA_NAVRAT_S = 300
+TEPLOTY_KEY = "teploty_png"                   # image.mar_teploty
+TEPLOTY_HODIN = 12                            # kolik hodin graf ukazuje
+TEPLOTY_KROK_MIN = 5                          # mřížka grafu (min)
+TEPLOTY_OBNOVA_S = 300                        # jak často se graf překreslí, když je vidět
+
+
+def signal_vrstva(entry_id: str) -> str:
+    """Dispatcher signál: select.mar_vrstva změnil volbu (nese novou volbu)."""
+    return f"{DOMAIN}_{entry_id}_vrstva"
+
 # Denní rozpad pro export: `den:0` = dnešek, `den:7` = nejstarší v kruhu.
 # Není to entita ani view — jen klíč do akumulátoru pro druhou variantu snímku.
 PERIOD_DAY_PREFIX = "den:"
