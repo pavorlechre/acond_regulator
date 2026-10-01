@@ -729,12 +729,15 @@ SEKUNDAR_DEFAULT = SEKUNDAR_CERPADLO
 VRSTVA_KEY = "vrstva"                         # select.mar_vrstva
 VRSTVA_SCHEMA = "Schéma"
 VRSTVA_TEPLOTY = "Teploty"
-VRSTVA_OPTIONS = [VRSTVA_SCHEMA, VRSTVA_TEPLOTY]
+VRSTVA_POCASI = "Počasí"
+VRSTVA_OPTIONS = [VRSTVA_SCHEMA, VRSTVA_TEPLOTY, VRSTVA_POCASI]
 VRSTVA_NAVRAT_S = 300
 TEPLOTY_KEY = "teploty_png"                   # image.mar_teploty
 TEPLOTY_HODIN = 12                            # kolik hodin graf ukazuje
 TEPLOTY_KROK_MIN = 5                          # mřížka grafu (min)
 TEPLOTY_OBNOVA_S = 300                        # jak často se graf překreslí, když je vidět
+POCASI_KEY = "pocasi_png"                     # image.mar_pocasi
+POCASI_HODIN = 24                             # ouško Počasí: hodin zpět i dopředu
 
 
 def signal_vrstva(entry_id: str) -> str:

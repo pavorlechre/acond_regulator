@@ -24,6 +24,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.util import dt as dt_util
 
 from .const import (
+    POCASI_HODIN,
     ACOND_BIT_TUV,
     ACOND_INDOOR,
     ACOND_OUTDOOR,
@@ -129,6 +130,10 @@ class MarCoordinator(DataUpdateCoordinator[RegulatorResult]):
         self._fcst_n: int = 0
         self._fcst_s1: list = []
         self._fcst_s2: list = []
+        self.pocasi_symboly: list = []                    # ouško Počasí: značky met.no po hodinách
+        self.pocasi_s1: list = []                         # ouško Počasí: celé stažené předpovědi
+        self.pocasi_s2: list = []
+        self.pocasi_avg: list = []
 
     async def async_load_buffer(self) -> None:
         data = await self._store.async_load()
@@ -142,19 +147,22 @@ class MarCoordinator(DataUpdateCoordinator[RegulatorResult]):
         fh = max(0, int(self.future_hours))        # váha předpovědi (h); 0 = bez předpovědi
         n_sensor = max(1, fh)                      # informativní senzory předpovědi: vždy aspoň 1 h
         n_display = max(12, n_sensor)              # do grafu vždy aspoň 12 h
+        n_fetch = max(POCASI_HODIN + 1, n_display)  # stahuje se víc kvůli oušku Počasí
 
         now_ts = dt_util.utcnow().timestamp()
-        if (now_ts - self._fcst_ts) < FORECAST_TTL_S and self._fcst_n >= n_display:
-            # čerstvá cache stačí -> žádný dotaz na API (mimořádný refresh)
-            res.series1 = list(self._fcst_s1)
-            res.series2 = list(self._fcst_s2)
-        else:
-            res.series1 = await self._open_meteo(n_display)
-            res.series2 = await self._met_no(n_display)
-            self._fcst_s1 = list(res.series1)
-            self._fcst_s2 = list(res.series2)
-            self._fcst_n = n_display
+        if not ((now_ts - self._fcst_ts) < FORECAST_TTL_S and self._fcst_n >= n_fetch):
+            self._fcst_s1 = await self._open_meteo(n_fetch)
+            self._fcst_s2 = await self._met_no(n_fetch)
+            self._fcst_n = n_fetch
             self._fcst_ts = now_ts
+        # (jinak čerstvá cache stačí -> žádný dotaz na API při mimořádném refreshi)
+        # Ouško Počasí dostane celou staženou řadu; senzory, jejich atributy
+        # (ApexCharts) i model dál jen prvních n_display hodin jako dřív.
+        self.pocasi_s1 = list(self._fcst_s1)
+        self.pocasi_s2 = list(self._fcst_s2)
+        self.pocasi_avg = self._merge(self.pocasi_s1, self.pocasi_s2)
+        res.series1 = list(self._fcst_s1[:n_display])
+        res.series2 = list(self._fcst_s2[:n_display])
         res.series_avg = self._merge(res.series1, res.series2)
 
         # informativní průměry předpovědi (senzory) – z prvních n_sensor hodin
@@ -248,7 +256,7 @@ class MarCoordinator(DataUpdateCoordinator[RegulatorResult]):
             "longitude": self.entry.data[CONF_LONGITUDE],
             "hourly": "temperature_2m",
             "timezone": "UTC",
-            "forecast_days": 2,
+            "forecast_days": 3,          # ať je vždy aspoň 24 h dopředu i večer
         }
         try:
             resp = await session.get(OPEN_METEO_URL, params=params, timeout=30)
@@ -291,6 +299,7 @@ class MarCoordinator(DataUpdateCoordinator[RegulatorResult]):
 
         now = dt_util.utcnow()
         series: list = []
+        symboly: list = []
         for item in ts_list:
             ts = dt_util.parse_datetime(item.get("time", ""))
             if ts is None:
@@ -300,9 +309,21 @@ class MarCoordinator(DataUpdateCoordinator[RegulatorResult]):
             except (KeyError, TypeError):
                 continue
             if ts >= now - timedelta(minutes=30):
-                series.append({"datetime": ts.isoformat(), "temperature": round(float(temp), 1)})
-            if len(series) >= n:
+                if len(series) < n:
+                    series.append({"datetime": ts.isoformat(), "temperature": round(float(temp), 1)})
+                # Pro ouško Počasí: značka počasí a srážky na příští hodinu.
+                # Jen zobrazení — do regulace nevstupuje.
+                h1 = (item.get("data") or {}).get("next_1_hours") or {}
+                znacka = (h1.get("summary") or {}).get("symbol_code")
+                if znacka and len(symboly) < POCASI_HODIN + 3:
+                    symboly.append({
+                        "datetime": ts.isoformat(),
+                        "symbol": znacka,
+                        "srazky": (h1.get("details") or {}).get("precipitation_amount"),
+                    })
+            if len(series) >= n and len(symboly) >= POCASI_HODIN + 3:
                 break
+        self.pocasi_symboly = symboly
         return series
 
     def _merge(self, s1: list, s2: list) -> list:
