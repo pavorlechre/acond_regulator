@@ -49,6 +49,14 @@ P2 = (318, 600)                    # dolní panel
 OS_CAS = 618                       # popisky času
 LEGENDA = 664
 
+# Spodní mez osy zpátečky. Co je níž (noc bez topení, voda z domu), se kreslí
+# tečkovaně po spodním okraji — neroztahuje osu a nevypadá jako výpadek dat.
+DOLNI_MEZ = 19.5
+# Ohřev TUV: firmware zvedne požadovanou zpátečku vždy na 60 °C, a to dřív, než
+# se rozsvítí bit TUV. Taková chvíle se bere jako TUV (šedý pás, mimo osu).
+TUV_POZADOVANA = 59.5
+MAX_POPISKU = 7
+
 
 @dataclass
 class TeplotyData:
@@ -95,8 +103,16 @@ def krivka(x: float, xs: list[float], ys: list[float]) -> float | None:
     return ys[-1]
 
 
-def _rozsah(*rady, pas, minimum=2.0, krok=0.5):
+def _rozsah(*rady, pas, minimum=2.0, krok=0.5, dolni=None):
+    """Rozsah osy z hodnot mimo pásy. `dolni` = pevná spodní mez (níž se neroste)."""
     hodnoty = [v for r in rady for v, p in zip(r, pas) if v is not None and not p]
+    if dolni is not None:
+        nad = [v for v in hodnoty if v >= dolni]
+        if not nad:
+            return dolni, dolni + minimum
+        lo = max(dolni, math.floor((min(nad) - 0.3) / krok) * krok)
+        hi = math.ceil((max(nad) + 0.3) / krok) * krok
+        return lo, max(hi, lo + minimum)
     if not hodnoty:
         return 20.0, 30.0
     lo, hi = min(hodnoty), max(hodnoty)
@@ -107,8 +123,24 @@ def _rozsah(*rady, pas, minimum=2.0, krok=0.5):
     return lo, hi
 
 
+def _znacky(lo: float, hi: float) -> list[float]:
+    """Nejvýš MAX_POPISKU popisků na „hezkém“ kroku."""
+    for krok in (0.5, 1.0, 2.0, 5.0, 10.0):
+        if (hi - lo) / krok + 1 <= MAX_POPISKU:
+            break
+    v = math.ceil(lo / krok - 1e-9) * krok
+    out = []
+    while v <= hi + 1e-6:
+        out.append(round(v, 1))
+        v += krok
+    return out
+
+
 def vykresli(d: TeplotyData) -> bytes:
     n = len(d.casy)
+    # požadovaná 60 °C = začátek/průběh ohřevu TUV, i když bit ještě nesvítí
+    d.pas = [p or (v is not None and v >= TUV_POZADOVANA)
+             for p, v in zip(d.pas, d.pozadovana)]
     img = Image.new("RGB", (W * S, H * S), POZADI)
     g = ImageDraw.Draw(img, "RGBA")
 
@@ -159,6 +191,34 @@ def vykresli(d: TeplotyData) -> bytes:
             useky.append(cur)
         return useky
 
+    def schody_pod(rada, Y, lo):
+        """Úseky, kde je hodnota pod spodní mezí — kreslí se po okraji."""
+        useky, cur = [], []
+        for i in range(n):
+            v = rada[i]
+            if v is None or d.pas[i] or v >= lo:
+                if cur:
+                    cur.append((X(i), cur[-1][1]))
+                    useky.append(cur)
+                cur = []
+                continue
+            if not cur:
+                cur.append((X(i), Y(lo)))
+            cur.append((X(i), Y(lo)))
+        if cur:
+            useky.append(cur)
+        return useky
+
+    def teckovane(useky, col, w):
+        for u in useky:
+            if len(u) < 2:
+                continue
+            x0, x1, y = u[0][0], u[-1][0], u[0][1]
+            x = x0
+            while x < x1:
+                g.ellipse([x - w * S, y - w * S, x + w * S, y + w * S], fill=col)
+                x += 7 * S
+
     def cara(useky, col, w):
         for u in useky:
             if len(u) > 1:
@@ -206,12 +266,12 @@ def vykresli(d: TeplotyData) -> bytes:
     if cil_ted is not None:
         lo1, hi1 = cil_ted - 1.0, cil_ted + 1.0
         Y1 = Yf(P1, lo1, hi1)
-        mrizka(P1, Y1, [lo1, lo1 + 0.5, cil_ted, hi1 - 0.5, hi1])
+        mrizka(P1, Y1, [lo1, cil_ted, hi1])
         vypln(d.cil, d.mistnost, Y1,
               lambda i: RED if (d.mistnost[i] or 0) > (d.cil[i] or 0) else BLU, lo=lo1, hi=hi1)
         carkovane(schody(d.cil, Y1, lo1, hi1), TGT, 1.8)
         cara(schody(d.mistnost, Y1, lo1, hi1), ROOM, 2.6)
-        text(R + 12, Y1(cil_ted) / S - 22, "cíl " + _fmt(cil_ted), TGT, 14)
+        text(R, P1[0] - 26, "- - cíl " + _fmt(cil_ted) + " °C", TGT, 14, anchor="ra")
         m = posledni(d.mistnost)
         if m is not None:
             ym = Y1(max(lo1, min(hi1, m))) / S
@@ -226,15 +286,9 @@ def vykresli(d: TeplotyData) -> bytes:
     # ── panel 2: zpátečka ──
     text(L, P2[0] - 26, "Zpátečka", INK, 16, True)
     pasy(P2)
-    lo2, hi2 = _rozsah(d.pozadovana, d.skutecna, d.ekv_zaklad, pas=d.pas)
+    lo2, hi2 = _rozsah(d.pozadovana, d.skutecna, d.ekv_zaklad, pas=d.pas, dolni=DOLNI_MEZ)
     Y2 = Yf(P2, lo2, hi2)
-    rozpeti = hi2 - lo2
-    krok = 0.5 if rozpeti <= 3 else (1.0 if rozpeti <= 7 else 2.0)
-    ticks, v = [], lo2
-    while v <= hi2 + 1e-6:
-        ticks.append(round(v, 1))
-        v += krok
-    mrizka(P2, Y2, ticks)
+    mrizka(P2, Y2, _znacky(lo2, hi2))
 
     vypln(d.ekv_zaklad, d.vypocet, Y2,
           lambda i: RED if (d.vypocet[i] or 0) > (d.ekv_zaklad[i] or 0) else BLU,
@@ -255,9 +309,9 @@ def vykresli(d: TeplotyData) -> bytes:
             y = Y2(z)
             if not (P2[0] * S + 10 < y < P2[1] * S - 6):
                 continue
-            if y_ukaz is not None and abs(y - y_ukaz) < 16 * S:
+            if y_ukaz is not None and abs(y - y_ukaz) < 22 * S:
                 continue
-            if any(abs(y - o) < 16 * S for o in obsazeno):
+            if any(abs(y - o) < 22 * S for o in obsazeno):
                 continue
             obsazeno.append(y)
             g.line([((AX - 7) * S, y), (AX * S, y)], fill=PUR, width=S)   # značka doleva
@@ -267,8 +321,12 @@ def vykresli(d: TeplotyData) -> bytes:
     if zaklad_useky and zaklad_useky[-1]:
         zaklad_useky[-1].append((AX * S, zaklad_useky[-1][-1][1]))   # vteče do osy
     carkovane(zaklad_useky, PUR, 2.0)
-    cara(schody(d.pozadovana, Y2, lo2, hi2), AMB, 2.6)
-    cara(schody(d.skutecna, Y2, lo2, hi2), ACT, 2.6)
+    pod = lambda r: [None if v is not None and v < lo2 else v for v in r]
+    cara(schody(pod(d.pozadovana), Y2, lo2, hi2), AMB, 2.6)
+    cara(schody(pod(d.skutecna), Y2, lo2, hi2), ACT, 2.6)
+    # pod spodní mezí: tečkovaně, světleji, po spodním okraji
+    teckovane(schody_pod(d.skutecna, Y2, lo2), ACT + (110,), 1.6)
+    teckovane(schody_pod(d.pozadovana, Y2, lo2), AMB + (110,), 1.6)
 
     if y_ukaz is not None and t_ted is not None:
         popis = _fmt(t_ted) + " °C"
