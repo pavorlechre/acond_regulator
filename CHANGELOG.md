@@ -7,6 +7,7 @@ verze podle [sémantického verzování](https://semver.org/lang/cs/).
 ## [Nevydáno]
 
 ### Přidáno
+- Ouško Počasí: noci jako jemně šedé pozadí (západ → východ slunce z HA), T ekv tečkovaně dopředu stejným vzorcem jako MaR — končí, kam ještě sahá okno předpovědi (konec předpovědi minus hodiny předpovědi z nastavení), blok „venku teď / T ekv teď / T ekv za 12 h“, minimum a maximum předpovědi.
 - Ouško Počasí (`image.mar_pocasi`): 24 h zpět a 24 h dopředu — venkovní teplota, T ekv, průměrná předpověď a oba zdroje, okno průměrování, ryska „teď“ a nahoře ikonky počasí po 3 h se srážkami (značky met.no, žádný dotaz navíc). Koordinátor si pro graf ponechá celou staženou předpověď; výpočet regulace beze změny.
 - Ouška pod schématem: Schéma, Teploty, Energie, Ekviterma, Počasí, Stroj. Funkční je zatím Teploty, ostatní jsou ztlumená. Volba `select.mar_vrstva` se po 5 minutách sama vrátí na Schéma (je společná pro všechna zařízení).
 - Graf Teploty (`image.mar_teploty`) přes celé schéma: místnost proti cíli, požadovaná a skutečná zpátečka, ekviterma bez přídavku s pravou osou T ekv, přídavek na místnost, pásy TUV a odmrazování. 12 h z recorderu, kreslí se jen při otevřeném oušku, obnova po 5 minutách. Klepnutím na graf zpět na schéma.
@@ -16,6 +17,8 @@ verze podle [sémantického verzování](https://semver.org/lang/cs/).
 
 ### Změněno
 - Manifest: `http` uveden v závislostech (používá se pro `/mar-schema/`). Chování beze změny.
+- Ouška bez probliknutí: graf se kreslí na pozadí a do aplikace jde až hotový; s otevřeným ouškem se předkreslují všechny grafy (přepnutí mezi nimi je okamžité); úplně první kreslení po startu kryje plocha „Kreslím graf…“ místo prosvítajícího schématu.
+- Graf Teploty: čára a výplň místnosti pokračují pásem TUV (ohřev vody místnost neovlivní), pás je v panelu místnosti jen slabě podbarvený.
 - Graf Teploty: osa zpátečky začíná na 19,5 °C, nižší hodnoty se kreslí tečkovaně po spodním okraji; požadovaná 60 °C se bere jako ohřev TUV (šedý pás, mimo osu); nejvýš 7 popisků; cíl místnosti v záhlaví (nepřekrývá se s hodnotou).
 - Schéma v okně Pohled integrace Acond přes celou šířku (`grid_options: columns: full`).
 - Příručka se posílá bez dlouhé mezipaměti, aplikace po aktualizaci hned ukáže novou.
