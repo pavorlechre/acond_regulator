@@ -161,23 +161,23 @@ def vykresli(d: TeplotyData) -> bytes:
                 g.line([(L * S, y), (R * S, y)], fill=GRID, width=S)
                 text(L - 10, y / S, _fmt(v) + " °C", anchor="rm")
 
-    def pasy(panel):
+    def pasy(panel, barva=PAS):
         i = 0
         while i < n:
             if d.pas[i]:
                 j = i
                 while j < n and d.pas[j]:
                     j += 1
-                g.rectangle([X(i), panel[0] * S, X(min(j, n - 1)), panel[1] * S], fill=PAS)
+                g.rectangle([X(i), panel[0] * S, X(min(j, n - 1)), panel[1] * S], fill=barva)
                 i = j
             else:
                 i += 1
 
-    def schody(rada, Y, lo=None, hi=None):
+    def schody(rada, Y, lo=None, hi=None, pres_pas=False):
         useky, cur = [], []
         for i in range(n):
             v = rada[i]
-            if v is None or d.pas[i]:
+            if v is None or (d.pas[i] and not pres_pas):
                 if cur:
                     useky.append(cur)
                 cur = []
@@ -242,10 +242,10 @@ def vykresli(d: TeplotyData) -> bytes:
                     if zbytek >= (on if kresli else off) * S - 1e-6:
                         zbytek, kresli = 0.0, not kresli
 
-    def vypln(dolni, horni, Y, barva_fn, alfa=64, lo=None, hi=None):
+    def vypln(dolni, horni, Y, barva_fn, alfa=64, lo=None, hi=None, pres_pas=False):
         for i in range(n - 1):
             a, b = dolni[i], horni[i]
-            if d.pas[i] or a is None or b is None or a == b:
+            if (d.pas[i] and not pres_pas) or a is None or b is None or a == b:
                 continue
             if lo is not None:
                 a, b = max(lo, min(hi, a)), max(lo, min(hi, b))
@@ -262,15 +262,16 @@ def vykresli(d: TeplotyData) -> bytes:
     # ── panel 1: místnost ──
     cil_ted = posledni(d.cil)
     text(L, P1[0] - 26, "Místnost", INK, 16, True)
-    pasy(P1)
+    pasy(P1, (0, 0, 0, 8))      # ohřev TUV místnost neovlivní — jen slabé podbarvení
     if cil_ted is not None:
         lo1, hi1 = cil_ted - 1.0, cil_ted + 1.0
         Y1 = Yf(P1, lo1, hi1)
         mrizka(P1, Y1, [lo1, cil_ted, hi1])
         vypln(d.cil, d.mistnost, Y1,
-              lambda i: RED if (d.mistnost[i] or 0) > (d.cil[i] or 0) else BLU, lo=lo1, hi=hi1)
-        carkovane(schody(d.cil, Y1, lo1, hi1), TGT, 1.8)
-        cara(schody(d.mistnost, Y1, lo1, hi1), ROOM, 2.6)
+              lambda i: RED if (d.mistnost[i] or 0) > (d.cil[i] or 0) else BLU, lo=lo1, hi=hi1,
+              pres_pas=True)
+        carkovane(schody(d.cil, Y1, lo1, hi1, pres_pas=True), TGT, 1.8)
+        cara(schody(d.mistnost, Y1, lo1, hi1, pres_pas=True), ROOM, 2.6)
         text(R, P1[0] - 26, "- - cíl " + _fmt(cil_ted) + " °C", TGT, 14, anchor="ra")
         m = posledni(d.mistnost)
         if m is not None:
