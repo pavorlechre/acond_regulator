@@ -547,6 +547,17 @@ def ouska() -> dict[str, str]:
         if _i in PRIPRAVUJE_SE:
             continue
         o[f"o-{_i}-on"] = _platno_ousek([_ousko(i, n, ik, aktivni=True)])
+    # Zástupná plocha pod grafem ouška (plátno schématu): dokud se první graf
+    # po startu kreslí, aplikace ukáže tohle — ne prosvítající schéma.
+    o["o-nacitam"] = platno([
+        f'<rect x="0" y="0" width="{W}" height="{H}" fill="#fafafb"/>',
+        # nápis až po 0,8 s: při rychlém přepnutí mezi hotovými grafy jen
+        # čisté pozadí, při dlouhém prvním kreslení i vysvětlení
+        '<g opacity="0">',
+        '  <set attributeName="opacity" to="1" begin="0.8s" fill="freeze"/>',
+        txt(W / 2, H / 2, "Kreslím graf…", 26, SEDA_POPIS),
+        '</g>',
+    ])
     o["o-klik"] = (
         f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {OUSKO_W} {OUSKO_H}" '
         f'width="{OUSKO_W}" height="{OUSKO_H}">\n'

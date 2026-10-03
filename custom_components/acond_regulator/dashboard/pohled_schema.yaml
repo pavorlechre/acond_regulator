@@ -1062,6 +1062,13 @@
           state: Teploty
         elements:
         - type: image
+          image: /mar-schema/o-nacitam.svg?v=0186
+          style:
+            top: 50%
+            left: 50%
+            width: 100%
+            pointer-events: none
+        - type: image
           entity: select.mar_vrstva
           image: /mar-schema/v-prazdno.svg?v=0172
           image_entity: image.mar_teploty
@@ -1083,6 +1090,13 @@
           state: Počasí
         elements:
         - type: image
+          image: /mar-schema/o-nacitam.svg?v=0186
+          style:
+            top: 50%
+            left: 50%
+            width: 100%
+            pointer-events: none
+        - type: image
           entity: select.mar_vrstva
           image: /mar-schema/v-prazdno.svg?v=0172
           image_entity: image.mar_pocasi
@@ -1098,7 +1112,7 @@
             left: 50%
             width: 100%
     - type: picture-elements
-      image: /mar-schema/o-podklad.svg?v=0185
+      image: /mar-schema/o-podklad.svg?v=0186
       elements:
       - type: conditional
         conditions:
@@ -1107,7 +1121,7 @@
           state: Schéma
         elements:
         - type: image
-          image: /mar-schema/o-schema-on.svg?v=0185
+          image: /mar-schema/o-schema-on.svg?v=0186
           style:
             top: 50%
             left: 50%
@@ -1120,7 +1134,7 @@
           state: Teploty
         elements:
         - type: image
-          image: /mar-schema/o-teploty-on.svg?v=0185
+          image: /mar-schema/o-teploty-on.svg?v=0186
           style:
             top: 50%
             left: 50%
@@ -1133,14 +1147,14 @@
           state: Počasí
         elements:
         - type: image
-          image: /mar-schema/o-pocasi-on.svg?v=0185
+          image: /mar-schema/o-pocasi-on.svg?v=0186
           style:
             top: 50%
             left: 50%
             width: 100%
             pointer-events: none
       - type: image
-        image: /mar-schema/o-klik.svg?v=0185
+        image: /mar-schema/o-klik.svg?v=0186
         tap_action:
           action: perform-action
           perform_action: select.select_option
@@ -1154,7 +1168,7 @@
           width: 15.000%
           cursor: pointer
       - type: image
-        image: /mar-schema/o-klik.svg?v=0185
+        image: /mar-schema/o-klik.svg?v=0186
         tap_action:
           action: perform-action
           perform_action: select.select_option
@@ -1168,7 +1182,7 @@
           width: 15.000%
           cursor: pointer
       - type: image
-        image: /mar-schema/o-klik.svg?v=0185
+        image: /mar-schema/o-klik.svg?v=0186
         tap_action:
           action: perform-action
           perform_action: select.select_option

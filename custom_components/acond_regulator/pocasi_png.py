@@ -56,6 +56,76 @@ class PocasiData:
     symboly: list[tuple[datetime, str, float | None]] = field(default_factory=list)
     okno_od: datetime | None = None
     okno_do: datetime | None = None
+    noci: list[tuple[datetime, datetime]] = field(default_factory=list)   # západ → východ
+    vyhled_tekv: list[tuple[datetime, float]] = field(default_factory=list)  # T ekv dopředu
+
+
+# ── výhled T ekv ─────────────────────────────────────────────────────────
+
+def vyhled_tekv(ted: datetime, hist_casy: list[datetime], venku: list[float | None],
+                predpoved: list[tuple[datetime, float]], hodin_minulost: int,
+                hodin_predpoved: int, tekv_ted: float | None) -> list[tuple[datetime, float]]:
+    """T ekv dopředu stejným vzorcem jako MaR, po hodinách.
+
+    model(t) = (bh · průměr[t − bh, t] + fh · průměr předpovědi[t, t + fh]) / (bh + fh)
+    Do minulého okna padá změřená venkovní teplota (do „teď“) a za „teď“
+    předpověď. Počítá se jen tam, kde má okno předpovědi celou délku — tedy
+    nejdéle do konce předpovědi minus fh. Výsledek se posune tak, aby navázal
+    na skutečnou T ekv v „teď“ (MaR navíc lehce vyhlazuje a vzorkuje buffer).
+    """
+    bh, fh = max(1, int(hodin_minulost)), max(0, int(hodin_predpoved))
+    fc = sorted((t, v) for t, v in predpoved if v is not None)
+    if not fc:
+        return []
+    konec_fc = fc[-1][0]
+
+    def fc_v(t: datetime) -> float | None:
+        """Předpověď v čase t (lineárně mezi hodinami)."""
+        if t <= fc[0][0]:
+            return fc[0][1]
+        for (ta, va), (tb, vb) in zip(fc, fc[1:]):
+            if ta <= t <= tb:
+                f = (t - ta).total_seconds() / max((tb - ta).total_seconds(), 1)
+                return va + f * (vb - va)
+        return None
+
+    mereno = [(t, v) for t, v in zip(hist_casy, venku) if v is not None and t <= ted]
+
+    def minuly_prumer(t: datetime) -> float | None:
+        od = t - timedelta(hours=bh)
+        vals = [v for tt, v in mereno if od <= tt <= t]
+        k = max(od, ted) + timedelta(minutes=5)
+        while k <= t:
+            v = fc_v(k)
+            if v is not None:
+                vals.append(v)
+            k += timedelta(minutes=5)
+        return sum(vals) / len(vals) if vals else None
+
+    def model(t: datetime) -> float | None:
+        mp = minuly_prumer(t)
+        if mp is None:
+            return None
+        if fh == 0:
+            return mp
+        okno = [v for tt, v in fc if t <= tt < t + timedelta(hours=fh)]
+        if not okno:
+            return None
+        return (bh * mp + fh * (sum(okno) / len(okno))) / (bh + fh)
+
+    posledni = konec_fc - timedelta(hours=fh)
+    if posledni <= ted:
+        return []
+    zaklad = model(ted)
+    posun = (tekv_ted - zaklad) if (tekv_ted is not None and zaklad is not None) else 0.0
+    out: list[tuple[datetime, float]] = []
+    t = ted
+    while t <= posledni:
+        m = model(t)
+        if m is not None:
+            out.append((t, round(m + posun, 1)))
+        t += timedelta(hours=1)
+    return out
 
 
 # ── ikonky ───────────────────────────────────────────────────────────────
@@ -109,7 +179,7 @@ def ikona(g, cx, cy, r, znacka: str) -> None:
     zaklad = znacka.split("_")[0]
     svetlo = _mesic if noc else _slunce
     if zaklad == "clearsky":
-        svetlo(g, cx, cy, r * 0.75)
+        svetlo(g, cx, cy, r * (0.5 if not noc else 0.7))
         return
     if zaklad in ("fair", "partlycloudy"):
         svetlo(g, cx - r * 0.45, cy - r * 0.45, r * 0.55)
@@ -157,7 +227,7 @@ def vykresli(d: PocasiData) -> bytes:
         return (L + (R - L) * (t.timestamp() - t0) / (t1 - t0)) * S
 
     hodnoty = [v for v in d.venku + d.model if v is not None]
-    hodnoty += [v for _, v in d.fc_prumer + d.fc_open_meteo + d.fc_met_no]
+    hodnoty += [v for _, v in d.fc_prumer + d.fc_open_meteo + d.fc_met_no + d.vyhled_tekv]
     if hodnoty:
         lo = math.floor(min(hodnoty) - 0.5)
         hi = math.ceil(max(hodnoty) + 0.5)
@@ -173,6 +243,12 @@ def vykresli(d: PocasiData) -> bytes:
     # nadpis
     text(L, 22, "Počasí · 24 h zpět a 24 h dopředu", INK, 22, True)
     text(R, 26, "klepnutím zpět na schéma", MUT, 14, anchor="ra")
+
+    # noci (od západu do východu slunce) — jemně šedé pozadí grafu
+    for od, do in d.noci:
+        xa, xb = max(X(od), L * S), min(X(do), R * S)
+        if xb > xa:
+            g.rectangle([xa, P[0] * S, xb, P[1] * S], fill=(40, 50, 80, 14))
 
     # mřížka a osa °C
     for v in _znacky(lo, hi):
@@ -219,6 +295,35 @@ def vykresli(d: PocasiData) -> bytes:
     cara(d.fc_met_no, ZELENA, 1.6)
     cara(d.fc_prumer, CERVENA, 3.6)
 
+    # T ekv dopředu — tečkovaně; končí tam, kam ještě sahá okno předpovědi
+    if len(d.vyhled_tekv) > 1:
+        body = [(X(t), Y(v)) for t, v in d.vyhled_tekv]
+        krok = 9 * S
+        for (x0, y0), (x1, y1) in zip(body, body[1:]):
+            delka = math.hypot(x1 - x0, y1 - y0)
+            k = 0.0
+            while k <= delka:
+                f = k / delka if delka else 0
+                cx, cy = x0 + (x1 - x0) * f, y0 + (y1 - y0) * f
+                g.ellipse([cx - 2.2 * S, cy - 2.2 * S, cx + 2.2 * S, cy + 2.2 * S], fill=PUR)
+                k += krok
+        xk, yk = body[-1]
+        g.ellipse([xk - 4.5 * S, yk - 4.5 * S, xk + 4.5 * S, yk + 4.5 * S], fill=PUR)
+
+    # minimum a maximum předpovědi
+    budouci = [(t, v) for t, v in d.fc_prumer if t > d.ted + timedelta(hours=1)]
+    if len(budouci) >= 3:
+        for (t, v), nahoru, popis in ((max(budouci, key=lambda p: p[1]), True, "max"),
+                                      (min(budouci, key=lambda p: p[1]), False, "min")):
+            x, y = X(t), Y(v)
+            g.ellipse([x - 4 * S, y - 4 * S, x + 4 * S, y + 4 * S], fill=CERVENA)
+            ty = y / S - 16 if nahoru else y / S + 16
+            if ty < P[0] + 8:
+                ty = y / S + 16
+            if ty > P[1] - 14:
+                ty = y / S - 16
+            text(x / S, ty, f"{popis} {_fmt(v)} °C", CERVENA, 14, True, anchor="mm")
+
     # ryska teď
     xt = X(d.ted)
     y = P[0] * S
@@ -228,6 +333,30 @@ def vykresli(d: PocasiData) -> bytes:
     g.rounded_rectangle([xt - 22 * S, (P[0] - 26) * S, xt + 22 * S, (P[0] - 4) * S],
                         radius=6 * S, fill=(128, 128, 128))
     text(xt / S, P[0] - 15, "teď", (255, 255, 255), 14, True, anchor="mm")
+
+    # blok aktuálních hodnot vlevo nahoře (nad historií, kde nejsou ikonky)
+    posledni = lambda r: next((v for v in reversed(r) if v is not None), None)
+    venku_ted, tekv_ted = posledni(d.venku), posledni(d.model)
+
+    def dlazdice(x, popis, hodnota, barva):
+        text(x, IKONY_Y - 22, popis, MUT, 14)
+        text(x, IKONY_Y + 8, hodnota, barva, 24, True)
+
+    x = L
+    if venku_ted is not None:
+        dlazdice(x, "venku teď", _fmt(venku_ted) + " °C", MODRA)
+        x += 170
+    if tekv_ted is not None:
+        dlazdice(x, "T ekv teď", _fmt(tekv_ted) + " °C", PUR)
+        x += 170
+    if d.vyhled_tekv and tekv_ted is not None:
+        cil = d.ted + timedelta(hours=12)
+        t_v, v_v = min(d.vyhled_tekv, key=lambda p: abs((p[0] - cil).total_seconds()))
+        hod = round((t_v - d.ted).total_seconds() / 3600)
+        if hod >= 1:
+            rozdil = v_v - tekv_ted
+            sipka = "↑" if rozdil > 0.05 else ("↓" if rozdil < -0.05 else "→")
+            dlazdice(x, f"T ekv za {hod} h", f"{sipka} {_fmt(v_v)} °C", PUR)
 
     # ikonky po 3 h nad předpovědí
     for t, znacka, mm in d.symboly:
@@ -245,18 +374,23 @@ def vykresli(d: PocasiData) -> bytes:
         y = LEGENDA
         if druh == "cara":
             g.line([(x * S, y * S), ((x + 24) * S, y * S)], fill=col, width=int(2.6 * S))
+        elif druh == "tecky":
+            for k in range(4):
+                cx = (x + 3 + k * 6) * S
+                g.ellipse([cx - 2 * S, (y - 2) * S, cx + 2 * S, (y + 2) * S], fill=col)
         elif druh == "tenka":
             g.line([(x * S, y * S), ((x + 24) * S, y * S)], fill=col, width=int(1.6 * S))
         else:
             g.rectangle([x * S, (y - 4) * S, (x + 24) * S, (y + 3) * S], fill=col)
         text(x + 32, y, s, INK, 14, anchor="lm")
 
-    leg(L, "cara", MODRA, "venku (čidlo TČ)")
-    leg(L + 200, "cara", PUR, "T ekv")
-    leg(L + 310, "cara", CERVENA, "předpověď")
-    leg(L + 455, "tenka", ORANZ, "open-meteo")
-    leg(L + 610, "tenka", ZELENA, "met.no")
-    leg(L + 745, "pruh", ZLUTA, "okno průměrování")
+    leg(L, "cara", MODRA, "venku")
+    leg(L + 125, "cara", PUR, "T ekv")
+    leg(L + 230, "tecky", PUR, "T ekv výhled")
+    leg(L + 395, "cara", CERVENA, "předpověď")
+    leg(L + 540, "tenka", ORANZ, "open-meteo")
+    leg(L + 690, "tenka", ZELENA, "met.no")
+    leg(L + 815, "pruh", ZLUTA, "okno průměru")
 
     out = img.resize(VYSTUP, Image.LANCZOS)
     buf = BytesIO()

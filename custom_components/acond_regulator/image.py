@@ -60,6 +60,7 @@ from .const import (
     POCASI_HODIN,
     POCASI_KEY,
     VRSTVA_POCASI,
+    VRSTVA_SCHEMA,
     VRSTVA_TEPLOTY,
     PERIOD_DAY_PREFIX,
     RING_DAYS,
@@ -77,7 +78,7 @@ from .const import (
 )
 from .coordinator import MarCoordinator
 from .stav_png import sestav_radky, vykresli
-from .pocasi_png import PocasiData, vykresli as vykresli_pocasi
+from .pocasi_png import PocasiData, vykresli as vykresli_pocasi, vyhled_tekv
 from .teploty_png import TeplotyData, vykresli as vykresli_teploty
 from .statistics.accumulator import StatisticsAccumulator
 from .statistics.table_png import render_days, render_table
@@ -691,8 +692,15 @@ async def _historie(hass: HomeAssistant, start: dt.datetime, ids: list[str]) -> 
 class _VrstvaImage(ImageEntity):
     """Společný základ obrázků oušek pod schématem.
 
-    Kreslí se jen tehdy, když je ouško otevřené (select.mar_vrstva = VRSTVA),
-    a pak každých TEPLOTY_OBNOVA_S sekund. Zavřené ouško nestojí nic.
+    Kreslí se jen tehdy, když je otevřené NĚJAKÉ ouško s grafem (select.mar_vrstva
+    ≠ Schéma) — pak se předkreslují všechny grafy, takže přepnutí mezi nimi je
+    okamžité. Obnova každých TEPLOTY_OBNOVA_S sekund. Při Schématu nestojí nic.
+
+    Bez probliknutí: graf se kreslí na pozadí a do aplikace se ohlásí (nové
+    image_last_updated) až HOTOVÝ — do té doby aplikace drží předchozí obrázek.
+    Jen úplně první obrázek po startu se kreslí na požádání; dashboard pod ním
+    mezitím ukazuje „Kreslím graf…“.
+
     Když recorder chybí nebo dotaz selže, obrázek ukáže, co má (i prázdný
     graf) — regulace o tom neví a nic se nezastaví.
     """
@@ -707,6 +715,8 @@ class _VrstvaImage(ImageEntity):
         self._coordinator = coordinator
         self._entry = entry
         self._png: bytes | None = None
+        self._png_cas: dt.datetime | None = None
+        self._kreslim = False
         self._aktivni = False
         self._zrus_obnovu = None
         self._attr_unique_id = f"{entry.entry_id}_{self.KLIC}"
@@ -729,17 +739,38 @@ class _VrstvaImage(ImageEntity):
 
     @callback
     def _vrstva(self, volba: str) -> None:
-        self._aktivni = volba == self.VRSTVA
+        aktivni = volba != VRSTVA_SCHEMA
+        if aktivni == self._aktivni:
+            return                       # přepnutí mezi grafy: obnova už běží
+        self._aktivni = aktivni
         self._zastav_obnovu()
-        if self._aktivni:
+        if aktivni:
             self._zrus_obnovu = async_track_time_interval(
                 self.hass, self._obnov, dt.timedelta(seconds=TEPLOTY_OBNOVA_S))
-            self._obnov()
+            cerstvy = (self._png_cas is not None and
+                       (dt_util.utcnow() - self._png_cas).total_seconds() < TEPLOTY_OBNOVA_S)
+            if not cerstvy:
+                self._obnov()
 
     @callback
     def _obnov(self, _now=None) -> None:
-        self._png = None
-        self._attr_image_last_updated = dt_util.utcnow()
+        """Překresli na pozadí; aplikaci ohlas až hotový obrázek."""
+        if self._kreslim:
+            return
+        self._kreslim = True
+        self.hass.async_create_background_task(self._kresli(), f"mar_{self.KLIC}")
+
+    async def _kresli(self) -> None:
+        try:
+            png = await self._vyrob()
+        except Exception:  # noqa: BLE001 — graf je nadstavba, nesmí nic shodit
+            _LOGGER.warning("Ouško: graf se nepodařilo nakreslit", exc_info=True)
+            return
+        finally:
+            self._kreslim = False
+        self._png = png
+        self._png_cas = dt_util.utcnow()
+        self._attr_image_last_updated = self._png_cas
         self.async_write_ha_state()
 
     def _mar_id(self, klic: str) -> str | None:
@@ -750,8 +781,9 @@ class _VrstvaImage(ImageEntity):
         raise NotImplementedError
 
     async def async_image(self) -> bytes | None:
-        if self._png is None:
+        if self._png is None:            # jen úplně první obrázek po startu
             self._png = await self._vyrob()
+            self._png_cas = dt_util.utcnow()
         return self._png
 
 
@@ -858,17 +890,46 @@ class PocasiImage(_VrstvaImage):
                 symboly.append((dt_util.as_local(cas), str(p["symbol"]), p.get("srazky")))
 
         mistni = dt_util.as_local
+        fc_prumer = rada(getattr(self._coordinator, "pocasi_avg", None) or (data.series_avg if data else []))
+        hist_mistni = [mistni(c) for c in casy]
+        tekv_ted = next((v for v in reversed(model) if v is not None), None)
+        vyhled = vyhled_tekv(
+            mistni(ted), hist_mistni, venku, fc_prumer,
+            self._coordinator.past_hours, self._coordinator.future_hours, tekv_ted)
         return PocasiData(
             ted=mistni(ted),
             start=mistni(start),
             konec=mistni(konec),
-            hist_casy=[mistni(c) for c in casy],
+            hist_casy=hist_mistni,
             venku=venku,
             model=model,
-            fc_prumer=rada(getattr(self._coordinator, "pocasi_avg", None) or (data.series_avg if data else [])),
+            fc_prumer=fc_prumer,
             fc_open_meteo=rada(getattr(self._coordinator, "pocasi_s1", None) or (data.series1 if data else [])),
             fc_met_no=rada(getattr(self._coordinator, "pocasi_s2", None) or (data.series2 if data else [])),
             symboly=symboly,
             okno_od=mistni(ted - dt.timedelta(hours=max(1, int(self._coordinator.past_hours)))),
             okno_do=mistni(ted + dt.timedelta(hours=max(0, int(self._coordinator.future_hours)))),
+            noci=self._noci(start, konec),
+            vyhled_tekv=vyhled,
         )
+
+    def _noci(self, start: dt.datetime, konec: dt.datetime) -> list:
+        """Intervaly západ → východ slunce v okně grafu (místní čas)."""
+        try:
+            from homeassistant.const import SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET
+            from homeassistant.helpers.sun import get_astral_event_date
+        except Exception:  # noqa: BLE001 — bez slunce prostě bez nocí
+            return []
+        out = []
+        den = dt_util.as_local(start).date() - dt.timedelta(days=1)
+        posledni_den = dt_util.as_local(konec).date()
+        while den <= posledni_den:
+            try:
+                zapad = get_astral_event_date(self.hass, SUN_EVENT_SUNSET, den)
+                vychod = get_astral_event_date(self.hass, SUN_EVENT_SUNRISE, den + dt.timedelta(days=1))
+            except Exception:  # noqa: BLE001
+                zapad = vychod = None
+            if zapad and vychod and vychod > start and zapad < konec:
+                out.append((dt_util.as_local(max(zapad, start)), dt_util.as_local(min(vychod, konec))))
+            den += dt.timedelta(days=1)
+        return out

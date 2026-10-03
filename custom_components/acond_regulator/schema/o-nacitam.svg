@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 700" width="1200" height="700">
+<rect x="0" y="0" width="1200" height="700" fill="#fafafb"/>
+<g opacity="0">
+  <set attributeName="opacity" to="1" begin="0.8s" fill="freeze"/>
+<text x="600.0" y="350.0" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="700" fill="#6b7075">Kreslím graf…</text>
+</g>
+</svg>
