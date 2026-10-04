@@ -147,7 +147,9 @@ class MarCoordinator(DataUpdateCoordinator[RegulatorResult]):
         fh = max(0, int(self.future_hours))        # váha předpovědi (h); 0 = bez předpovědi
         n_sensor = max(1, fh)                      # informativní senzory předpovědi: vždy aspoň 1 h
         n_display = max(12, n_sensor)              # do grafu vždy aspoň 12 h
-        n_fetch = max(POCASI_HODIN + 1, n_display)  # stahuje se víc kvůli oušku Počasí
+        # Ouško Počasí: 24 h předpovědi do grafu + fh h navíc, aby výhled T ekv
+        # došel poctivě (s celým oknem předpovědi) až na konec grafu.
+        n_fetch = max(POCASI_HODIN + fh + 1, n_display)
 
         now_ts = dt_util.utcnow().timestamp()
         if not ((now_ts - self._fcst_ts) < FORECAST_TTL_S and self._fcst_n >= n_fetch):

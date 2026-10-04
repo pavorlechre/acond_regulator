@@ -25,7 +25,7 @@ from .teploty_png import (
     GRID, INK, MUT, POZADI, PUR, S, VYSTUP, H, W, _fmt, _font, _znacky,
 )
 
-MODRA = (31, 119, 180)
+MODRA = (0, 151, 167)        # venku — tyrkysová (dřív modrá splývala s fialovou T ekv)
 CERVENA = (214, 39, 40)
 ORANZ = (255, 127, 14)
 ZELENA = (44, 160, 44)
@@ -64,13 +64,14 @@ class PocasiData:
 
 def vyhled_tekv(ted: datetime, hist_casy: list[datetime], venku: list[float | None],
                 predpoved: list[tuple[datetime, float]], hodin_minulost: int,
-                hodin_predpoved: int, tekv_ted: float | None) -> list[tuple[datetime, float]]:
+                hodin_predpoved: int, tekv_ted: float | None,
+                do: datetime | None = None) -> list[tuple[datetime, float]]:
     """T ekv dopředu stejným vzorcem jako MaR, po hodinách.
 
     model(t) = (bh · průměr[t − bh, t] + fh · průměr předpovědi[t, t + fh]) / (bh + fh)
     Do minulého okna padá změřená venkovní teplota (do „teď“) a za „teď“
     předpověď. Počítá se jen tam, kde má okno předpovědi celou délku — tedy
-    nejdéle do konce předpovědi minus fh. Výsledek se posune tak, aby navázal
+    nejdéle do konce předpovědi minus fh (a ne dál než `do`, konec grafu). Výsledek se posune tak, aby navázal
     na skutečnou T ekv v „teď“ (MaR navíc lehce vyhlazuje a vzorkuje buffer).
     """
     bh, fh = max(1, int(hodin_minulost)), max(0, int(hodin_predpoved))
@@ -114,6 +115,8 @@ def vyhled_tekv(ted: datetime, hist_casy: list[datetime], venku: list[float | No
         return (bh * mp + fh * (sum(okno) / len(okno))) / (bh + fh)
 
     posledni = konec_fc - timedelta(hours=fh)
+    if do is not None:
+        posledni = min(posledni, do)        # dál než konec grafu se nekreslí
     if posledni <= ted:
         return []
     zaklad = model(ted)
@@ -229,8 +232,11 @@ def vykresli(d: PocasiData) -> bytes:
     hodnoty = [v for v in d.venku + d.model if v is not None]
     hodnoty += [v for _, v in d.fc_prumer + d.fc_open_meteo + d.fc_met_no + d.vyhled_tekv]
     if hodnoty:
-        lo = math.floor(min(hodnoty) - 0.5)
-        hi = math.ceil(max(hodnoty) + 0.5)
+        # rezerva nahoře i dole, aby se popisky max/min vešly nad/pod vrchol
+        rozpeti = max(hodnoty) - min(hodnoty)
+        rez = max(1.0, rozpeti * 0.10)
+        lo = math.floor(min(hodnoty) - rez)
+        hi = math.ceil(max(hodnoty) + rez)
         if hi - lo < 4:
             stred = (hi + lo) / 2
             lo, hi = math.floor(stred - 2), math.ceil(stred + 2)
@@ -295,34 +301,56 @@ def vykresli(d: PocasiData) -> bytes:
     cara(d.fc_met_no, ZELENA, 1.6)
     cara(d.fc_prumer, CERVENA, 3.6)
 
-    # T ekv dopředu — tečkovaně; končí tam, kam ještě sahá okno předpovědi
+    # T ekv dopředu — tence čárkovaně; končí tam, kam ještě sahá okno předpovědi
     if len(d.vyhled_tekv) > 1:
         body = [(X(t), Y(v)) for t, v in d.vyhled_tekv]
-        krok = 9 * S
+        zbytek, kresli = 0.0, True
+        on, off = 10 * S, 6 * S
         for (x0, y0), (x1, y1) in zip(body, body[1:]):
             delka = math.hypot(x1 - x0, y1 - y0)
-            k = 0.0
-            while k <= delka:
-                f = k / delka if delka else 0
-                cx, cy = x0 + (x1 - x0) * f, y0 + (y1 - y0) * f
-                g.ellipse([cx - 2.2 * S, cy - 2.2 * S, cx + 2.2 * S, cy + 2.2 * S], fill=PUR)
-                k += krok
-        xk, yk = body[-1]
-        g.ellipse([xk - 4.5 * S, yk - 4.5 * S, xk + 4.5 * S, yk + 4.5 * S], fill=PUR)
+            pos = 0.0
+            while pos < delka:
+                kus = min((on if kresli else off) - zbytek, delka - pos)
+                if kresli:
+                    a, b = pos / delka, (pos + kus) / delka
+                    g.line([(x0 + (x1 - x0) * a, y0 + (y1 - y0) * a),
+                            (x0 + (x1 - x0) * b, y0 + (y1 - y0) * b)], fill=PUR, width=int(2.0 * S))
+                pos += kus
+                zbytek += kus
+                if zbytek >= (on if kresli else off) - 1e-6:
+                    zbytek, kresli = 0.0, not kresli
+
+    def vrchol(t, v, nahoru, popis, barva):
+        """Bod a popisek vrcholu: nad/pod bodem, a když tam není místo, vedle něj."""
+        x, y = X(t), Y(v)
+        g.ellipse([x - 4 * S, y - 4 * S, x + 4 * S, y + 4 * S], fill=barva)
+        s_ = f"{popis} {_fmt(v)} °C"
+        ty = y / S - 16 if nahoru else y / S + 16
+        if P[0] + 8 <= ty <= P[1] - 14:
+            text(x / S, ty, s_, barva, 14, True, anchor="mm")
+            return
+        sirka = g.textlength(s_, font=_font(14, True)) / S
+        if x / S + 12 + sirka <= R:
+            text(x / S + 12, y / S, s_, barva, 14, True, anchor="lm")
+        else:
+            text(x / S - 12, y / S, s_, barva, 14, True, anchor="rm")
+
+    # minimum a maximum v historii (venku) — jen skutečné vrcholy, ne useknutý kraj okna
+    hist = [(t, v) for t, v in zip(d.hist_casy, d.venku) if v is not None]
+    if len(hist) >= 12:
+        kraj = timedelta(minutes=45)
+        for (t, v), nahoru, popis in ((max(hist, key=lambda p: p[1]), True, "max"),
+                                      (min(hist, key=lambda p: p[1]), False, "min")):
+            if t - hist[0][0] < kraj or hist[-1][0] - t < kraj:
+                continue                  # vrchol na kraji okna = useknutý, nepopisovat
+            vrchol(t, v, nahoru, popis, MODRA)
 
     # minimum a maximum předpovědi
     budouci = [(t, v) for t, v in d.fc_prumer if t > d.ted + timedelta(hours=1)]
     if len(budouci) >= 3:
         for (t, v), nahoru, popis in ((max(budouci, key=lambda p: p[1]), True, "max"),
                                       (min(budouci, key=lambda p: p[1]), False, "min")):
-            x, y = X(t), Y(v)
-            g.ellipse([x - 4 * S, y - 4 * S, x + 4 * S, y + 4 * S], fill=CERVENA)
-            ty = y / S - 16 if nahoru else y / S + 16
-            if ty < P[0] + 8:
-                ty = y / S + 16
-            if ty > P[1] - 14:
-                ty = y / S - 16
-            text(x / S, ty, f"{popis} {_fmt(v)} °C", CERVENA, 14, True, anchor="mm")
+            vrchol(t, v, nahoru, popis, CERVENA)
 
     # ryska teď
     xt = X(d.ted)
@@ -374,10 +402,9 @@ def vykresli(d: PocasiData) -> bytes:
         y = LEGENDA
         if druh == "cara":
             g.line([(x * S, y * S), ((x + 24) * S, y * S)], fill=col, width=int(2.6 * S))
-        elif druh == "tecky":
-            for k in range(4):
-                cx = (x + 3 + k * 6) * S
-                g.ellipse([cx - 2 * S, (y - 2) * S, cx + 2 * S, (y + 2) * S], fill=col)
+        elif druh == "carky":
+            for k in range(3):
+                g.line([((x + k * 9) * S, y * S), ((x + k * 9 + 6) * S, y * S)], fill=col, width=int(2.0 * S))
         elif druh == "tenka":
             g.line([(x * S, y * S), ((x + 24) * S, y * S)], fill=col, width=int(1.6 * S))
         else:
@@ -386,7 +413,7 @@ def vykresli(d: PocasiData) -> bytes:
 
     leg(L, "cara", MODRA, "venku")
     leg(L + 125, "cara", PUR, "T ekv")
-    leg(L + 230, "tecky", PUR, "T ekv výhled")
+    leg(L + 230, "carky", PUR, "T ekv výhled")
     leg(L + 395, "cara", CERVENA, "předpověď")
     leg(L + 540, "tenka", ORANZ, "open-meteo")
     leg(L + 690, "tenka", ZELENA, "met.no")
