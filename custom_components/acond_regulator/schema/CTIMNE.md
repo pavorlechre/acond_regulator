@@ -52,6 +52,13 @@ integrace v Pillow (`teploty_png.py`) a dashboard ho zobrazí jako poslední
 vrstvu schématu, takže schéma celé překryje. Hotová ouška: Teploty
 (`teploty_png.py`) a Počasí (`pocasi_png.py`).
 
+**Výkon** je výjimka: není to vrstva přes celé schéma, ale malý graf
+(`vykon_png.py`) vložený do plochy `VYKON_VLOZKA` (od svislé trubky z AKU po
+pravý okraj tlačítka FVE topení, výška AKU). Zapíná ho přepínač
+`switch.mar_vrstva_vykon`, ne `select.mar_vrstva`. Když se změní rozmístění
+schématu, posuň `VYKON_VLOZKA` (generátor) i `VLOZKA` (vykon_png.py) a
+procenta umístění v dashboardu.
+
 | Chci… | Změním |
 |---|---|
 | posunout nebo přejmenovat tlačítko | tabulku `TLACITKA` |

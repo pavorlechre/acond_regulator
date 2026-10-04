@@ -737,7 +737,19 @@ TEPLOTY_HODIN = 12                            # kolik hodin graf ukazuje
 TEPLOTY_KROK_MIN = 5                          # mřížka grafu (min)
 TEPLOTY_OBNOVA_S = 300                        # jak často se graf překreslí, když je vidět
 POCASI_KEY = "pocasi_png"                     # image.mar_pocasi
+# Ouško Výkon: vložený graf přes pravou spodní část schématu (topná soustava),
+# zapíná a vypíná se klepnutím na ouško — nezávisle na Teplotách a Počasí.
+VRSTVA_VYKON_KEY = "vrstva_vykon"             # switch.mar_vrstva_vykon
+VYKON_KEY = "vykon_png"                       # image.mar_vykon
+VYKON_HODIN = 12
+ACOND_TEPELNY_VYKON = "sensor.acond_30028_ahp"   # tepelný výkon
+ACOND_COP = "sensor.acond_30029_cop"
 POCASI_HODIN = 24                             # ouško Počasí: hodin zpět i dopředu
+
+
+def signal_vrstva_vykon(entry_id: str) -> str:
+    """Dispatcher signál: switch.mar_vrstva_vykon se přepnul (nese bool)."""
+    return f"{DOMAIN}_{entry_id}_vrstva_vykon"
 
 
 def signal_vrstva(entry_id: str) -> str:

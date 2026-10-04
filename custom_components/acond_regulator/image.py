@@ -44,6 +44,9 @@ from homeassistant.helpers.event import (
 
 from .const import (
     ACOND_BIT_DEFROST,
+    ACOND_COP,
+    ACOND_POWER,
+    ACOND_TEPELNY_VYKON,
     ACOND_BIT_TUV,
     ACOND_INDOOR,
     ACOND_OUTDOOR,
@@ -61,6 +64,9 @@ from .const import (
     POCASI_KEY,
     VRSTVA_POCASI,
     VRSTVA_SCHEMA,
+    VRSTVA_VYKON_KEY,
+    VYKON_HODIN,
+    VYKON_KEY,
     VRSTVA_TEPLOTY,
     PERIOD_DAY_PREFIX,
     RING_DAYS,
@@ -75,11 +81,13 @@ from .const import (
     signal_stats_snapshot,
     signal_stats_snapshot_days,
     signal_vrstva,
+    signal_vrstva_vykon,
 )
 from .coordinator import MarCoordinator
 from .stav_png import sestav_radky, vykresli
 from .pocasi_png import PocasiData, vykresli as vykresli_pocasi, vyhled_tekv
 from .teploty_png import TeplotyData, vykresli as vykresli_teploty
+from .vykon_png import VykonData, vykresli as vykresli_vykon
 from .statistics.accumulator import StatisticsAccumulator
 from .statistics.table_png import render_days, render_table
 
@@ -310,6 +318,7 @@ async def async_setup_entry(
             StavImage(hass, entry),
             TeplotyImage(hass, coordinator, entry),
             PocasiImage(hass, coordinator, entry),
+            VykonImage(hass, coordinator, entry),
         ]
     )
 
@@ -739,7 +748,10 @@ class _VrstvaImage(ImageEntity):
 
     @callback
     def _vrstva(self, volba: str) -> None:
-        aktivni = volba != VRSTVA_SCHEMA
+        self._nastav_aktivni(volba != VRSTVA_SCHEMA)
+
+    @callback
+    def _nastav_aktivni(self, aktivni: bool) -> None:
         if aktivni == self._aktivni:
             return                       # přepnutí mezi grafy: obnova už běží
         self._aktivni = aktivni
@@ -872,12 +884,12 @@ class PocasiImage(_VrstvaImage):
         venku = _prevzorkuj(historie.get(ACOND_OUTDOOR, []), casy, _cislo)
         model = _prevzorkuj(historie.get(model_id, []), casy, _cislo) if model_id else []
 
-        def rada(series) -> list:
+        def rada(series, do=konec) -> list:
             out = []
             for p in series or []:
                 cas = dt_util.parse_datetime(str(p.get("datetime", "")))
                 v = p.get("temperature")
-                if cas is None or v is None or cas > konec:
+                if cas is None or v is None or (do is not None and cas > do):
                     continue
                 out.append((dt_util.as_local(cas), float(v)))
             return out
@@ -893,9 +905,12 @@ class PocasiImage(_VrstvaImage):
         fc_prumer = rada(getattr(self._coordinator, "pocasi_avg", None) or (data.series_avg if data else []))
         hist_mistni = [mistni(c) for c in casy]
         tekv_ted = next((v for v in reversed(model) if v is not None), None)
+        # výhled počítá i z předpovědi za okrajem grafu (24 h + fh), kreslí se do konce grafu
+        fc_cela = rada(getattr(self._coordinator, "pocasi_avg", None) or (data.series_avg if data else []), do=None)
         vyhled = vyhled_tekv(
-            mistni(ted), hist_mistni, venku, fc_prumer,
-            self._coordinator.past_hours, self._coordinator.future_hours, tekv_ted)
+            mistni(ted), hist_mistni, venku, fc_cela,
+            self._coordinator.past_hours, self._coordinator.future_hours, tekv_ted,
+            do=mistni(konec))
         return PocasiData(
             ted=mistni(ted),
             start=mistni(start),
@@ -933,3 +948,53 @@ class PocasiImage(_VrstvaImage):
                 out.append((dt_util.as_local(max(zapad, start)), dt_util.as_local(min(vychod, konec))))
             den += dt.timedelta(days=1)
         return out
+
+
+class VykonImage(_VrstvaImage):
+    """image.mar_vykon — ouško Výkon: malý graf vložený přes schéma (12 h).
+
+    Na rozdíl od Teplot a Počasí ho nezapíná select.mar_vrstva, ale přepínač
+    switch.mar_vrstva_vykon (zapni / vypni klepnutím na ouško). Kreslení na
+    pozadí a obnova à 5 min jsou stejné jako u ostatních oušek.
+    """
+
+    _attr_name = "Výkon"          # entity_id: image.mar_vykon
+    KLIC = VYKON_KEY
+
+    async def async_added_to_hass(self) -> None:
+        await ImageEntity.async_added_to_hass(self)
+        self.async_on_remove(async_dispatcher_connect(
+            self.hass, signal_vrstva_vykon(self._entry.entry_id), self._nastav_aktivni))
+        data = self.hass.data.get(DOMAIN, {}).get(self._entry.entry_id, {})
+        if isinstance(data, dict) and data.get(VRSTVA_VYKON_KEY):
+            self._nastav_aktivni(True)
+
+    async def _vyrob(self) -> bytes:
+        data = await self._data()
+        return await self.hass.async_add_executor_job(vykresli_vykon, data)
+
+    def _na_kw(self, eid: str):
+        """Převod stavu na kW podle jednotky entity (W i kW)."""
+        st = self.hass.states.get(eid)
+        jednotka = (st.attributes.get("unit_of_measurement") if st else None) or "W"
+        nasobek = 1.0 if str(jednotka).lower() == "kw" else 0.001
+        return lambda v: (None if _cislo(v) is None else _cislo(v) * nasobek)
+
+    async def _data(self) -> VykonData:
+        konec = dt_util.utcnow().replace(second=0, microsecond=0)
+        konec -= dt.timedelta(minutes=konec.minute % TEPLOTY_KROK_MIN)
+        start = konec - dt.timedelta(hours=VYKON_HODIN)
+        kroku = VYKON_HODIN * 60 // TEPLOTY_KROK_MIN
+        casy = [start + dt.timedelta(minutes=TEPLOTY_KROK_MIN * i) for i in range(kroku + 1)]
+        ids = [ACOND_POWER, ACOND_TEPELNY_VYKON, ACOND_COP]
+        historie = await _historie(self.hass, start - dt.timedelta(hours=1), ids)
+        prikon = _prevzorkuj(historie.get(ACOND_POWER, []), casy, self._na_kw(ACOND_POWER))
+        vykon = _prevzorkuj(historie.get(ACOND_TEPELNY_VYKON, []), casy, self._na_kw(ACOND_TEPELNY_VYKON))
+        cop = _prevzorkuj(historie.get(ACOND_COP, []), casy, _cislo)
+        # COP jen když kompresor opravdu běží (příkon nad 100 W) a dává smysl
+        cop = [c if (c is not None and 0 < c < 15 and p is not None and p > 0.1) else None
+               for c, p in zip(cop, prikon)]
+        return VykonData(
+            casy=[dt_util.as_local(c) for c in casy],
+            prikon_kw=prikon, vykon_kw=vykon, cop=cop,
+        )

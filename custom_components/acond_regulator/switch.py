@@ -12,7 +12,7 @@ try:  # HA 2023.12+
 except ImportError:  # pragma: no cover – starší HA
     from homeassistant.exceptions import HomeAssistantError as _OdmitnutoError
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.dispatcher import async_dispatcher_connect, async_dispatcher_send
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
@@ -26,6 +26,7 @@ from .const import (
     TOPENI_HLIDAC_KEY,
     STRATEGY_BEZ_MAR,
     STRATEGY_EKVITERM,
+    VRSTVA_VYKON_KEY,
     device_info,
     signal_dennoc_updated,
     signal_dovolena_updated,
@@ -33,6 +34,7 @@ from .const import (
     signal_topeni_updated,
     signal_okna_updated,
     signal_profily_updated,
+    signal_vrstva_vykon,
     signal_zebra_updated,
 )
 from .coordinator import MarCoordinator
@@ -59,6 +61,7 @@ async def async_setup_entry(
                             "Profil ulozit fve", data["profily"].set_ulozit_fve),
             ProfilFveSwitch(data["profily"], entry, PROFIL_NACIST_FVE_KEY,
                             "Profil nacist fve", data["profily"].set_nacist_fve),
+            VrstvaVykonSwitch(hass, entry),
         ]
     )
 
@@ -574,3 +577,52 @@ class ProfilFveSwitch(RestoreEntity, SwitchEntity):
         self._attr_is_on = False
         self._setter(False)
         self.async_write_ha_state()
+
+
+class VrstvaVykonSwitch(RestoreEntity, SwitchEntity):
+    """switch.mar_vrstva_vykon — ouško Výkon: vložený graf přes schéma.
+
+    Čistě zobrazovací, do regulace nezasahuje. Zapíná a vypíná se klepnutím
+    na ouško; na rozdíl od select.mar_vrstva se sám nevrací (graf je malý a
+    schéma nezakrývá). Stav přežije restart. Stav se zrcadlí do hass.data,
+    aby ho obrázek našel i když se přidá až po switchi.
+    """
+
+    _attr_has_entity_name = True
+    _attr_name = "Vrstva výkon"
+    _attr_icon = "mdi:chart-areaspline"
+
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+        self._entry = entry
+        self._is_on = False
+        self._attr_unique_id = f"{entry.entry_id}_{VRSTVA_VYKON_KEY}"
+        self._attr_device_info = device_info(entry.entry_id)
+
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+        last = await self.async_get_last_state()
+        if last is not None:
+            self._is_on = last.state == "on"
+        self._ohlas()
+
+    @property
+    def is_on(self) -> bool:
+        return self._is_on
+
+    @callback
+    def _ohlas(self) -> None:
+        self.hass.data.setdefault(DOMAIN, {}).setdefault(self._entry.entry_id, {})
+        data = self.hass.data[DOMAIN][self._entry.entry_id]
+        if isinstance(data, dict):
+            data[VRSTVA_VYKON_KEY] = self._is_on
+        async_dispatcher_send(self.hass, signal_vrstva_vykon(self._entry.entry_id), self._is_on)
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        self._is_on = True
+        self.async_write_ha_state()
+        self._ohlas()
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        self._is_on = False
+        self.async_write_ha_state()
+        self._ohlas()

@@ -495,8 +495,8 @@ OUSKA = [
      "M4 5h6v5H4zM14 14h6v5h-6zM7 10v6.5h7M17 10V5"),
     ("teploty",   "Teploty",   "Teploty",
      "M3 17l5-6 4 3 7-8M3 21h18"),
-    ("energie",   "Energie",   "Energie",
-     "M13 2 4 14h7l-1 8 9-12h-7z"),
+    ("vykon",     "Výkon",     "Výkon",
+     "M3 20h18M5 20V12M10 20V6M15 20V10M20 20V4"),
     ("ekviterma", "Ekviterma", "Ekviterma",
      "M3 5c5 3 11 8 18 14M10 11a2 2 0 1 0 4 0a2 2 0 1 0-4 0"),
     ("pocasi",    "Počasí",    "Počasí",
@@ -504,7 +504,10 @@ OUSKA = [
     ("stroj",     "Stroj",     "Stroj",
      "M12 9a3 3 0 1 0 0 6a3 3 0 1 0 0-6M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2"),
 ]
-PRIPRAVUJE_SE = {"energie", "ekviterma", "stroj"}
+PRIPRAVUJE_SE = {"ekviterma", "stroj"}
+# Výkon není vrstva přes celé schéma, ale vložený graf zapínaný přepínačem
+# (switch.mar_vrstva_vykon); jeho plocha v souřadnicích schématu:
+VYKON_VLOZKA = (776, 319, 1180, 567)    # x0, y0, x1, y1 — shodně s vykon_png.VLOZKA
 
 OUSKO_VYPLN, OUSKO_RAM, OUSKO_TEXT = "#eef1f4", "#b6bcc4", "#3b424a"
 OUSKO_AKT_VYPLN, OUSKO_AKT_RAM, OUSKO_AKT_TEXT = "#1b3a63", "#122a49", "#ffffff"
@@ -558,6 +561,13 @@ def ouska() -> dict[str, str]:
         txt(W / 2, H / 2, "Kreslím graf…", 26, SEDA_POPIS),
         '</g>',
     ])
+    # Zástupná plocha vloženého grafu Výkon (dokud se poprvé nenakreslí)
+    x0, y0, x1, y1 = VYKON_VLOZKA
+    o["o-vykon-nacitam"] = (
+        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {x1 - x0} {y1 - y0}" '
+        f'width="{x1 - x0}" height="{y1 - y0}">\n'
+        f'  <rect x="1" y="1" width="{x1 - x0 - 2}" height="{y1 - y0 - 2}" rx="10" '
+        f'fill="#fafafb" stroke="#b6bcc4" stroke-width="2"/>\n</svg>')
     o["o-klik"] = (
         f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {OUSKO_W} {OUSKO_H}" '
         f'width="{OUSKO_W}" height="{OUSKO_H}">\n'

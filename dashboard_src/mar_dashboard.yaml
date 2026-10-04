@@ -3403,11 +3403,37 @@ views:
       - type: conditional
         conditions:
         - condition: state
+          entity: switch.mar_vrstva_vykon
+          state: 'on'
+        elements:
+        - type: image
+          image: /mar-schema/o-vykon-nacitam.svg?v=0187
+          style:
+            top: 63.286%
+            left: 81.500%
+            width: 33.667%
+            pointer-events: none
+        - type: image
+          entity: switch.mar_vrstva_vykon
+          image: /mar-schema/o-vykon-nacitam.svg?v=0187
+          image_entity: image.mar_vykon
+          tap_action:
+            action: perform-action
+            perform_action: switch.turn_off
+            target:
+              entity_id: switch.mar_vrstva_vykon
+          style:
+            top: 63.286%
+            left: 81.500%
+            width: 33.667%
+      - type: conditional
+        conditions:
+        - condition: state
           entity: select.mar_vrstva
           state: Teploty
         elements:
         - type: image
-          image: /mar-schema/o-nacitam.svg?v=0186
+          image: /mar-schema/o-nacitam.svg?v=0187
           style:
             top: 50%
             left: 50%
@@ -3435,7 +3461,7 @@ views:
           state: Počasí
         elements:
         - type: image
-          image: /mar-schema/o-nacitam.svg?v=0186
+          image: /mar-schema/o-nacitam.svg?v=0187
           style:
             top: 50%
             left: 50%
@@ -3457,7 +3483,7 @@ views:
             left: 50%
             width: 100%
     - type: picture-elements
-      image: /mar-schema/o-podklad.svg?v=0186
+      image: /mar-schema/o-podklad.svg?v=0187
       elements:
       - type: conditional
         conditions:
@@ -3466,7 +3492,20 @@ views:
           state: Schéma
         elements:
         - type: image
-          image: /mar-schema/o-schema-on.svg?v=0186
+          image: /mar-schema/o-schema-on.svg?v=0187
+          style:
+            top: 50%
+            left: 50%
+            width: 100%
+            pointer-events: none
+      - type: conditional
+        conditions:
+        - condition: state
+          entity: switch.mar_vrstva_vykon
+          state: 'on'
+        elements:
+        - type: image
+          image: /mar-schema/o-vykon-on.svg?v=0187
           style:
             top: 50%
             left: 50%
@@ -3479,7 +3518,7 @@ views:
           state: Teploty
         elements:
         - type: image
-          image: /mar-schema/o-teploty-on.svg?v=0186
+          image: /mar-schema/o-teploty-on.svg?v=0187
           style:
             top: 50%
             left: 50%
@@ -3492,14 +3531,14 @@ views:
           state: Počasí
         elements:
         - type: image
-          image: /mar-schema/o-pocasi-on.svg?v=0186
+          image: /mar-schema/o-pocasi-on.svg?v=0187
           style:
             top: 50%
             left: 50%
             width: 100%
             pointer-events: none
       - type: image
-        image: /mar-schema/o-klik.svg?v=0186
+        image: /mar-schema/o-klik.svg?v=0187
         tap_action:
           action: perform-action
           perform_action: select.select_option
@@ -3513,7 +3552,7 @@ views:
           width: 15.000%
           cursor: pointer
       - type: image
-        image: /mar-schema/o-klik.svg?v=0186
+        image: /mar-schema/o-klik.svg?v=0187
         tap_action:
           action: perform-action
           perform_action: select.select_option
@@ -3527,7 +3566,19 @@ views:
           width: 15.000%
           cursor: pointer
       - type: image
-        image: /mar-schema/o-klik.svg?v=0186
+        image: /mar-schema/o-klik.svg?v=0187
+        tap_action:
+          action: perform-action
+          perform_action: switch.toggle
+          target:
+            entity_id: switch.mar_vrstva_vykon
+        style:
+          top: 50%
+          left: 41.000%
+          width: 15.000%
+          cursor: pointer
+      - type: image
+        image: /mar-schema/o-klik.svg?v=0187
         tap_action:
           action: perform-action
           perform_action: select.select_option

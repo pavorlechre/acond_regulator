@@ -9,10 +9,10 @@
     <path d="M3 17l5-6 4 3 7-8M3 21h18" transform="translate(236 19)" fill="none" stroke="#3b424a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
     <text x="268" y="38" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700" fill="#3b424a">Teploty</text>
   </g>
-  <g opacity="0.45">
+  <g>
     <path d="M402 4 H582 V46 Q582 58 570 58 H414 Q402 58 402 46 Z" fill="#eef1f4" stroke="#b6bcc4" stroke-width="2"/>
-    <path d="M13 2 4 14h7l-1 8 9-12h-7z" transform="translate(428 19)" fill="none" stroke="#3b424a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-    <text x="460" y="38" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700" fill="#3b424a">Energie</text>
+    <path d="M3 20h18M5 20V12M10 20V6M15 20V10M20 20V4" transform="translate(428 19)" fill="none" stroke="#3b424a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="460" y="38" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700" fill="#3b424a">Výkon</text>
   </g>
   <g opacity="0.45">
     <path d="M594 4 H774 V46 Q774 58 762 58 H606 Q594 58 594 46 Z" fill="#eef1f4" stroke="#b6bcc4" stroke-width="2"/>

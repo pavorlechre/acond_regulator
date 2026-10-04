@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 64" width="1200" height="64">
+  <g>
+    <path d="M402 4 H582 V46 Q582 58 570 58 H414 Q402 58 402 46 Z" fill="#1b3a63" stroke="#122a49" stroke-width="2"/>
+    <path d="M3 20h18M5 20V12M10 20V6M15 20V10M20 20V4" transform="translate(428 19)" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="460" y="38" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700" fill="#ffffff">Výkon</text>
+  </g>
+</svg>
