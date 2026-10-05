@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1200 700" width="1200" height="700">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="240 286 472 324" width="472" height="324">
 <path id="t_phz" d="M251 403 L251 296 L582 296 L702 296 L702 330" fill="none" stroke="none"/>
 <circle r="6" fill="#123f7d" opacity="0.92"><animateMotion dur="17.41s" repeatCount="indefinite" begin="-0.00s"><mpath href="#t_phz"/></animateMotion></circle>
 <circle r="6" fill="#123f7d" opacity="0.92"><animateMotion dur="17.41s" repeatCount="indefinite" begin="-5.80s"><mpath href="#t_phz"/></animateMotion></circle>

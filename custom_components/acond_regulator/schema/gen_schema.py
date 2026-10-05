@@ -50,10 +50,20 @@ def _esc(t: str) -> str:
     return t.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
 
-def platno(telo: list[str], xlink: bool = False) -> str:
+def platno(telo: list[str], xlink: bool = False,
+           vyrez: tuple[int, int, int, int] | None = None) -> str:
+    """SVG v souřadnicích plátna 1200 × 700.
+
+    `vyrez` = (x, y, šířka, výška): obrázek je jen ten kousek plátna (viewBox),
+    souřadnice uvnitř zůstávají stejné. Dashboard ho položí na stejné místo
+    (procenta z `--souradnice`). Pohyblivé vrstvy přes celé plátno nutily
+    tablet překreslovat celé schéma s každým pohybem kuličky — na velkém
+    displeji mu došla paměť a spodek schématu se rozpadal do pruhů.
+    """
     x = ' xmlns:xlink="http://www.w3.org/1999/xlink"' if xlink else ""
+    vx, vy, vw, vh = vyrez or (0, 0, W, H)
     return (f'<svg xmlns="http://www.w3.org/2000/svg"{x} '
-            f'viewBox="0 0 {W} {H}" width="{W}" height="{H}">\n'
+            f'viewBox="{vx} {vy} {vw} {vh}" width="{vw}" height="{vh}">\n'
             + "".join(r + "\n" for r in telo) + "</svg>")
 
 
@@ -349,6 +359,34 @@ def kulicky(ident, d, pocet, barva, r=6) -> list[str]:
     return out
 
 
+# Výřezy pohyblivých vrstev (x, y, šířka, výška) — vždy celá trasa / vrtule
+# s rezervou. Obě varianty jedné vrstvy (točí/stojí, normální/zpětné) mají
+# STEJNÝ výřez, protože je dashboard střídá na jednom místě.
+VYREZY = {
+    "vetrak":    (80, 404, 96, 96),       # střed 128,452; mřížka do 43 px
+    "cerp1":     (510, 576, 48, 48),      # střed 534,600; lopatky 19 px
+    "cerp2":     (792, 576, 48, 48),      # střed 816,600
+    "ventil":    (566, 282, 30, 30),
+    "biv":       (204, 484, 96, 34),      # spirála + záře (tah 12)
+    "kul-primar":   (240, 286, 472, 324), # trasy x 251–702, y 296–600, kulička r 6
+    "kul-tuv":      (240, 286, 352, 324), # x 251–582, y 296–600
+    "kul-sekundar": (692, 354, 448, 256), # x 702–1130, y 364–600
+    "el-sit":    (128, 34, 542, 72),      # x 138–660, y 44–95, kulička r 5
+    "el-panely": (366, 117, 244, 20),     # x 376–600, y 127
+    "el-bat":    (710, 117, 140, 20),     # x 720–840, y 127
+    "el-dum":    (650, 150, 20, 66),      # x 660, y 160–206
+}
+
+
+def vyrez_vrstvy(jmeno: str) -> tuple[int, int, int, int] | None:
+    """Výřez podle jména souboru v-*.svg (v-cerp1-toci → cerp1 …)."""
+    j = jmeno.removeprefix("v-")
+    for klic in sorted(VYREZY, key=len, reverse=True):
+        if j == klic or j.startswith(klic + "-"):
+            return VYREZY[klic]
+    return None
+
+
 def vrstvy() -> dict[str, str]:
     v: dict[str, str] = {}
     v["v-prazdno"] = platno([], xlink=True)
@@ -417,6 +455,14 @@ def vrstvy() -> dict[str, str]:
         kulicky("t_ebv", "M840 127 L720 127", 1, KULICKA_EL, r=5), xlink=True)
     v["v-el-dum"] = platno(
         kulicky("t_ed", T_EL_DUM, 1, KULICKA_EL, r=5), xlink=True)
+
+    # ořez na výřezy (obsah se nemění, jen velikost obrázku)
+    for jm in list(v):
+        box = vyrez_vrstvy(jm)
+        if box is not None:
+            v[jm] = v[jm].replace(f'viewBox="0 0 {W} {H}" width="{W}" height="{H}"',
+                                  f'viewBox="{box[0]} {box[1]} {box[2]} {box[3]}" '
+                                  f'width="{box[2]}" height="{box[3]}"', 1)
     return v
 
 
@@ -604,6 +650,10 @@ def souradnice() -> None:
         print(f"{_i:10s} left: {(x + w / 2) / W * 100:6.3f}%  "
               f"top: {(y + h / 2) / H * 100:6.3f}%  "
               f"width: {TVARY[tvar][0] / W * 100:5.3f}%")
+    print("\n# výřezy pohyblivých vrstev: id, left %, top %, šířka %")
+    for k, (x, y, w, h) in VYREZY.items():
+        print(f"{k:13s} left: {(x + w / 2) / W * 100:7.3f}%  "
+              f"top: {(y + h / 2) / H * 100:7.3f}%  width: {w / W * 100:6.3f}%")
     print("\n# ouška (plátno 1200 × %d): id, left %%, šířka %%" % OUSKO_H)
     for i, (_i, _n, _v, _ik) in enumerate(OUSKA):
         print(f"{_i:10s} left: {(_ousko_x(i) + OUSKO_W / 2) / W * 100:6.3f}%  "

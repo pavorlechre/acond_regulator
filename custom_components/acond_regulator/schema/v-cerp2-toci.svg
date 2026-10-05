@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1200 700" width="1200" height="700">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="792 576 48 48" width="48" height="48">
 <g><animateTransform attributeName="transform" type="rotate" from="0 816 600" to="360 816 600" dur="1.8s" repeatCount="indefinite"/><path d="M816 600 Q 821.7 588.2, 817.7 581.0 Q 810.7 582.9, 816 600 Z" fill="#9aa1a9" stroke="#7d848c" stroke-width="1" transform="rotate(0 816 600)"/>
 <path d="M816 600 Q 821.7 588.2, 817.7 581.0 Q 810.7 582.9, 816 600 Z" fill="#9aa1a9" stroke="#7d848c" stroke-width="1" transform="rotate(72 816 600)"/>
 <path d="M816 600 Q 821.7 588.2, 817.7 581.0 Q 810.7 582.9, 816 600 Z" fill="#9aa1a9" stroke="#7d848c" stroke-width="1" transform="rotate(144 816 600)"/>

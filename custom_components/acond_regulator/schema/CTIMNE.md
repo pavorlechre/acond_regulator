@@ -108,6 +108,15 @@ automaticky posune trubku i kuličky po ní. To je záměr; nerozpojuj to.
 
 ## Pasti, na které se přišlo draze
 
+**Pohyblivé vrstvy nesmí být přes celé plátno.** Do 0.18.0b8 byla každá
+vrstva s kuličkami nebo vrtulkou SVG 1200 × 700 a tablet ve velkém zobrazení
+(aplikace i Chrome) s každým pohybem kuličky překresloval celé schéma; došla
+mu paměť a spodek schématu (tlačítka, ouška) se rozpadal do pruhů. Proto má
+každá pohyblivá vrstva výřez v `VYREZY` (viewBox jen kolem trasy či vrtule,
+souřadnice uvnitř stejné) a dashboard ji klade na střed výřezu — procenta
+vypíše `--souradnice`. Výřezy mají sudé rozměry (polovina pixelu by
+rozmazala hrany). Nová pohyblivá vrstva = nový výřez.
+
 **Celoplošná vrstva polyká dotyky.** Obrázek přes celé plátno je pro
 prohlížeč obdélník, i když je průhledný, a bere kliknutí všude. Každá
 tlačítková vrstva proto musí mít v dashboardu `pointer-events: none`,

@@ -2372,15 +2372,15 @@ views:
         elements:
         - type: image
           entity: sensor.mar_schema_smer
-          image: /mar-schema/v-kul-primar.svg?v=0172
+          image: /mar-schema/v-kul-primar.svg?v=0190
           state_image:
-            normal: /mar-schema/v-kul-primar.svg?v=0172
-            odmraz: /mar-schema/v-kul-primar-zpetne.svg?v=0172
-            chlazeni: /mar-schema/v-kul-primar-zpetne.svg?v=0172
+            normal: /mar-schema/v-kul-primar.svg?v=0190
+            odmraz: /mar-schema/v-kul-primar-zpetne.svg?v=0190
+            chlazeni: /mar-schema/v-kul-primar-zpetne.svg?v=0190
           style:
-            top: 50%
-            left: 50%
-            width: 100%
+            top: 64.000%
+            left: 39.667%
+            width: 39.333%
       - type: conditional
         conditions:
         - entity: binary_sensor.acond_30045_hp_comp_bit_2
@@ -2390,15 +2390,15 @@ views:
         elements:
         - type: image
           entity: sensor.mar_schema_smer
-          image: /mar-schema/v-kul-tuv.svg?v=0172
+          image: /mar-schema/v-kul-tuv.svg?v=0190
           state_image:
-            normal: /mar-schema/v-kul-tuv.svg?v=0172
-            odmraz: /mar-schema/v-kul-tuv-zpetne.svg?v=0172
-            chlazeni: /mar-schema/v-kul-tuv-zpetne.svg?v=0172
+            normal: /mar-schema/v-kul-tuv.svg?v=0190
+            odmraz: /mar-schema/v-kul-tuv-zpetne.svg?v=0190
+            chlazeni: /mar-schema/v-kul-tuv-zpetne.svg?v=0190
           style:
-            top: 50%
-            left: 50%
-            width: 100%
+            top: 64.000%
+            left: 34.667%
+            width: 29.333%
       - type: conditional
         conditions:
         - entity: select.mar_schema_sekundar
@@ -2408,15 +2408,15 @@ views:
         elements:
         - type: image
           entity: sensor.mar_schema_smer
-          image: /mar-schema/v-kul-sekundar.svg?v=0172
+          image: /mar-schema/v-kul-sekundar.svg?v=0190
           state_image:
-            normal: /mar-schema/v-kul-sekundar.svg?v=0172
-            odmraz: /mar-schema/v-kul-sekundar.svg?v=0172
-            chlazeni: /mar-schema/v-kul-sekundar-zpetne.svg?v=0172
+            normal: /mar-schema/v-kul-sekundar.svg?v=0190
+            odmraz: /mar-schema/v-kul-sekundar.svg?v=0190
+            chlazeni: /mar-schema/v-kul-sekundar-zpetne.svg?v=0190
           style:
-            top: 50%
-            left: 50%
-            width: 100%
+            top: 68.857%
+            left: 76.333%
+            width: 37.333%
       - type: conditional
         conditions:
         - entity: select.mar_schema_sekundar
@@ -2424,15 +2424,15 @@ views:
         elements:
         - type: image
           entity: sensor.mar_schema_smer
-          image: /mar-schema/v-kul-sekundar.svg?v=0172
+          image: /mar-schema/v-kul-sekundar.svg?v=0190
           state_image:
-            normal: /mar-schema/v-kul-sekundar.svg?v=0172
-            odmraz: /mar-schema/v-kul-sekundar.svg?v=0172
-            chlazeni: /mar-schema/v-kul-sekundar-zpetne.svg?v=0172
+            normal: /mar-schema/v-kul-sekundar.svg?v=0190
+            odmraz: /mar-schema/v-kul-sekundar.svg?v=0190
+            chlazeni: /mar-schema/v-kul-sekundar-zpetne.svg?v=0190
           style:
-            top: 50%
-            left: 50%
-            width: 100%
+            top: 68.857%
+            left: 76.333%
+            width: 37.333%
       - type: conditional
         conditions:
         - entity: select.mar_schema_sekundar
@@ -2442,15 +2442,15 @@ views:
         elements:
         - type: image
           entity: sensor.mar_schema_smer
-          image: /mar-schema/v-kul-sekundar.svg?v=0172
+          image: /mar-schema/v-kul-sekundar.svg?v=0190
           state_image:
-            normal: /mar-schema/v-kul-sekundar.svg?v=0172
-            odmraz: /mar-schema/v-kul-sekundar.svg?v=0172
-            chlazeni: /mar-schema/v-kul-sekundar-zpetne.svg?v=0172
+            normal: /mar-schema/v-kul-sekundar.svg?v=0190
+            odmraz: /mar-schema/v-kul-sekundar.svg?v=0190
+            chlazeni: /mar-schema/v-kul-sekundar-zpetne.svg?v=0190
           style:
-            top: 50%
-            left: 50%
-            width: 100%
+            top: 68.857%
+            left: 76.333%
+            width: 37.333%
       - type: conditional
         conditions:
         - entity: binary_sensor.mar_ma_fve
@@ -2460,11 +2460,11 @@ views:
           above: 10
         elements:
         - type: image
-          image: /mar-schema/v-el-panely.svg?v=0172
+          image: /mar-schema/v-el-panely.svg?v=0190
           style:
-            top: 50%
-            left: 50%
-            width: 100%
+            top: 18.143%
+            left: 40.667%
+            width: 20.333%
       - type: conditional
         conditions:
         - entity: binary_sensor.mar_ma_fve
@@ -2474,11 +2474,11 @@ views:
           above: 10
         elements:
         - type: image
-          image: /mar-schema/v-el-dum.svg?v=0172
+          image: /mar-schema/v-el-dum.svg?v=0190
           style:
-            top: 50%
-            left: 50%
-            width: 100%
+            top: 26.143%
+            left: 55.000%
+            width: 1.667%
       - type: conditional
         conditions:
         - entity: binary_sensor.mar_ma_fve
@@ -2488,11 +2488,11 @@ views:
           above: 10
         elements:
         - type: image
-          image: /mar-schema/v-el-sit-ven.svg?v=0172
+          image: /mar-schema/v-el-sit-ven.svg?v=0190
           style:
-            top: 50%
-            left: 50%
-            width: 100%
+            top: 10.000%
+            left: 33.250%
+            width: 45.167%
       - type: conditional
         conditions:
         - entity: binary_sensor.mar_ma_fve
@@ -2502,11 +2502,11 @@ views:
           below: -10
         elements:
         - type: image
-          image: /mar-schema/v-el-sit-dovnitr.svg?v=0172
+          image: /mar-schema/v-el-sit-dovnitr.svg?v=0190
           style:
-            top: 50%
-            left: 50%
-            width: 100%
+            top: 10.000%
+            left: 33.250%
+            width: 45.167%
       - type: conditional
         conditions:
         - entity: binary_sensor.mar_ma_fve
@@ -2516,11 +2516,11 @@ views:
           above: 10
         elements:
         - type: image
-          image: /mar-schema/v-el-bat-vybij.svg?v=0172
+          image: /mar-schema/v-el-bat-vybij.svg?v=0190
           style:
-            top: 50%
-            left: 50%
-            width: 100%
+            top: 18.143%
+            left: 65.000%
+            width: 11.667%
       - type: conditional
         conditions:
         - entity: binary_sensor.mar_ma_fve
@@ -2530,31 +2530,31 @@ views:
           below: -10
         elements:
         - type: image
-          image: /mar-schema/v-el-bat-nabij.svg?v=0172
+          image: /mar-schema/v-el-bat-nabij.svg?v=0190
           style:
-            top: 50%
-            left: 50%
-            width: 100%
+            top: 18.143%
+            left: 65.000%
+            width: 11.667%
       - type: image
         entity: binary_sensor.acond_30045_hp_comp_bit_1
         image: /mar-schema/v-prazdno.svg?v=0172
         state_image:
-          'on': /mar-schema/v-vetrak-toci.svg?v=0172
-          'off': /mar-schema/v-vetrak-stoji.svg?v=0172
+          'on': /mar-schema/v-vetrak-toci.svg?v=0190
+          'off': /mar-schema/v-vetrak-stoji.svg?v=0190
         style:
-          top: 50%
-          left: 50%
-          width: 100%
+          top: 64.571%
+          left: 10.667%
+          width: 8.000%
       - type: image
         entity: binary_sensor.acond_30045_hp_comp_bit_2
         image: /mar-schema/v-prazdno.svg?v=0172
         state_image:
-          'on': /mar-schema/v-cerp1-toci.svg?v=0172
-          'off': /mar-schema/v-cerp1-stoji.svg?v=0172
+          'on': /mar-schema/v-cerp1-toci.svg?v=0190
+          'off': /mar-schema/v-cerp1-stoji.svg?v=0190
         style:
-          top: 50%
-          left: 50%
-          width: 100%
+          top: 85.714%
+          left: 44.500%
+          width: 4.000%
       - type: conditional
         conditions:
         - entity: select.mar_schema_sekundar
@@ -2563,11 +2563,11 @@ views:
           state: 'off'
         elements:
         - type: image
-          image: /mar-schema/v-cerp2-stoji.svg?v=0172
+          image: /mar-schema/v-cerp2-stoji.svg?v=0190
           style:
-            top: 50%
-            left: 50%
-            width: 100%
+            top: 85.714%
+            left: 68.000%
+            width: 4.000%
       - type: conditional
         conditions:
         - entity: select.mar_schema_sekundar
@@ -2576,11 +2576,11 @@ views:
           state: 'off'
         elements:
         - type: image
-          image: /mar-schema/v-cerp2-stoji.svg?v=0172
+          image: /mar-schema/v-cerp2-stoji.svg?v=0190
           style:
-            top: 50%
-            left: 50%
-            width: 100%
+            top: 85.714%
+            left: 68.000%
+            width: 4.000%
       - type: conditional
         conditions:
         - entity: select.mar_schema_sekundar
@@ -2589,22 +2589,22 @@ views:
           state: 'on'
         elements:
         - type: image
-          image: /mar-schema/v-cerp2-toci.svg?v=0172
+          image: /mar-schema/v-cerp2-toci.svg?v=0190
           style:
-            top: 50%
-            left: 50%
-            width: 100%
+            top: 85.714%
+            left: 68.000%
+            width: 4.000%
       - type: conditional
         conditions:
         - entity: select.mar_schema_sekundar
           state: Stále
         elements:
         - type: image
-          image: /mar-schema/v-cerp2-toci.svg?v=0172
+          image: /mar-schema/v-cerp2-toci.svg?v=0190
           style:
-            top: 50%
-            left: 50%
-            width: 100%
+            top: 85.714%
+            left: 68.000%
+            width: 4.000%
       - type: conditional
         conditions:
         - entity: select.mar_schema_sekundar
@@ -2613,31 +2613,31 @@ views:
           state: 'on'
         elements:
         - type: image
-          image: /mar-schema/v-cerp2-toci.svg?v=0172
+          image: /mar-schema/v-cerp2-toci.svg?v=0190
           style:
-            top: 50%
-            left: 50%
-            width: 100%
+            top: 85.714%
+            left: 68.000%
+            width: 4.000%
       - type: image
         entity: binary_sensor.acond_30007_tc_status_bit_3
         image: /mar-schema/v-prazdno.svg?v=0172
         state_image:
-          'on': /mar-schema/v-ventil-tuv.svg?v=0172
-          'off': /mar-schema/v-ventil-aku.svg?v=0172
+          'on': /mar-schema/v-ventil-tuv.svg?v=0190
+          'off': /mar-schema/v-ventil-aku.svg?v=0190
         style:
-          top: 50%
-          left: 50%
-          width: 100%
+          top: 42.429%
+          left: 48.417%
+          width: 2.500%
       - type: image
         entity: binary_sensor.acond_30007_tc_status_bit_9
         image: /mar-schema/v-prazdno.svg?v=0172
         state_image:
-          'on': /mar-schema/v-biv-topi.svg?v=0172
-          'off': /mar-schema/v-biv-klid.svg?v=0172
+          'on': /mar-schema/v-biv-topi.svg?v=0190
+          'off': /mar-schema/v-biv-klid.svg?v=0190
         style:
-          top: 50%
-          left: 50%
-          width: 100%
+          top: 71.571%
+          left: 21.000%
+          width: 8.000%
       - type: image
         entity: sensor.mar_kompresor_vizual
         image: /mar-schema/v-prazdno.svg?v=0172

@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1200 700" width="1200" height="700">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="692 354 448 256" width="448" height="256">
 <path id="t_sh" d="M744 364 L784 364 L784 520 L880 520" fill="none" stroke="none"/>
 <circle r="6" fill="#8f2216" opacity="0.92"><animateMotion dur="8.59s" repeatCount="indefinite" begin="-0.00s"><mpath href="#t_sh"/></animateMotion></circle>
 <circle r="6" fill="#8f2216" opacity="0.92"><animateMotion dur="8.59s" repeatCount="indefinite" begin="-2.86s"><mpath href="#t_sh"/></animateMotion></circle>

@@ -18,6 +18,9 @@ verze podle [sémantického verzování](https://semver.org/lang/cs/).
 - Vsuvka `dashboard/pohled_schema.yaml`: Schéma soustavy nahoře v okně Pohled integrace Acond (tlačítka režimů Acondu zůstávají). Schéma je dál i jako samostatné podokno `/acond-dashboard/mar_schema`.
 - Oba soubory generuje `dashboard_src/gen_views.py` z jediného zdroje `dashboard_src/mar_dashboard.yaml`.
 
+### Opraveno
+- Schéma na tabletu ve velkém zobrazení blikalo a spodek (tlačítka, ouška) se rozpadal do vodorovných pruhů: pohyblivé vrstvy (kuličky, vrtulky, větrák, ventil, bivalence) byly obrázky přes celé schéma a s každým pohybem se překreslovalo všechno. Teď má každá jen svůj výřez; vzhled beze změny (ověřeno porovnáním pixelů).
+
 ### Změněno
 - Schéma: zeď je mezi trubkami přerušená (okno s malými teplotami); místo nápisu „Tepelné čerpadlo“ jsou pod strojem otáčky (v závorce strop) na jednom řádku, zpátečka se přesunula pod modrou trubku, výstupní teplota nad ohyb červené. Příručka: obrázek schématu a popis (nová položka 15).
 - Manifest: `http` uveden v závislostech (používá se pro `/mar-schema/`). Chování beze změny.
