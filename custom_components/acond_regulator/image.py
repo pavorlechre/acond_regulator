@@ -49,6 +49,7 @@ from .const import (
     ACOND_TEPELNY_VYKON,
     ACOND_BIT_TUV,
     ACOND_INDOOR,
+    ACOND_OUTLET,
     ACOND_OUTDOOR,
     ACOND_RETURN_ACT,
     ACOND_RETURN_READBACK,
@@ -56,6 +57,8 @@ from .const import (
     ACOND_STARTS_TOTAL,
     CURVE_X,
     DOMAIN,
+    MINI_TEPLOTY_HODIN,
+    MINI_TEPLOTY_KEY,
     TEPLOTY_HODIN,
     TEPLOTY_KEY,
     TEPLOTY_KROK_MIN,
@@ -88,6 +91,7 @@ from .stav_png import sestav_radky, vykresli
 from .pocasi_png import PocasiData, vykresli as vykresli_pocasi, vyhled_tekv
 from .teploty_png import TeplotyData, vykresli as vykresli_teploty
 from .vykon_png import VykonData, vykresli as vykresli_vykon
+from .mini_teploty_png import MiniTeplotyData, vykresli as vykresli_mini_teploty
 from .statistics.accumulator import StatisticsAccumulator
 from .statistics.table_png import render_days, render_table
 
@@ -319,6 +323,7 @@ async def async_setup_entry(
             TeplotyImage(hass, coordinator, entry),
             PocasiImage(hass, coordinator, entry),
             VykonImage(hass, coordinator, entry),
+            MiniTeplotyImage(hass, coordinator, entry),
         ]
     )
 
@@ -997,4 +1002,55 @@ class VykonImage(_VrstvaImage):
         return VykonData(
             casy=[dt_util.as_local(c) for c in casy],
             prikon_kw=prikon, vykon_kw=vykon, cop=cop,
+        )
+
+
+class MiniTeplotyImage(_VrstvaImage):
+    """image.mar_teploty_mini — malé teploty v „okně ve zdi“ schématu (6 h).
+
+    Je vidět pořád, takže se obnovuje pořád (à 5 min, kreslení na pozadí jako
+    u oušek). Na ouška ani přepínače nereaguje.
+    """
+
+    _attr_name = "Teploty mini"       # entity_id: image.mar_teploty_mini
+    KLIC = MINI_TEPLOTY_KEY
+
+    async def async_added_to_hass(self) -> None:
+        await ImageEntity.async_added_to_hass(self)
+        self._nastav_aktivni(True)
+
+    async def _vyrob(self) -> bytes:
+        data = await self._data()
+        return await self.hass.async_add_executor_job(vykresli_mini_teploty, data)
+
+    async def _data(self) -> MiniTeplotyData:
+        konec = dt_util.utcnow().replace(second=0, microsecond=0)
+        konec -= dt.timedelta(minutes=konec.minute % TEPLOTY_KROK_MIN)
+        start = konec - dt.timedelta(hours=MINI_TEPLOTY_HODIN)
+        kroku = MINI_TEPLOTY_HODIN * 60 // TEPLOTY_KROK_MIN
+        casy = [start + dt.timedelta(minutes=TEPLOTY_KROK_MIN * i) for i in range(kroku + 1)]
+        zdroje = {
+            "mistnost": ACOND_INDOOR,
+            "cil": ACOND_ROOM_SET,
+            "vystup": ACOND_OUTLET,
+            "pozadovana": ACOND_RETURN_READBACK,
+            "skutecna": ACOND_RETURN_ACT,
+            "tuv": ACOND_BIT_TUV,
+            "odmraz": ACOND_BIT_DEFROST,
+        }
+        historie = await _historie(self.hass, start - dt.timedelta(hours=1), list(zdroje.values()))
+
+        def rada(klic, prevod=_cislo):
+            return _prevzorkuj(historie.get(zdroje[klic], []), casy, prevod)
+
+        zap = lambda s: s == "on"
+        tuv, odmraz = rada("tuv", zap), rada("odmraz", zap)
+        return MiniTeplotyData(
+            casy=[dt_util.as_local(c) for c in casy],
+            mistnost=rada("mistnost"),
+            cil=rada("cil"),
+            vystup=rada("vystup"),
+            pozadovana=rada("pozadovana"),
+            skutecna=rada("skutecna"),
+            pas=[bool(a) or bool(b) for a, b in zip(tuv, odmraz)],
         )

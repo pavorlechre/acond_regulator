@@ -745,6 +745,10 @@ VYKON_HODIN = 12
 ACOND_TEPELNY_VYKON = "sensor.acond_30028_ahp"   # tepelný výkon
 ACOND_COP = "sensor.acond_30029_cop"
 POCASI_HODIN = 24                             # ouško Počasí: hodin zpět i dopředu
+# Malé teploty ve schématu („okno ve zdi“ mezi TČ a bojlerem) — vidět pořád.
+MINI_TEPLOTY_KEY = "teploty_mini_png"         # image.mar_teploty_mini
+MINI_TEPLOTY_HODIN = 6
+ACOND_OUTLET = "sensor.acond_30018_t_act_water_outlet"   # výstup topné vody z TČ
 
 
 def signal_vrstva_vykon(entry_id: str) -> str:
