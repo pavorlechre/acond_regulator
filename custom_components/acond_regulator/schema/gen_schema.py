@@ -137,6 +137,10 @@ DEFS = """<defs>
 # Pata zdi končí nad spodní lištou tlačítek; kdyby se lišta posunula,
 # mění se tady jedno číslo.
 ZED_X, ZED_Y, ZED_W, ZED_H = 428, 20, 44, 618
+# „Okno ve zdi“ mezi červenou (296) a modrou (505) trubkou: zeď je tu přerušená
+# a dashboard sem položí malé teploty (image.mar_teploty_mini, mini_teploty_png.py
+# — plocha OKNO tam musí sedět s tímhle otvorem).
+ZED_OKNO = (303, 498)                   # y od–do, kde zeď chybí
 
 # ── trasy potrubí (sdílené s vrstvami kuliček – proto nahoře) ────────────
 T_PRIMAR_TOPI = "M251 403 L251 296 L582 296 L702 296 L702 330"
@@ -155,11 +159,12 @@ def podklad(fve: bool = True) -> str:
     r: list[str] = [DEFS]
     r.append(f'<rect x="0" y="0" width="{W}" height="{H}" fill="#fbfbfc"/>')
 
-    # zeď
-    r.append(f'<rect x="{ZED_X}" y="{ZED_Y}" width="{ZED_W}" height="{ZED_H}" '
-             f'fill="url(#zed)" stroke="{TMAVA}" stroke-width="2"/>')
-    r.append(f'<rect x="{ZED_X}" y="{ZED_Y}" width="{ZED_W}" height="{ZED_H}" '
-             f'fill="url(#srafy)" opacity="0.5"/>')
+    # zeď — dva kusy, mezi nimi okno s malými teplotami
+    for y0, y1 in ((ZED_Y, ZED_OKNO[0]), (ZED_OKNO[1], ZED_Y + ZED_H)):
+        r.append(f'<rect x="{ZED_X}" y="{y0}" width="{ZED_W}" height="{y1 - y0}" '
+                 f'fill="url(#zed)" stroke="{TMAVA}" stroke-width="2"/>')
+        r.append(f'<rect x="{ZED_X}" y="{y0}" width="{ZED_W}" height="{y1 - y0}" '
+                 f'fill="url(#srafy)" opacity="0.5"/>')
 
     if fve:
         # stožár vysokého napětí
@@ -196,7 +201,7 @@ def podklad(fve: bool = True) -> str:
     r.append('<rect x="60" y="530" width="18" height="14" fill="#8b9199"/>')
     r.append('<rect x="280" y="530" width="18" height="14" fill="#8b9199"/>')
     r.append(txt(62, 522, "ACOND", 13, fill=SEDA_POPIS, anchor="start"))
-    r.append(txt(179, 560, "Tepelné čerpadlo", 15))
+    # pod TČ místo nápisu „Tepelné čerpadlo“ píše dashboard otáčky (požadované)
 
     if fve:
         # vedení elektřiny

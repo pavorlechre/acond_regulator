@@ -50,14 +50,23 @@ hodnoty = [
     (31.7, 36.6, '12,4 °C'), (43.7, 36.6, '22,6 °C'), (43.7, 36.6, '(22,5 °C)', True),
     (8.3, 31.7, '640 W'), (8.3, 38.9, '3 120 W'), (8.3, 46.0, '4,9'), (8.3, 50.0, 'Dnes 3,4 kWh'),
     (23.3, 9.1, 'Import 1,8 kWh'), (23.3, 11.7, 'Export 4,2 kWh'),
-    (24.6, 51.4, '32,5 °C'), (31.0, 57.5, '2 450 rpm'), (31.0, 57.5, '(3 000 rpm)', True),
-    (31.0, 64.9, '28,1 °C'), (31.0, 64.9, '(28,4 °C)', True),
+    (24.3, 40.0, '32,5 °C'), (10.3, 79.43, '2 450 rpm'), (19.3, 75.71, '(3 000 rpm)', True),
+    (28.5, 74.857, '28,1 °C'), (28.5, 74.857, '(28,4 °C)', True),
     (48.5, 65.1, '47,5 °C', False, True), (48.5, 65.1, '(48,0 °C)', True, True),
     (23.7, 32.0, '18,6 kWh'), (55.0, 10.6, '3 850 W'), (44.5, 18.1, '5 900 W'),
     (65.0, 18.1, '−1 210 W'), (55.0, 27.1, '840 W'), (79.8, 18.1, '82 %'),
 ]
 for h in hodnoty:
     telo.append(hod(*h))
+
+# malé teploty v okně ve zdi (v HA image.mar_teploty_mini) — ukázkový obrázek
+# vedle skriptu, nakreslený mini_teploty_png.py z ukázkových řad
+import base64
+_mini = Path(__file__).resolve().parent / 'mini-teploty-ukazka.png'
+if _mini.exists():
+    x0, y0, x1, y1 = 322, 306, 520, 496          # = OKNO v mini_teploty_png.py
+    telo.append(f'<image x="{x0}" y="{y0}" width="{x1 - x0}" height="{y1 - y0}" '
+                f'href="data:image/png;base64,{base64.b64encode(_mini.read_bytes()).decode()}"/>')
 
 # stav regulace (v HA ho kreslí image.mar_stav_regulace; tady vektorově)
 stav = [(0, 20, 700, '#1b3a63', 'Stav regulace'),
@@ -73,9 +82,10 @@ for dy, fs, fw, c, t in stav:
 
 # značky: (číslo, x, y)
 ZNACKY = [
-    (1, 470, 70), (2, 192, 400), (3, 455, 225), (4, 340, 532), (5, 612, 330),
-    (6, 530, 430), (7, 1000, 440), (8, 660, 600), (9, 770, 200),
+    (1, 470, 70), (2, 192, 400), (3, 455, 225), (4, 398, 532), (5, 612, 330),
+    (6, 642, 470), (7, 1000, 440), (8, 660, 600), (9, 770, 200),
     (10, 22, 605), (11, 518, 666), (12, 940, 628), (13, 930, 30), (14, 712, 666),
+    (15, 298, 318),
 ]
 for n, x, y in ZNACKY:
     telo.append(f'<g><circle cx="{x}" cy="{y}" r="16" fill="#d62728" stroke="#ffffff" '

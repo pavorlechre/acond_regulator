@@ -2299,8 +2299,8 @@
         entity: binary_sensor.mar_ma_fve
         image: /mar-schema/v-prazdno.svg?v=0172
         state_image:
-          'on': /mar-schema/podklad.svg?v=0172
-          'off': /mar-schema/podklad-bez-fve.svg?v=0172
+          'on': /mar-schema/podklad.svg?v=0190
+          'off': /mar-schema/podklad-bez-fve.svg?v=0190
         style:
           top: 50%
           left: 50%
@@ -2746,13 +2746,27 @@
           text-shadow: '0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff'
           white-space: nowrap
         prefix: 'Export '
+      - type: image
+        image: /mar-schema/v-prazdno.svg?v=0172
+        image_entity: image.mar_teploty_mini
+        tap_action:
+          action: perform-action
+          perform_action: select.select_option
+          target:
+            entity_id: select.mar_vrstva
+          data:
+            option: Teploty
+        style:
+          top: 57.286%
+          left: 35.083%
+          width: 16.500%
       - type: state-label
         entity: sensor.acond_30018_t_act_water_outlet
         tap_action:
           action: more-info
         style:
-          top: 51.4%
-          left: 24.6%
+          top: 40.0%
+          left: 24.3%
           font-size: 11px
           font-weight: '700'
           color: '#101418'
@@ -2763,26 +2777,27 @@
         tap_action:
           action: more-info
         style:
-          top: 57.5%
-          left: 31.0%
+          top: 79.5%
+          left: 14.667%
           font-size: 11px
           font-weight: '700'
           color: '#101418'
           text-shadow: '0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff'
           white-space: nowrap
+          transform: translate(-100%, -50%)
       - type: state-label
         entity: number.acond_40014_comp_capacity_max_set
         tap_action:
           action: more-info
         style:
-          top: 57.5%
-          left: 31.0%
+          top: 79.5%
+          left: 15.167%
           font-size: 9px
           font-weight: '600'
           color: '#5a6068'
           text-shadow: '0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff'
           white-space: nowrap
-          transform: translate(-50%, calc(-50% + 13px))
+          transform: translate(0, -50%)
         prefix: (
         suffix: )
       - type: state-label
@@ -2790,8 +2805,8 @@
         tap_action:
           action: more-info
         style:
-          top: 64.9%
-          left: 31.0%
+          top: 74.857%
+          left: 28.5%
           font-size: 11px
           font-weight: '700'
           color: '#101418'
@@ -2802,8 +2817,8 @@
         tap_action:
           action: more-info
         style:
-          top: 64.9%
-          left: 31.0%
+          top: 74.857%
+          left: 28.5%
           font-size: 9px
           font-weight: '600'
           color: '#5a6068'

@@ -7,6 +7,7 @@ verze podle [sémantického verzování](https://semver.org/lang/cs/).
 ## [Nevydáno]
 
 ### Přidáno
+- Okno ve zdi: malé teploty přímo ve schématu mezi tepelným čerpadlem a bojlerem (`image.mar_teploty_mini`), vidět pořád, bez vypínače. 6 h bez os: místnost proti cíli, výstup, skutečná a požadovaná zpátečka; růžová mezera výstup–zpátečka ukazuje chod stroje; TUV a odmrazování šedým pruhem; hodnoty „teď“ u pravé hrany. Klepnutí otevře ouško Teploty. Obnova po 5 minutách.
 - Ouško Výkon (místo Energie): malý graf vložený přes topnou soustavu ve schématu (od trubky z AKU po tlačítko FVE topení, výška AKU) — tepelný výkon a příkon jako plochy, COP na pravé ose, 12 h, velké COP nahoře. Zapíná a vypíná se klepnutím na ouško (`switch.mar_vrstva_vykon`, pamatuje si stav), nezávisle na Teplotách a Počasí.
 - Počasí: min a max i v historii venkovní teploty (jen skutečné vrcholy, ne useknutý kraj okna).
 - Ouško Počasí: noci jako jemně šedé pozadí (západ → východ slunce z HA), T ekv tečkovaně dopředu stejným vzorcem jako MaR — končí, kam ještě sahá okno předpovědi (konec předpovědi minus hodiny předpovědi z nastavení), blok „venku teď / T ekv teď / T ekv za 12 h“, minimum a maximum předpovědi.
@@ -18,6 +19,7 @@ verze podle [sémantického verzování](https://semver.org/lang/cs/).
 - Oba soubory generuje `dashboard_src/gen_views.py` z jediného zdroje `dashboard_src/mar_dashboard.yaml`.
 
 ### Změněno
+- Schéma: zeď je mezi trubkami přerušená (okno s malými teplotami); místo nápisu „Tepelné čerpadlo“ jsou pod strojem otáčky (v závorce strop) na jednom řádku, zpátečka se přesunula pod modrou trubku, výstupní teplota nad ohyb červené. Příručka: obrázek schématu a popis (nová položka 15).
 - Manifest: `http` uveden v závislostech (používá se pro `/mar-schema/`). Chování beze změny.
 - Počasí: výhled T ekv tence čárkovaně až na konec grafu (+24 h) — koordinátor drží 24 h + hodiny předpovědi z nastavení; venkovní teplota tyrkysově (modrá splývala s fialovou T ekv); rezerva nad a pod křivkami, aby se popisky min/max vešly.
 - Ouška bez probliknutí: graf se kreslí na pozadí a do aplikace jde až hotový; s otevřeným ouškem se předkreslují všechny grafy (přepnutí mezi nimi je okamžité); úplně první kreslení po startu kryje plocha „Kreslím graf…“ místo prosvítajícího schématu.

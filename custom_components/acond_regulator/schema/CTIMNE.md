@@ -59,6 +59,15 @@ pravý okraj tlačítka FVE topení, výška AKU). Zapíná ho přepínač
 schématu, posuň `VYKON_VLOZKA` (generátor) i `VLOZKA` (vykon_png.py) a
 procenta umístění v dashboardu.
 
+**Okno ve zdi** mezi TČ a bojlerem: zeď je přerušená (`ZED_OKNO`, mezi
+červenou a modrou trubkou) a dashboard do otvoru položí malé teploty
+`image.mar_teploty_mini` (`mini_teploty_png.py`, plocha `OKNO`, 6 h, bez os).
+Je vidět pořád, nemá ouško ani vypínač; klepnutí otevře ouško Teploty. Při
+posunu okna změň `ZED_OKNO` (generátor), `OKNO` (mini_teploty_png.py), procenta
+v dashboardu a obrázek příručky (`gen_obrazek_prirucka.py`, ukázka
+`mini-teploty-ukazka.png`). Nápis „Tepelné čerpadlo“ zmizel — pod strojem
+jsou otáčky, zpátečka je pod modrou trubkou, výstup nad ohybem červené.
+
 | Chci… | Změním |
 |---|---|
 | posunout nebo přejmenovat tlačítko | tabulku `TLACITKA` |
