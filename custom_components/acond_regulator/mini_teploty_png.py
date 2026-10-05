@@ -2,7 +2,7 @@
 
 Je vidět pořád (bez vypínače), proto je subtilní: žádné osy, mřížka ani
 legenda, jen křivky a barevné plochy za posledních 6 h a u pravé hrany
-(= teď) drobné hodnoty. Podrobnosti ukáže klepnutí → ouško Teploty.
+(= teď) drobné hodnoty všech pěti čar. Podrobnosti ukáže klepnutí → ouško Teploty.
 
   • Nahoře MÍSTNOST: schody, cíl čárkovaně zeleně, odchylka vybarvená
     (červená nad cílem, modrá pod ním). Rozsah se přizpůsobí odchylce,
@@ -50,6 +50,7 @@ PAS = (0, 0, 0, 14)
 L, R = 2, W - 34                        # graf; vpravo sloupek na hodnoty
 P1 = (8, 62)                            # místnost: top, bottom
 P2 = (76, 184)                          # voda
+ROZESTUP = 10                           # svislá mezera mezi hodnotami vpravo
 
 
 @dataclass
@@ -134,7 +135,8 @@ def vykresli(d: MiniTeplotyData) -> bytes:
                         fill=barva_fn(a, b) + (alfa,))
 
     posledni = lambda r: next((v for v in reversed(r) if v is not None), None)
-    popisky: list[tuple[float, str, tuple]] = []      # (y, text, barva)
+    horni: list[tuple[float, str, tuple]] = []        # (y, text, barva) — místnost
+    dolni: list[tuple[float, str, tuple]] = []        # voda
 
     # ── místnost ──
     cil_ted = posledni(d.cil)
@@ -149,7 +151,8 @@ def vykresli(d: MiniTeplotyData) -> bytes:
         cara(schody(d.mistnost, Y1), ROOM, 1.7)
         m = posledni(d.mistnost)
         if m is not None:
-            popisky.append((Y1(m) / S, _fmt(m), ROOM))
+            horni.append((Y1(m) / S, _fmt(m), ROOM))
+        horni.append((Y1(cil_ted) / S, _fmt(cil_ted), TGT))
 
     # ── voda ──
     for i in range(n):                  # šedý pruh TUV / odmraz přes oba panely
@@ -168,21 +171,21 @@ def vykresli(d: MiniTeplotyData) -> bytes:
     teckovane_pod(d.skutecna, Y2, lo2, ACT + (120,))
     teckovane_pod(d.vystup, Y2, lo2, VODA + (90,))
 
-    for rada, col in ((d.pozadovana, AMB), (d.skutecna, ACT)):
+    for rada, col in ((d.vystup, VODA), (d.pozadovana, AMB), (d.skutecna, ACT)):
         v = posledni(rada)
         if v is not None:
-            popisky.append((Y2(v) / S, _fmt(v), col))
+            dolni.append((Y2(v) / S, _fmt(v), col))
 
-    # hodnoty „teď“ u pravé hrany — rozestrčené, aby se nepřekrývaly
-    popisky.sort(key=lambda p: p[0])
-    ys: list[float] = []
-    for y, _t, _c in popisky:
-        y = max(y, (ys[-1] + 11) if ys else 0)
-        ys.append(min(y, H - 6))
-    for i in range(len(ys) - 2, -1, -1):        # zpětně, když spodní narazil na dno
-        ys[i] = min(ys[i], ys[i + 1] - 11)
-    for (_y, t, c), y in zip(popisky, ys):
-        g.text(((R + 4) * S, y * S), t, fill=c, font=_font(10, True), anchor="lm")
+    # hodnoty „teď“ u pravé hrany — v každém panelu rozestrčené, ať se nepřekrývají
+    for popisky, (top, bot) in ((horni, (P1[0] - 4, P1[1] + 6)), (dolni, (P2[0] - 2, H - 5))):
+        popisky.sort(key=lambda p: p[0])
+        ys: list[float] = []
+        for y, _t, _c in popisky:
+            ys.append(min(max(y, (ys[-1] + ROZESTUP) if ys else top), bot))
+        for i in range(len(ys) - 2, -1, -1):    # zpětně, když spodní narazil na dno
+            ys[i] = min(ys[i], ys[i + 1] - ROZESTUP)
+        for (_y, t, c), y in zip(popisky, ys):
+            g.text(((R + 4) * S, y * S), t, fill=c, font=_font(9, True), anchor="lm")
 
     out = img.resize(VYSTUP, Image.LANCZOS)
     buf = BytesIO()

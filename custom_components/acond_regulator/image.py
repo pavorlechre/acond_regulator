@@ -44,6 +44,7 @@ from homeassistant.helpers.event import (
 
 from .const import (
     ACOND_BIT_DEFROST,
+    ACOND_COMP_BIT,
     ACOND_COP,
     ACOND_POWER,
     ACOND_TEPELNY_VYKON,
@@ -685,6 +686,25 @@ def _prevzorkuj(stavy: list, casy: list[dt.datetime], prevod):
     return out
 
 
+def _prevzorkuj_kdykoli(stavy: list, casy: list[dt.datetime], test) -> list[bool]:
+    """True, když stav splnil `test` KDYKOLI v kroku mřížky (od minulého bodu).
+
+    Pro krátké děje (odmrazování 3 min, krátký ohřev TUV): obyčejné
+    převzorkování se dívá jen na okamžik v bodě mřížky a děj mezi dvěma
+    body by propadl.
+    """
+    stavy = sorted(stavy, key=lambda st: st.last_changed)
+    out, j, posledni = [], 0, False
+    for t in casy:
+        bylo = posledni
+        while j < len(stavy) and stavy[j].last_changed <= t:
+            posledni = bool(test(stavy[j].state))
+            bylo = bylo or posledni
+            j += 1
+        out.append(bylo)
+    return out
+
+
 async def _historie(hass: HomeAssistant, start: dt.datetime, ids: list[str]) -> dict:
     """Stavy entit od `start` z recorderu. Selhání = prázdno (graf je nadstavba)."""
     try:
@@ -839,7 +859,8 @@ class TeplotyImage(_VrstvaImage):
             return _prevzorkuj(historie.get(eid, []) if eid else [], casy, prevod)
 
         zap = lambda s: s == "on"
-        tuv, odmraz = rada("tuv", zap), rada("odmraz", zap)
+        kdykoli = lambda k: _prevzorkuj_kdykoli(historie.get(zdroje[k], []), casy, zap)
+        tuv, odmraz = kdykoli("tuv"), kdykoli("odmraz")
         mistni = [dt_util.as_local(c) for c in casy]
         return TeplotyData(
             casy=mistni,
@@ -851,6 +872,8 @@ class TeplotyImage(_VrstvaImage):
             pozadovana=rada("pozadovana"),
             skutecna=rada("skutecna"),
             pas=[bool(a) or bool(b) for a, b in zip(tuv, odmraz)],
+            tuv=tuv,
+            odmraz=odmraz,
             krivka_x=list(CURVE_X),
             krivka_y=list(self._coordinator.curve_y),
         )
@@ -991,8 +1014,9 @@ class VykonImage(_VrstvaImage):
         start = konec - dt.timedelta(hours=VYKON_HODIN)
         kroku = VYKON_HODIN * 60 // TEPLOTY_KROK_MIN
         casy = [start + dt.timedelta(minutes=TEPLOTY_KROK_MIN * i) for i in range(kroku + 1)]
-        ids = [ACOND_POWER, ACOND_TEPELNY_VYKON, ACOND_COP]
+        ids = [ACOND_POWER, ACOND_TEPELNY_VYKON, ACOND_COP, ACOND_BIT_TUV, ACOND_BIT_DEFROST]
         historie = await _historie(self.hass, start - dt.timedelta(hours=1), ids)
+        zap = lambda s: s == "on"
         prikon = _prevzorkuj(historie.get(ACOND_POWER, []), casy, self._na_kw(ACOND_POWER))
         vykon = _prevzorkuj(historie.get(ACOND_TEPELNY_VYKON, []), casy, self._na_kw(ACOND_TEPELNY_VYKON))
         cop = _prevzorkuj(historie.get(ACOND_COP, []), casy, _cislo)
@@ -1002,6 +1026,8 @@ class VykonImage(_VrstvaImage):
         return VykonData(
             casy=[dt_util.as_local(c) for c in casy],
             prikon_kw=prikon, vykon_kw=vykon, cop=cop,
+            tuv=_prevzorkuj_kdykoli(historie.get(ACOND_BIT_TUV, []), casy, zap),
+            odmraz=_prevzorkuj_kdykoli(historie.get(ACOND_BIT_DEFROST, []), casy, zap),
         )
 
 
@@ -1009,23 +1035,56 @@ class MiniTeplotyImage(_VrstvaImage):
     """image.mar_teploty_mini — malé teploty v „okně ve zdi“ schématu (6 h).
 
     Je vidět pořád, takže se obnovuje pořád (à 5 min, kreslení na pozadí jako
-    u oušek). Na ouška ani přepínače nereaguje.
+    u oušek). Navíc hned po důležité události — kompresor se rozjede nebo
+    zastaví, začne nebo skončí TUV či odmrazování — nejvýš jednou za minutu.
+    Na ouška ani přepínače nereaguje.
     """
 
     _attr_name = "Teploty mini"       # entity_id: image.mar_teploty_mini
     KLIC = MINI_TEPLOTY_KEY
+    UDALOSTI = (ACOND_COMP_BIT, ACOND_BIT_TUV, ACOND_BIT_DEFROST)
+    NEJCASTEJI_S = 60
 
     async def async_added_to_hass(self) -> None:
         await ImageEntity.async_added_to_hass(self)
+        self._zrus_odklad = None
         self._nastav_aktivni(True)
+        self.async_on_remove(async_track_state_change_event(
+            self.hass, list(self.UDALOSTI), self._udalost))
+
+    async def async_will_remove_from_hass(self) -> None:
+        await super().async_will_remove_from_hass()
+        if self._zrus_odklad is not None:
+            self._zrus_odklad()
+            self._zrus_odklad = None
+
+    @callback
+    def _udalost(self, event) -> None:  # noqa: ANN001
+        stary, novy = event.data.get("old_state"), event.data.get("new_state")
+        if stary is None or novy is None or stary.state == novy.state:
+            return
+        if self._zrus_odklad is not None:
+            return                       # překreslení už je naplánované
+        uplynulo = (self.NEJCASTEJI_S if self._png_cas is None
+                    else (dt_util.utcnow() - self._png_cas).total_seconds())
+        if uplynulo >= self.NEJCASTEJI_S:
+            self._obnov()
+        else:
+            self._zrus_odklad = async_call_later(
+                self.hass, self.NEJCASTEJI_S - uplynulo, self._po_odkladu)
+
+    @callback
+    def _po_odkladu(self, _now=None) -> None:
+        self._zrus_odklad = None
+        self._obnov()
 
     async def _vyrob(self) -> bytes:
         data = await self._data()
         return await self.hass.async_add_executor_job(vykresli_mini_teploty, data)
 
     async def _data(self) -> MiniTeplotyData:
-        konec = dt_util.utcnow().replace(second=0, microsecond=0)
-        konec -= dt.timedelta(minutes=konec.minute % TEPLOTY_KROK_MIN)
+        # mřížka končí TEĎ (ne na celých 5 min) — po události musí být vidět
+        konec = dt_util.utcnow().replace(microsecond=0)
         start = konec - dt.timedelta(hours=MINI_TEPLOTY_HODIN)
         kroku = MINI_TEPLOTY_HODIN * 60 // TEPLOTY_KROK_MIN
         casy = [start + dt.timedelta(minutes=TEPLOTY_KROK_MIN * i) for i in range(kroku + 1)]
@@ -1044,7 +1103,8 @@ class MiniTeplotyImage(_VrstvaImage):
             return _prevzorkuj(historie.get(zdroje[klic], []), casy, prevod)
 
         zap = lambda s: s == "on"
-        tuv, odmraz = rada("tuv", zap), rada("odmraz", zap)
+        tuv = _prevzorkuj_kdykoli(historie.get(ACOND_BIT_TUV, []), casy, zap)
+        odmraz = _prevzorkuj_kdykoli(historie.get(ACOND_BIT_DEFROST, []), casy, zap)
         return MiniTeplotyData(
             casy=[dt_util.as_local(c) for c in casy],
             mistnost=rada("mistnost"),

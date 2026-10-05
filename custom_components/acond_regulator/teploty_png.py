@@ -70,6 +70,8 @@ class TeplotyData:
     pozadovana: list[float | None]      # 30008 — co TČ opravdu dostala
     skutecna: list[float | None]        # 30009
     pas: list[bool]                     # TUV nebo odmrazování
+    tuv: list[bool] = field(default_factory=list)       # zvlášť kvůli popisku pásu
+    odmraz: list[bool] = field(default_factory=list)
     krivka_x: list[float] = field(default_factory=list)
     krivka_y: list[float] = field(default_factory=list)
 
@@ -101,6 +103,33 @@ def krivka(x: float, xs: list[float], ys: list[float]) -> float | None:
             f = (x - xs[i]) / (xs[i + 1] - xs[i])
             return ys[i] + f * (ys[i + 1] - ys[i])
     return ys[-1]
+
+
+def useky_pasu(pas: list[bool]) -> list[tuple[int, int]]:
+    """Souvislé úseky pásu jako (od, do) — `do` je první index za úsekem."""
+    out, i, n = [], 0, len(pas)
+    while i < n:
+        if pas[i]:
+            j = i
+            while j < n and pas[j]:
+                j += 1
+            out.append((i, j))
+            i = j
+        else:
+            i += 1
+    return out
+
+
+def popis_pasu(od: int, do: int, tuv: list[bool], odmraz: list[bool]) -> str:
+    """Co bylo v pásu: „TUV“, „odmraz.“, nebo obojí. Bez údaje (pás jen
+    z požadované 60 °C) je to TUV."""
+    t = any(tuv[od:do]) if tuv else False
+    o = any(odmraz[od:do]) if odmraz else False
+    if o and not t:
+        return "odmraz."
+    if o and t:
+        return "TUV / odmraz."
+    return "TUV"
 
 
 def _rozsah(*rady, pas, minimum=2.0, krok=0.5, dolni=None):
@@ -338,22 +367,13 @@ def vykresli(d: TeplotyData) -> bytes:
                             radius=5 * S, fill=PUR)
         text(bx + 7, y_ukaz / S, popis, (255, 255, 255), 13, True, anchor="lm")
 
-    # pás TUV/odmraz — popisek u nejdelšího pásu
-    if any(d.pas):
-        best, i = (0, 0, 0), 0
-        while i < n:
-            if d.pas[i]:
-                j = i
-                while j < n and d.pas[j]:
-                    j += 1
-                if j - i > best[0]:
-                    best = (j - i, i, j)
-                i = j
-            else:
-                i += 1
-        if best[0] >= 3:
-            xm = (X(best[1]) + X(min(best[2], n - 1))) / 2 / S
-            text(xm, P2[0] + 8, "TUV / odmraz.", MUT, 12, anchor="ma")
+    # pás TUV/odmraz — u každého pásu, kam se vejde, co v něm bylo
+    for od, do in useky_pasu(d.pas):
+        popis = popis_pasu(od, do, d.tuv, d.odmraz)
+        sirka = (X(min(do, n - 1)) - X(od)) / S
+        if sirka >= g.textlength(popis, font=_font(12)) / S + 4:
+            xm = (X(od) + X(min(do, n - 1))) / 2 / S
+            text(xm, P2[0] + 8, popis, MUT, 12, anchor="ma")
 
     # ── časová osa ──
     for i, c in enumerate(d.casy):

@@ -8,7 +8,9 @@ plátno v poměru té plochy (VLOZKA) a málo čísel — na mobilu je malý.
     plochou uvnitř ní — mezera mezi nimi je teplo vzaté ze vzduchu, takže je
     COP vidět i bez čísla,
   • COP (30029) tenkou čarou na pravé ose (jen když kompresor běží),
-  • velká hodnota COP vpravo nahoře, 12 h.
+  • na konci čar hodnoty „teď“ (výkon, příkon v kW, COP) před osou COP,
+    nahoře jen malé „kW“ a „COP“ nad osami, 12 h,
+  • ohřev TUV a odmrazování šedým pruhem s popiskem nad ním.
 
 Čistá kreslicí funkce bez Home Assistantu; data skládá `VykonImage`.
 """
@@ -16,13 +18,13 @@ plátno v poměru té plochy (VLOZKA) a málo čísel — na mobilu je malý.
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from io import BytesIO
 
 from PIL import Image, ImageDraw
 
-from .teploty_png import GRID, INK, MUT, _fmt, _font
+from .teploty_png import GRID, INK, MUT, _fmt, _font, popis_pasu, useky_pasu
 
 # Plocha vložky v souřadnicích schématu 1200 × 700 (dashboard ji tam umístí)
 VLOZKA = (776, 319, 1180, 567)          # x0, y0, x1, y1
@@ -37,7 +39,10 @@ TEPLO = (226, 75, 74)                   # tepelný výkon
 ELEKTRO = (55, 110, 190)                # příkon
 COP_BARVA = (29, 140, 90)
 
-L, R = 44, W - 40                       # graf: vlevo osa kW, vpravo osa COP
+L, R = 44, W - 76                       # graf: vlevo osa kW, vpravo hodnoty a osa COP
+OS_COP = W - 30                         # popisky osy COP
+PAS = (0, 0, 0, 16)
+ROZESTUP = 12
 T, B = 46, H - 40
 
 
@@ -47,6 +52,8 @@ class VykonData:
     prikon_kw: list[float | None]
     vykon_kw: list[float | None]
     cop: list[float | None]
+    tuv: list[bool] = field(default_factory=list)
+    odmraz: list[bool] = field(default_factory=list)
 
 
 def vykresli(d: VykonData) -> bytes:
@@ -72,12 +79,23 @@ def vykresli(d: VykonData) -> bytes:
     Y = lambda v: (B - (B - T) * v / hi) * S
     Yc = lambda v: (B - (B - T) * v / cop_hi) * S
 
-    # nadpis a velké COP
+    # nadpis
     text(12, 10, "Výkon · 12 h", INK, 13, True)
-    posledni = lambda r: next((v for v in reversed(r) if v is not None), None)
-    cop_ted = posledni(d.cop)
-    text(W - 12, 6, "COP " + (_fmt(cop_ted) if cop_ted is not None else "—"),
-         COP_BARVA, 18, True, anchor="ra")
+
+    # šedý pruh TUV / odmrazování (pod křivkami), popisek nahoře
+    pas = [a or b for a, b in zip(d.tuv or [False] * n, d.odmraz or [False] * n)]
+    konec_popisku = -1e9
+    for od, do in useky_pasu(pas):
+        x0, x1 = round(X(od)), round(X(min(do, n - 1)))
+        g.rectangle([x0, T * S, max(x0 + S, x1 - 1), B * S], fill=PAS)
+        # popisek nad pruh (uvnitř by ho zakryly plochy výkonu při ohřevu);
+        # těsně za sebou jdoucí pruhy — jen první popisek, ať se nepřekrývají
+        popis = popis_pasu(od, do, d.tuv, d.odmraz)
+        pul = g.textlength(popis, font=_font(9)) / 2
+        xm = (x0 + x1) / 2
+        if xm - pul > konec_popisku + 4 * S:
+            text(xm / S, T - 3, popis, MUT, 9, anchor="mb")
+            konec_popisku = xm + pul
 
     # mřížka + osy
     v = 0.0
@@ -87,10 +105,11 @@ def vykresli(d: VykonData) -> bytes:
         text(L - 5, y / S, (_fmt(v).replace(",0", "")), MUT, 10, anchor="rm")
         v += krok
     text(L - 5, T - 12, "kW", MUT, 10, anchor="rm")
+    text(OS_COP, T - 12, "COP", COP_BARVA, 10, anchor="lm")
     for c in range(0, int(cop_hi) + 1, 2 if cop_hi > 6 else 1):
         if c == 0:
             continue
-        text(R + 5, Yc(c) / S, str(c), COP_BARVA, 10, anchor="lm")
+        text(OS_COP, Yc(c) / S, str(c), COP_BARVA, 10, anchor="lm")
 
     def plocha(rada, barva, alfa):
         for i in range(n - 1):
@@ -122,6 +141,23 @@ def vykresli(d: VykonData) -> bytes:
     cara(d.vykon_kw, TEPLO, 1.6, Y)
     cara(d.prikon_kw, ELEKTRO, 1.6, Y)
     cara(d.cop, COP_BARVA, 1.6, Yc)
+
+    # hodnoty „teď“ na konci čar (jen poslední bod — COP z dřívějšího běhu
+    # by u stojícího stroje lhal), rozestrčené, ať se nepřekrývají
+    popisky = []
+    for rada, barva, y_fn in ((d.vykon_kw, TEPLO, Y), (d.prikon_kw, ELEKTRO, Y),
+                              (d.cop, COP_BARVA, Yc)):
+        v = rada[-1] if rada else None
+        if v is not None:
+            popisky.append((y_fn(v) / S, _fmt(v), barva))
+    popisky.sort(key=lambda p: p[0])
+    ys: list[float] = []
+    for y, _t, _c in popisky:
+        ys.append(min(max(y, (ys[-1] + ROZESTUP) if ys else T), B))
+    for i in range(len(ys) - 2, -1, -1):
+        ys[i] = min(ys[i], ys[i + 1] - ROZESTUP)
+    for (_y, t, c), y in zip(popisky, ys):
+        text(R + 4, y, t, c, 10, True, anchor="lm")
 
     # časová osa po 3 h
     for i, c in enumerate(d.casy):

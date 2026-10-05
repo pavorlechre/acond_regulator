@@ -7,6 +7,9 @@ verze podle [sémantického verzování](https://semver.org/lang/cs/).
 ## [Nevydáno]
 
 ### Přidáno
+- Okno ve zdi: hodnoty „teď“ u všech pěti čar (přibyl výstup a cíl místnosti); překreslí se do minuty po rozjezdu či zastavení kompresoru, začátku či konci TUV a odmrazování (jinak à 5 min), mřížka končí přesně v „teď“.
+- Výkon: hodnoty na konci čar (výkon, příkon v kW, COP) před osou COP; nahoře jen malé „kW“ a „COP“ nad osami místo velkého čísla; šedý pruh ohřevu TUV a odmrazování s popiskem nad ním.
+- Teploty: popisek pásu říká, co v něm bylo — „TUV“, „odmraz.“ (nebo obojí) — u každého pásu, kam se vejde.
 - Okno ve zdi: malé teploty přímo ve schématu mezi tepelným čerpadlem a bojlerem (`image.mar_teploty_mini`), vidět pořád, bez vypínače. 6 h bez os: místnost proti cíli, výstup, skutečná a požadovaná zpátečka; růžová mezera výstup–zpátečka ukazuje chod stroje; TUV a odmrazování šedým pruhem; hodnoty „teď“ u pravé hrany. Klepnutí otevře ouško Teploty. Obnova po 5 minutách.
 - Ouško Výkon (místo Energie): malý graf vložený přes topnou soustavu ve schématu (od trubky z AKU po tlačítko FVE topení, výška AKU) — tepelný výkon a příkon jako plochy, COP na pravé ose, 12 h, velké COP nahoře. Zapíná a vypíná se klepnutím na ouško (`switch.mar_vrstva_vykon`, pamatuje si stav), nezávisle na Teplotách a Počasí.
 - Počasí: min a max i v historii venkovní teploty (jen skutečné vrcholy, ne useknutý kraj okna).
@@ -19,6 +22,7 @@ verze podle [sémantického verzování](https://semver.org/lang/cs/).
 - Oba soubory generuje `dashboard_src/gen_views.py` z jediného zdroje `dashboard_src/mar_dashboard.yaml`.
 
 ### Opraveno
+- Krátké odmrazování a ohřev TUV v grafech nepropadnou: krok mřížky (5 min) se označí, když děj proběhl kdykoli během něj, ne jen v jeho okamžiku (Teploty, okno ve zdi, Výkon).
 - Schéma na tabletu ve velkém zobrazení blikalo a spodek (tlačítka, ouška) se rozpadal do vodorovných pruhů: pohyblivé vrstvy (kuličky, vrtulky, větrák, ventil, bivalence) byly obrázky přes celé schéma a s každým pohybem se překreslovalo všechno. Teď má každá jen svůj výřez; vzhled beze změny (ověřeno porovnáním pixelů).
 
 ### Změněno
