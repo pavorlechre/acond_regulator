@@ -143,11 +143,16 @@ def vykresli(d: VykonData) -> bytes:
     cara(d.cop, COP_BARVA, 1.6, Yc)
 
     # hodnoty „teď“ na konci čar (jen poslední bod — COP z dřívějšího běhu
-    # by u stojícího stroje lhal), rozestrčené, ať se nepřekrývají
+    # by u stojícího stroje lhal, proto tam „0“), rozestrčené, ať se nepřekrývají
     popisky = []
     for rada, barva, y_fn in ((d.vykon_kw, TEPLO, Y), (d.prikon_kw, ELEKTRO, Y),
                               (d.cop, COP_BARVA, Yc)):
         v = rada[-1] if rada else None
+        if v is None and rada is d.cop and d.cop:
+            # stroj stojí → COP se nepočítá; ukaž „0“ u spodku osy, ne prázdno
+            p = d.prikon_kw[-1] if d.prikon_kw else None
+            if p is None or p <= 0.1:
+                v = 0.0
         if v is not None:
             popisky.append((y_fn(v) / S, _fmt(v), barva))
     popisky.sort(key=lambda p: p[0])

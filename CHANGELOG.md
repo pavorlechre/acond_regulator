@@ -7,6 +7,8 @@ verze podle [sémantického verzování](https://semver.org/lang/cs/).
 ## [Nevydáno]
 
 ### Přidáno
+- Výkon: když kompresor stojí, ukáže se u COP hodnota „0,0“ (dřív tam nebylo nic).
+- Ouška: funkční vlevo (Schéma, Teploty, Výkon, Počasí), dvě připravovaná vpravo jen jako prázdný ztlumený tvar bez nápisu.
 - Okno ve zdi: hodnoty „teď“ u všech pěti čar (přibyl výstup a cíl místnosti); překreslí se do minuty po rozjezdu či zastavení kompresoru, začátku či konci TUV a odmrazování (jinak à 5 min), mřížka končí přesně v „teď“.
 - Výkon: hodnoty na konci čar (výkon, příkon v kW, COP) před osou COP; nahoře jen malé „kW“ a „COP“ nad osami místo velkého čísla; šedý pruh ohřevu TUV a odmrazování s popiskem nad ním.
 - Teploty: popisek pásu říká, co v něm bylo — „TUV“, „odmraz.“ (nebo obojí) — u každého pásu, kam se vejde.

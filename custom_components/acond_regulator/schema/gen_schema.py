@@ -534,8 +534,8 @@ def tlacitka() -> dict[str, str]:
 # Samostatná karta těsně pod schématem (vlastní plátno 1200 × OUSKO_H), aby
 # se nemusely přepočítávat souřadnice vrstev schématu. Klepnutí přepíná
 # select.mar_vrstva; aktivní ouško zvýrazní vrstva o-<id>-on.svg.
-# Ouška, která ještě nemají obsah (PRIPRAVUJE_SE), jsou ztlumená a bez klikací
-# plochy v dashboardu.
+# Ouška, která ještě nemají obsah (PRIPRAVUJE_SE), jsou ztlumená, bez ikony
+# a nápisu a bez klikací plochy v dashboardu; funkční ouška jsou vlevo.
 
 OUSKO_H = 64
 OUSKO_W, OUSKO_MEZERA, OUSKO_X0, OUSKO_Y = 180, 12, 18, 4
@@ -548,10 +548,10 @@ OUSKA = [
      "M3 17l5-6 4 3 7-8M3 21h18"),
     ("vykon",     "Výkon",     "Výkon",
      "M3 20h18M5 20V12M10 20V6M15 20V10M20 20V4"),
-    ("ekviterma", "Ekviterma", "Ekviterma",
-     "M3 5c5 3 11 8 18 14M10 11a2 2 0 1 0 4 0a2 2 0 1 0-4 0"),
     ("pocasi",    "Počasí",    "Počasí",
      "M9 5.5a3.5 3.5 0 1 0 0 7M7 19h10a3.5 3.5 0 0 0 0-7 5 5 0 0 0-9.4 1.6A3 3 0 0 0 7 19z"),
+    ("ekviterma", "Ekviterma", "Ekviterma",
+     "M3 5c5 3 11 8 18 14M10 11a2 2 0 1 0 4 0a2 2 0 1 0-4 0"),
     ("stroj",     "Stroj",     "Stroj",
      "M12 9a3 3 0 1 0 0 6a3 3 0 1 0 0-6M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2"),
 ]
@@ -578,6 +578,11 @@ def _ousko(i, napis, ikona, aktivni=False, ztlumene=False) -> str:
          f"H{x + r} Q{x} {y + h} {x} {y + h - r} Z")
     op = ' opacity="0.45"' if ztlumene else ""
     ix, iy = x + 26, y + h / 2 - 12
+    if ztlumene:
+        # připravované ouško: jen prázdný tvar, ať nemate nápisem
+        return (f'  <g{op}>\n'
+                f'    <path d="{d}" fill="{vypln}" stroke="{ram}" stroke-width="2"/>\n'
+                f'  </g>')
     return (f'  <g{op}>\n'
             f'    <path d="{d}" fill="{vypln}" stroke="{ram}" stroke-width="2"/>\n'
             f'    <path d="{ikona}" transform="translate({ix:g} {iy:g})" fill="none" '
