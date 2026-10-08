@@ -7,6 +7,7 @@ verze podle [sémantického verzování](https://semver.org/lang/cs/).
 ## [Nevydáno]
 
 ### Přidáno
+- Příručka: oddíl „Ouška — grafy přes schéma“ v kapitole Schéma (Výkon, Teploty, Počasí) se snímky z provozu.
 - Výkon: když kompresor stojí, ukáže se u COP hodnota „0,0“ (dřív tam nebylo nic).
 - Ouška: funkční vlevo (Schéma, Teploty, Výkon, Počasí), dvě připravovaná vpravo jen jako prázdný ztlumený tvar bez nápisu.
 - Okno ve zdi: hodnoty „teď“ u všech pěti čar (přibyl výstup a cíl místnosti); překreslí se do minuty po rozjezdu či zastavení kompresoru, začátku či konci TUV a odmrazování (jinak à 5 min), mřížka končí přesně v „teď“.
