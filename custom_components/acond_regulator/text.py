@@ -26,6 +26,9 @@ from .const import (
     FVE_SRC_PRETOK_KEY,
     FVE_SRC_VYROBA_DEFAULT,
     FVE_SRC_VYROBA_KEY,
+    FVE_SRC_IMPORT_DNES_KEY,
+    FVE_SRC_EXPORT_DNES_KEY,
+    FVE_SRC_VYROBA_DNES_KEY,
     TOPENI_SRC_BATT_VYKON_KEY,
     TOPENI_SRC_BATT_VYKON_DEFAULT,
     device_info,
@@ -49,6 +52,13 @@ async def async_setup_entry(
             FveSourceText(fve, entry, FVE_SRC_BATERIE_KEY, "Fve zdroj baterie",
                           FVE_SRC_BATERIE_DEFAULT, fve.set_source_baterie,
                           "mdi:battery-70"),
+            # nepovinné vlastní denní senzory pro schéma (prázdné = MaR sčítá sám)
+            FveSourceText(fve, entry, FVE_SRC_IMPORT_DNES_KEY, "Fve zdroj import dnes",
+                          "", fve.set_source_import_dnes, "mdi:transmission-tower-import"),
+            FveSourceText(fve, entry, FVE_SRC_EXPORT_DNES_KEY, "Fve zdroj export dnes",
+                          "", fve.set_source_export_dnes, "mdi:transmission-tower-export"),
+            FveSourceText(fve, entry, FVE_SRC_VYROBA_DNES_KEY, "Fve zdroj vyroba dnes",
+                          "", fve.set_source_vyroba_dnes, "mdi:solar-power-variant"),
             # -> text.mar_topeni_zdroj_baterie_vykon (znaménkový výkon baterie, +nabíjí)
             FveSourceText(topeni, entry, TOPENI_SRC_BATT_VYKON_KEY,
                           "Topeni zdroj baterie vykon", TOPENI_SRC_BATT_VYKON_DEFAULT,

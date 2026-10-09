@@ -111,7 +111,7 @@
         - entity: binary_sensor.mar_ma_fve
           state: 'on'
         - condition: numeric_state
-          entity: sensor.pv_power
+          entity: sensor.mar_fve_pv
           above: 10
         elements:
         - type: image
@@ -125,7 +125,7 @@
         - entity: binary_sensor.mar_ma_fve
           state: 'on'
         - condition: numeric_state
-          entity: sensor.house_consumption
+          entity: sensor.mar_fve_dum
           above: 10
         elements:
         - type: image
@@ -139,7 +139,7 @@
         - entity: binary_sensor.mar_ma_fve
           state: 'on'
         - condition: numeric_state
-          entity: sensor.active_power
+          entity: sensor.mar_fve_pretok
           above: 10
         elements:
         - type: image
@@ -153,7 +153,7 @@
         - entity: binary_sensor.mar_ma_fve
           state: 'on'
         - condition: numeric_state
-          entity: sensor.active_power
+          entity: sensor.mar_fve_pretok
           below: -10
         elements:
         - type: image
@@ -167,7 +167,7 @@
         - entity: binary_sensor.mar_ma_fve
           state: 'on'
         - condition: numeric_state
-          entity: sensor.battery_power
+          entity: sensor.mar_fve_baterie_vykon
           above: 10
         elements:
         - type: image
@@ -181,7 +181,7 @@
         - entity: binary_sensor.mar_ma_fve
           state: 'on'
         - condition: numeric_state
-          entity: sensor.battery_power
+          entity: sensor.mar_fve_baterie_vykon
           below: -10
         elements:
         - type: image
@@ -434,7 +434,7 @@
         prefix: 'Dnes '
         suffix: ' kWh'
       - type: state-label
-        entity: sensor.aku_goodwe_import_dnes
+        entity: sensor.mar_fve_import_dnes
         tap_action:
           action: more-info
         style:
@@ -447,7 +447,7 @@
           white-space: nowrap
         prefix: 'Import '
       - type: state-label
-        entity: sensor.aku_goodwe_export_dnes
+        entity: sensor.mar_fve_export_dnes
         tap_action:
           action: more-info
         style:
@@ -573,7 +573,7 @@
           state: 'on'
         elements:
         - type: state-label
-          entity: sensor.today_s_pv_generation
+          entity: sensor.mar_fve_vyroba_dnes
           tap_action:
             action: more-info
           style:
@@ -590,7 +590,7 @@
           state: 'on'
         elements:
         - type: state-label
-          entity: sensor.active_power
+          entity: sensor.mar_fve_pretok
           tap_action:
             action: more-info
           style:
@@ -607,7 +607,7 @@
           state: 'on'
         elements:
         - type: state-label
-          entity: sensor.pv_power
+          entity: sensor.mar_fve_pv
           tap_action:
             action: more-info
           style:
@@ -624,7 +624,7 @@
           state: 'on'
         elements:
         - type: state-label
-          entity: sensor.battery_power
+          entity: sensor.mar_fve_baterie_vykon
           tap_action:
             action: more-info
           style:
@@ -641,7 +641,7 @@
           state: 'on'
         elements:
         - type: state-label
-          entity: sensor.house_consumption
+          entity: sensor.mar_fve_dum
           tap_action:
             action: more-info
           style:

@@ -621,7 +621,7 @@
         curve: stepline
         color: '#2CA02C'
         float_precision: 0
-      - entity: sensor.active_power
+      - entity: sensor.mar_fve_pretok
         name: Přetok
         type: line
         stroke_width: 1
@@ -641,7 +641,7 @@
       entities:
       - entity: sensor.mar_fve_prumer_pretoku
         name: Průměr přetoku (15 min)
-      - entity: sensor.active_power
+      - entity: sensor.mar_fve_pretok
         name: Přetok syrový
       - entity: sensor.mar_fve_tuv_rezim
         name: Ohřev TUV
@@ -1004,6 +1004,9 @@
 
         Předvyplněno pro **Goodwe** (`sensor.active_power`, `sensor.pv_power`, `sensor.battery_state_of_charge`). Jiný střídač → přepiš. Nemáš-li baterii, nech pole baterie prázdné — regulace pojede s tvrdším defaultem.
 
+
+        **Pro schéma (nepovinné):** denní import, export a výrobu MaR sčítá sám z přetoku a výroby. Kdo má přesné denní senzory (třeba měřič spotřeby nad čítači střídače), vyplní je dole a schéma ukáže ty. Výkon baterie se zadává v okně FVE topení.
+
         '
     - type: entities
       title: Nastavení zdrojů (vlož entity_id)
@@ -1018,6 +1021,18 @@
         name: Baterie (SoC v %)
         icon: mdi:battery-70
     - type: entities
+      title: Pro schéma — nepovinné (prázdné = MaR sčítá sám)
+      entities:
+      - entity: text.mar_fve_zdroj_import_dnes
+        name: Import dnes (kWh)
+        icon: mdi:transmission-tower-import
+      - entity: text.mar_fve_zdroj_export_dnes
+        name: Export dnes (kWh)
+        icon: mdi:transmission-tower-export
+      - entity: text.mar_fve_zdroj_vyroba_dnes
+        name: Vyrobeno dnes (kWh)
+        icon: mdi:solar-power-variant
+    - type: entities
       title: Kontrola – co se právě čte
       entities:
       - entity: sensor.mar_fve_prumer_pretoku
@@ -1029,6 +1044,16 @@
       - entity: sensor.mar_fve_baterie
         name: Baterie – aktuální stav
         icon: mdi:battery-70
+      - entity: sensor.mar_fve_baterie_vykon
+        name: Baterie – výkon (+ vybíjí)
+      - entity: sensor.mar_fve_dum
+        name: Dům – spotřeba (dopočet)
+      - entity: sensor.mar_fve_import_dnes
+        name: Import dnes
+      - entity: sensor.mar_fve_export_dnes
+        name: Export dnes
+      - entity: sensor.mar_fve_vyroba_dnes
+        name: Vyrobeno dnes
   - type: grid
     column_span: 2
     cards:
@@ -2398,7 +2423,7 @@
         - entity: binary_sensor.mar_ma_fve
           state: 'on'
         - condition: numeric_state
-          entity: sensor.pv_power
+          entity: sensor.mar_fve_pv
           above: 10
         elements:
         - type: image
@@ -2412,7 +2437,7 @@
         - entity: binary_sensor.mar_ma_fve
           state: 'on'
         - condition: numeric_state
-          entity: sensor.house_consumption
+          entity: sensor.mar_fve_dum
           above: 10
         elements:
         - type: image
@@ -2426,7 +2451,7 @@
         - entity: binary_sensor.mar_ma_fve
           state: 'on'
         - condition: numeric_state
-          entity: sensor.active_power
+          entity: sensor.mar_fve_pretok
           above: 10
         elements:
         - type: image
@@ -2440,7 +2465,7 @@
         - entity: binary_sensor.mar_ma_fve
           state: 'on'
         - condition: numeric_state
-          entity: sensor.active_power
+          entity: sensor.mar_fve_pretok
           below: -10
         elements:
         - type: image
@@ -2454,7 +2479,7 @@
         - entity: binary_sensor.mar_ma_fve
           state: 'on'
         - condition: numeric_state
-          entity: sensor.battery_power
+          entity: sensor.mar_fve_baterie_vykon
           above: 10
         elements:
         - type: image
@@ -2468,7 +2493,7 @@
         - entity: binary_sensor.mar_ma_fve
           state: 'on'
         - condition: numeric_state
-          entity: sensor.battery_power
+          entity: sensor.mar_fve_baterie_vykon
           below: -10
         elements:
         - type: image
@@ -2721,7 +2746,7 @@
         prefix: 'Dnes '
         suffix: ' kWh'
       - type: state-label
-        entity: sensor.aku_goodwe_import_dnes
+        entity: sensor.mar_fve_import_dnes
         tap_action:
           action: more-info
         style:
@@ -2734,7 +2759,7 @@
           white-space: nowrap
         prefix: 'Import '
       - type: state-label
-        entity: sensor.aku_goodwe_export_dnes
+        entity: sensor.mar_fve_export_dnes
         tap_action:
           action: more-info
         style:
@@ -2860,7 +2885,7 @@
           state: 'on'
         elements:
         - type: state-label
-          entity: sensor.today_s_pv_generation
+          entity: sensor.mar_fve_vyroba_dnes
           tap_action:
             action: more-info
           style:
@@ -2877,7 +2902,7 @@
           state: 'on'
         elements:
         - type: state-label
-          entity: sensor.active_power
+          entity: sensor.mar_fve_pretok
           tap_action:
             action: more-info
           style:
@@ -2894,7 +2919,7 @@
           state: 'on'
         elements:
         - type: state-label
-          entity: sensor.pv_power
+          entity: sensor.mar_fve_pv
           tap_action:
             action: more-info
           style:
@@ -2911,7 +2936,7 @@
           state: 'on'
         elements:
         - type: state-label
-          entity: sensor.battery_power
+          entity: sensor.mar_fve_baterie_vykon
           tap_action:
             action: more-info
           style:
@@ -2928,7 +2953,7 @@
           state: 'on'
         elements:
         - type: state-label
-          entity: sensor.house_consumption
+          entity: sensor.mar_fve_dum
           tap_action:
             action: more-info
           style:

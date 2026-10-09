@@ -261,6 +261,19 @@ FVE_AKTIVNI_KEY = "fve_aktivni"            # binary_sensor.mar_fve_aktivni
 FVE_PRUMER_KEY = "fve_prumer_pretoku"      # sensor.mar_fve_prumer_pretoku (čistý přetok)
 FVE_MIRROR_BATT_KEY = "fve_baterie"        # sensor.mar_fve_baterie
 FVE_MIRROR_PV_KEY = "fve_pv"               # sensor.mar_fve_pv
+# Zrcadla pro schéma (dashboard MaR nesmí jmenovat entity konkrétního střídače)
+FVE_MIRROR_PRETOK_KEY = "fve_pretok"              # sensor.mar_fve_pretok (W, + = export)
+FVE_MIRROR_BATT_VYKON_KEY = "fve_baterie_vykon"   # sensor.mar_fve_baterie_vykon (W, + = vybíjí)
+FVE_DUM_KEY = "fve_dum"                           # sensor.mar_fve_dum (W, dopočet)
+FVE_IMPORT_DNES_KEY = "fve_import_dnes"           # sensor.mar_fve_import_dnes (kWh)
+FVE_EXPORT_DNES_KEY = "fve_export_dnes"           # sensor.mar_fve_export_dnes (kWh)
+FVE_VYROBA_DNES_KEY = "fve_vyroba_dnes"           # sensor.mar_fve_vyroba_dnes (kWh)
+# Nepovinné vlastní denní senzory (prázdné = MaR sčítá výkon sám)
+FVE_SRC_IMPORT_DNES_KEY = "fve_zdroj_import_dnes"  # text.mar_fve_zdroj_import_dnes
+FVE_SRC_EXPORT_DNES_KEY = "fve_zdroj_export_dnes"  # text.mar_fve_zdroj_export_dnes
+FVE_SRC_VYROBA_DNES_KEY = "fve_zdroj_vyroba_dnes"  # text.mar_fve_zdroj_vyroba_dnes
+DENNI_MEZERA_S = 300      # delší díra ve výkonu se nesčítá (výpadek zdroje / HA)
+DENNI_ZAPIS_S = 60        # stav denního čítače se zapisuje nejvýš jednou za minutu
 # Badget = přetok + okamžitý příkon TČ (aep, 30027). „Odmaskuje" spotřebu, kterou
 # TČ zrovna žere -> skutečný dostupný přebytek. Dvě formy: vyhlazený (řídí START)
 # a syrový (do grafu + pro pozdější topení). Trvalý kontrakt (jako registry).

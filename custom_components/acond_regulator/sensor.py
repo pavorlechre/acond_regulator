@@ -30,6 +30,12 @@ from .const import (
     FVE_BADGET_SYROVY_KEY,
     FVE_MIRROR_BATT_KEY,
     FVE_MIRROR_PV_KEY,
+    FVE_MIRROR_PRETOK_KEY,
+    FVE_MIRROR_BATT_VYKON_KEY,
+    FVE_DUM_KEY,
+    FVE_IMPORT_DNES_KEY,
+    FVE_EXPORT_DNES_KEY,
+    FVE_VYROBA_DNES_KEY,
     FVE_PRUMER_KEY,
     FVE_TUV_REZIM_KEY,
     PROFIL_STAV_KEY,
@@ -54,6 +60,7 @@ from .const import (
     signal_zebra_updated,
 )
 from .coordinator import MarCoordinator
+from .fve_denni import EXPORT, IMPORT, VYROBA, FveDenniCitac
 from .runstate import RunState
 from .sequences import SequenceRunner
 from .statistics.sensors import build_statistics_sensors
@@ -111,6 +118,22 @@ async def async_setup_entry(
             FveReadSensor(data["fve"], entry, FVE_MIRROR_PV_KEY, "Fve pv",
                           data["fve"].pv_value, "W", SensorDeviceClass.POWER,
                           "mdi:solar-power"),
+            # zrcadla pro schéma (dashboard nejmenuje entity střídače)
+            FveReadSensor(data["fve"], entry, FVE_MIRROR_PRETOK_KEY, "Fve pretok",
+                          data["fve"].pretok_value, "W", SensorDeviceClass.POWER,
+                          "mdi:transmission-tower"),
+            FveReadSensor(data["fve"], entry, FVE_MIRROR_BATT_VYKON_KEY, "Fve baterie vykon",
+                          data["fve"].batt_vykon_schema, "W", SensorDeviceClass.POWER,
+                          "mdi:battery-charging"),
+            FveReadSensor(data["fve"], entry, FVE_DUM_KEY, "Fve dum",
+                          data["fve"].dum_value, "W", SensorDeviceClass.POWER,
+                          "mdi:home-lightning-bolt"),
+            FveDenniCitac(data["fve"], entry, FVE_IMPORT_DNES_KEY, "Fve import dnes",
+                          IMPORT, "mdi:transmission-tower-import"),
+            FveDenniCitac(data["fve"], entry, FVE_EXPORT_DNES_KEY, "Fve export dnes",
+                          EXPORT, "mdi:transmission-tower-export"),
+            FveDenniCitac(data["fve"], entry, FVE_VYROBA_DNES_KEY, "Fve vyroba dnes",
+                          VYROBA, "mdi:solar-power-variant"),
             ProfilStavSensor(data["profily"], entry),
         ]
         + build_statistics_sensors(stats, entry)

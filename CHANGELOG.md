@@ -7,6 +7,7 @@ verze podle [sémantického verzování](https://semver.org/lang/cs/).
 ## [Nevydáno]
 
 ### Přidáno
+- Zrcadlové FVE senzory pro schéma: `sensor.mar_fve_pretok`, `…_baterie_vykon` (+ vybíjí), `…_dum` (dopočet výroba − přetok − nabíjení) a denní čítače `…_import_dnes`, `…_export_dnes`, `…_vyroba_dnes` (MaR sčítá výkon sám, o půlnoci nuluje, restart přežije; nepovinně vlastní denní senzory v `text.mar_fve_zdroj_*_dnes`, výchozí prázdné). Dashboard MaR už nejmenuje žádnou entitu střídače — schéma funguje s jakýmkoli měničem.
 - FVE TUV: práh „Vypnout, až baterie klesne pod … %“ jde nastavit po 1 % (dřív po 5 %).
 - Příručka po celkové kontrole: Topit (zruší útlum, přepne do zimy; běžící kompresor = typicky TUV), kde se volí provozní režim TČ, kdy svítí kameny, měkký × tvrdý strop u návnady zpátečky, počet obrázků schématu, úvod Režimů, jednotně pomlčka u startů.
 - Teploty (ouško): výstup topné vody čárkovaně červeně, bez výplně; rozsah osy nezvětšuje, hodnota mimo graf se ukáže u kraje se šipkou.

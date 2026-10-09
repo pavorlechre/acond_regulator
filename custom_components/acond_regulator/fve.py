@@ -113,6 +113,10 @@ class FveController:
         self._src_pretok = ""                # entity_id zdroje přetoku
         self._src_vyroba = ""                # entity_id zdroje výroby (jen displej)
         self._src_baterie = ""               # entity_id zdroje baterie (%)
+        # nepovinné vlastní denní senzory pro schéma (prázdné = sčítá MaR)
+        self.src_import_dnes = ""
+        self.src_export_dnes = ""
+        self.src_vyroba_dnes = ""
 
         # --- příkon TČ (aep) je NAPEVNO (nativní Acond entita), ne přes text ---
         self._src_aep = ACOND_POWER          # sensor.acond_30027_aep
@@ -168,6 +172,23 @@ class FveController:
             return
         self._src_vyroba = eid
         self._sub_pv()
+
+    def set_source_import_dnes(self, entity_id: str | None) -> None:
+        self.src_import_dnes = (entity_id or "").strip()
+
+    def set_source_export_dnes(self, entity_id: str | None) -> None:
+        self.src_export_dnes = (entity_id or "").strip()
+
+    def set_source_vyroba_dnes(self, entity_id: str | None) -> None:
+        self.src_vyroba_dnes = (entity_id or "").strip()
+
+    @property
+    def src_pretok(self) -> str:
+        return self._src_pretok
+
+    @property
+    def src_vyroba(self) -> str:
+        return self._src_vyroba
 
     def set_source_baterie(self, entity_id: str | None) -> None:
         eid = (entity_id or "").strip()
@@ -266,6 +287,34 @@ class FveController:
 
     def pv_value(self) -> float | None:
         return self._read_source_float(self._src_vyroba)
+
+    # --- zrcadla pro schéma ---
+    def batt_vykon_schema(self) -> float | None:
+        """Výkon baterie pro schéma: + = vybíjí, − = nabíjí (jako GoodWe).
+        Zdroj a znaménko se nastavují v FVE topení (sdílené)."""
+        if self.topeni is None:
+            return None
+        try:
+            bp = self.topeni.batt_vykon_value()      # + = nabíjí
+        except Exception:  # noqa: BLE001
+            return None
+        return None if bp is None else -bp
+
+    def dum_value(self) -> float | None:
+        """Spotřeba domu dopočtem: výroba − přetok − nabíjení baterie (W).
+        Bez zdroje výkonu baterie se baterie bere jako 0; zdroj vyplněný,
+        ale němý -> None (nehádat)."""
+        pv = self.pv_value()
+        pretok = self.pretok_value()
+        if pv is None or pretok is None:
+            return None
+        nabijeni = 0.0
+        if self.topeni is not None and self.topeni.ma_baterku:
+            bp = self.topeni.batt_vykon_value()
+            if bp is None:
+                return None
+            nabijeni = bp
+        return round(max(0.0, pv - pretok - nabijeni), 0)
 
     # ------------------------------------------------------------------ #
     # Master + config
