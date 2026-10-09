@@ -14,6 +14,9 @@ Rozvržení (dohodnuté s Pavlem 29. 9. 2026):
   • Přídavek na místnost jako jemná výplň mezi ekvitermou a výpočtem MaR:
     červená přidává, modrá ubírá.
   • TUV a odmrazování jako šedé pásy, křivky v nich přerušené, osy bez špiček.
+  • Výstup topné vody (30018) čárkovaně červeně, bez výplně; rozsah osy
+    nezvětšuje — co je mimo, se nekreslí a hodnota teď se ukáže u kraje
+    se šipkou (Pavle 9. 10. 2026).
 
 Plátno má poměr stran schématu (1200 × 700), aby graf schéma přesně překryl.
 """
@@ -39,6 +42,7 @@ _FONTB_FALLBACK = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
 INK = (43, 49, 56); MUT = (107, 112, 117); GRID = (0, 0, 0, 24)
 RED = (226, 75, 74); BLU = (55, 138, 221); AMB = (196, 125, 20); ACT = (24, 95, 165)
 PUR = (83, 74, 183); TGT = (29, 158, 117); ROOM = (216, 90, 48)
+VODA = (224, 64, 44)               # výstup topné vody — barva červené trubky
 PAS = (0, 0, 0, 18)
 POZADI = (250, 250, 251)
 
@@ -72,6 +76,7 @@ class TeplotyData:
     pas: list[bool]                     # TUV nebo odmrazování
     tuv: list[bool] = field(default_factory=list)       # zvlášť kvůli popisku pásu
     odmraz: list[bool] = field(default_factory=list)
+    vystup: list[float | None] = field(default_factory=list)   # 30018
     krivka_x: list[float] = field(default_factory=list)
     krivka_y: list[float] = field(default_factory=list)
 
@@ -351,6 +356,10 @@ def vykresli(d: TeplotyData) -> bytes:
     if zaklad_useky and zaklad_useky[-1]:
         zaklad_useky[-1].append((AX * S, zaklad_useky[-1][-1][1]))   # vteče do osy
     carkovane(zaklad_useky, PUR, 2.0)
+    # výstup topné vody: jen co se vejde do osy, nic nevyplňuje
+    vystup = d.vystup if len(d.vystup) == n else [None] * n
+    v_osy = [v if v is not None and lo2 <= v <= hi2 else None for v in vystup]
+    carkovane(schody(v_osy, Y2), VODA, 2.0, 6, 4)
     pod = lambda r: [None if v is not None and v < lo2 else v for v in r]
     cara(schody(pod(d.pozadovana), Y2, lo2, hi2), AMB, 2.6)
     cara(schody(pod(d.skutecna), Y2, lo2, hi2), ACT, 2.6)
@@ -366,6 +375,16 @@ def vykresli(d: TeplotyData) -> bytes:
         g.rounded_rectangle([bx * S, y_ukaz - 12 * S, (bx + tw + 14) * S, y_ukaz + 12 * S],
                             radius=5 * S, fill=PUR)
         text(bx + 7, y_ukaz / S, popis, (255, 255, 255), 13, True, anchor="lm")
+
+    # hodnota výstupu teď u pravého kraje (mimo osu se šipkou u okraje)
+    v_ted = vystup[-1] if vystup and not d.pas[-1] else None
+    if v_ted is not None:
+        if v_ted > hi2:
+            text(R - 4, P2[0] + 4, "↑ " + _fmt(v_ted) + " °C", VODA, 14, True, anchor="ra")
+        elif v_ted < lo2:
+            text(R - 4, P2[1] - 4, "↓ " + _fmt(v_ted) + " °C", VODA, 14, True, anchor="rd")
+        else:
+            text(R - 4, Y2(v_ted) / S - 5, _fmt(v_ted) + " °C", VODA, 14, True, anchor="rd")
 
     # pás TUV/odmraz — u každého pásu, kam se vejde, co v něm bylo
     for od, do in useky_pasu(d.pas):
@@ -394,9 +413,11 @@ def vykresli(d: TeplotyData) -> bytes:
 
     poz, sk = posledni(d.pozadovana), posledni(d.skutecna)
     leg(L, "cara", AMB, "požadovaná" + (f" {_fmt(poz)} °C" if poz is not None else ""))
-    leg(L + 240, "cara", ACT, "skutečná" + (f" {_fmt(sk)} °C" if sk is not None else ""))
-    leg(L + 460, "cark", PUR, "ekviterma bez přídavku")
-    leg(L + 720, "vypln", (RED, BLU), "přídavek místnosti +/−")
+    vy = posledni(vystup)
+    leg(L + 205, "cara", ACT, "skutečná" + (f" {_fmt(sk)} °C" if sk is not None else ""))
+    leg(L + 400, "cark", VODA, "výstup" + (f" {_fmt(vy)} °C" if vy is not None else ""))
+    leg(L + 575, "cark", PUR, "ekviterma bez přídavku")
+    leg(L + 800, "vypln", (RED, BLU), "přídavek místnosti +/−")
 
     out = img.resize(VYSTUP, Image.LANCZOS)
     buf = BytesIO()

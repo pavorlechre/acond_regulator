@@ -7,6 +7,8 @@ verze podle [sémantického verzování](https://semver.org/lang/cs/).
 ## [Nevydáno]
 
 ### Přidáno
+- Teploty (ouško): výstup topné vody čárkovaně červeně, bez výplně; rozsah osy nezvětšuje, hodnota mimo graf se ukáže u kraje se šipkou.
+- Příručka: přesnější popis Netopit ve VYP, snímky v kapitole Trendy (Souhrn, Energie celkem, grafy po dnech), odrážka o výstupu v oušku Teploty; „pravidlo palce“ → „orientačně platí“, zrušena poslední značka XXX.
 - Příručka: oddíl „Ouška — grafy přes schéma“ v kapitole Schéma (Výkon, Teploty, Počasí) se snímky z provozu.
 - Výkon: když kompresor stojí, ukáže se u COP hodnota „0,0“ (dřív tam nebylo nic).
 - Ouška: funkční vlevo (Schéma, Teploty, Výkon, Počasí), dvě připravovaná vpravo jen jako prázdný ztlumený tvar bez nápisu.
