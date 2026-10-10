@@ -7,6 +7,9 @@ verze podle [sémantického verzování](https://semver.org/lang/cs/).
 ## [Nevydáno]
 
 ### Přidáno
+- Logo integrace (složka `brand/`, převzaté beze změny z integrace Acond).
+- Upozornění v README a příručce: neoficiální doplněk (název a logo Acond jen k označení čerpadel) a bez záruky.
+- Zdroje FVE se předvyplní hodnotami GoodWe jen tehdy, když ta entita v HA existuje; jinak zůstanou prázdné (dřív MaR u cizího měniče nebo bez FVE/baterie usoudil, že je má).
 - Zrcadlové FVE senzory pro schéma: `sensor.mar_fve_pretok`, `…_baterie_vykon` (+ vybíjí), `…_dum` (dopočet výroba − přetok − nabíjení) a denní čítače `…_import_dnes`, `…_export_dnes`, `…_vyroba_dnes` (MaR sčítá výkon sám, o půlnoci nuluje, restart přežije; nepovinně vlastní denní senzory v `text.mar_fve_zdroj_*_dnes`, výchozí prázdné). Dashboard MaR už nejmenuje žádnou entitu střídače — schéma funguje s jakýmkoli měničem.
 - FVE TUV: práh „Vypnout, až baterie klesne pod … %“ jde nastavit po 1 % (dřív po 5 %).
 - Příručka po celkové kontrole: Topit (zruší útlum, přepne do zimy; běžící kompresor = typicky TUV), kde se volí provozní režim TČ, kdy svítí kameny, měkký × tvrdý strop u návnady zpátečky, počet obrázků schématu, úvod Režimů, jednotně pomlčka u startů.

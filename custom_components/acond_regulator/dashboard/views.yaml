@@ -1002,7 +1002,7 @@
         Regulace potřebuje vědět, ze kterých senzorů číst **okamžitý přetok** (kladné = export), **výrobu panelů** a **stav baterie**. Vlož sem `entity_id` — nejlíp zkopírovaný z **Vývojářské nástroje → Stavy** a vložený ze schránky (Ctrl+V), ať se vyhneš překlepu.
 
 
-        Předvyplněno pro **Goodwe** (`sensor.active_power`, `sensor.pv_power`, `sensor.battery_state_of_charge`). Jiný střídač → přepiš. Nemáš-li baterii, nech pole baterie prázdné — regulace pojede s tvrdším defaultem.
+        Kdo má integraci **GoodWe**, najde pole předvyplněná (`sensor.active_power`, `sensor.pv_power`, `sensor.battery_state_of_charge`); jinak zůstanou prázdná a vyplníš je sám. Nemáš-li baterii, nech pole baterie prázdné — regulace pojede s tvrdším defaultem.
 
 
         **Pro schéma (nepovinné):** denní import, export a výrobu MaR sčítá sám z přetoku a výroby. Kdo má přesné denní senzory (třeba měřič spotřeby nad čítači střídače), vyplní je dole a schéma ukáže ty. Výkon baterie se zadává v okně FVE topení.

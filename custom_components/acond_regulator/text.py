@@ -14,6 +14,7 @@ from homeassistant.components.text import TextEntity, TextMode
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
@@ -70,7 +71,8 @@ async def async_setup_entry(
 
 
 class FveSourceText(RestoreEntity, TextEntity):
-    """Jedno zdrojové entity_id pro FVE. Default = Goodwe, přepíše uživatel."""
+    """Jedno zdrojové entity_id pro FVE. Default = Goodwe (jen když ta entita v HA
+    existuje, jinak prázdné), přepíše uživatel."""
 
     _attr_has_entity_name = True
     _attr_mode = TextMode.TEXT
@@ -94,8 +96,17 @@ class FveSourceText(RestoreEntity, TextEntity):
         last = await self.async_get_last_state()
         if last is not None and last.state not in ("unknown", "unavailable", None):
             self._attr_native_value = last.state
+        elif self._default and not self._entita_existuje(self._default):
+            # První založení: předvyplnit jen to, co v HA opravdu je (GoodWe).
+            # Jinak by MaR u cizího střídače / bez FVE či baterie hádal, že je má.
+            self._attr_native_value = ""
         # protlač do controlleru (nasadí odběr zdroje); evaluate běží až po resume
         self._setter(self._attr_native_value)
+
+    def _entita_existuje(self, entity_id: str) -> bool:
+        if self.hass.states.get(entity_id) is not None:
+            return True
+        return er.async_get(self.hass).async_get(entity_id) is not None
 
     async def async_set_value(self, value: str) -> None:
         self._attr_native_value = value
@@ -131,6 +142,10 @@ class ProfilNazevText(RestoreEntity, TextEntity):
         last = await self.async_get_last_state()
         if last is not None and last.state not in ("unknown", "unavailable", None):
             self._attr_native_value = last.state
+        elif self._default and not self._entita_existuje(self._default):
+            # První založení: předvyplnit jen to, co v HA opravdu je (GoodWe).
+            # Jinak by MaR u cizího střídače / bez FVE či baterie hádal, že je má.
+            self._attr_native_value = ""
         self._profily.set_nazev(self._attr_native_value)
 
     async def async_set_value(self, value: str) -> None:

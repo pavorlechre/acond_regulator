@@ -14,6 +14,14 @@ MaR (Měření a Regulace) je nadstavba integrace [Acond Heat Pump](https://gith
 
 Potřebuješ integraci Acond Heat Pump a kartu [`apexcharts-card`](https://github.com/RomRider/apexcharts-card).
 
+## Upozornění
+
+**Neoficiální doplněk.** MaR je komunitní projekt. Není spojený se společností Acond a.s., není jí schválený ani podporovaný. Název a logo Acond slouží jen k označení tepelných čerpadel, se kterými MaR spolupracuje.
+
+**Bez záruky.** MaR je komunitní projekt a nemůže postihnout všechny konfigurace topných soustav. Nevhodné nastavení, ale i chyba v programu, může vést ke zvýšeným nákladům na vytápění, k nedotopení či přetopení objektu, případně i ke zvýšenému opotřebení tepelného čerpadla, byť všechny vlastní ochrany čerpadla v jeho řídicí jednotce zůstávají zachovány. Autoři se zříkají odpovědnosti za případné škody.
+
+Naopak se rádi hlásí k úsporám energie, k pohodlí v domě a k šetrnému provozu čerpadla bez zbytečného cyklování, studených startů a protáčení — právě pro to je MaR stavěný.
+
 ## Licence
 
 MIT

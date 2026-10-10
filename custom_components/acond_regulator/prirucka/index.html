@@ -58,6 +58,8 @@
     content:""; display:block; width:34px; height:3px; background:var(--accent);
     margin-bottom:.9rem;
   }
+  .upozorneni { font-size:14.5px; color:var(--dim); border-left:3px solid var(--rule); padding:.1rem 0 .1rem 1rem; margin:1.2rem 0 0; }
+  .upozorneni p { margin:.5rem 0; }
   h4 { font-size:1.05rem; font-weight:600; margin:1.9rem 0 .3rem; }
   p { margin:.95rem 0; }
   ul { margin:.95rem 0; padding-left:1.2rem; }
@@ -127,6 +129,11 @@
   <p class="kicker">Acond Regulator (MaR) · příručka</p>
   <h1>Příručka MaR</h1>
   <p class="lede">Sedm kapitol, jedna ke každému oknu programu. Popisují, co která páka dělá, co se stane, když dáš víc nebo míň, a co program naopak neudělá.</p>
+  <div class="upozorneni">
+    <p><strong>Neoficiální doplněk.</strong> MaR je komunitní projekt. Není spojený se společností Acond a.s., není jí schválený ani podporovaný. Název a logo Acond slouží jen k označení tepelných čerpadel, se kterými MaR spolupracuje.</p>
+    <p><strong>Bez záruky.</strong> MaR je komunitní projekt a nemůže postihnout všechny konfigurace topných soustav. Nevhodné nastavení, ale i chyba v programu, může vést ke zvýšeným nákladům na vytápění, k nedotopení či přetopení objektu, případně i ke zvýšenému opotřebení tepelného čerpadla, byť všechny vlastní ochrany čerpadla v jeho řídicí jednotce zůstávají zachovány. Autoři se zříkají odpovědnosti za případné škody.</p>
+    <p>Naopak se rádi hlásí k úsporám energie, k pohodlí v domě a k šetrnému provozu čerpadla bez zbytečného cyklování, studených startů a protáčení — právě pro to je MaR stavěný.</p>
+  </div>
 </header>
 
 <nav class="obsah" id="obsah">
@@ -723,7 +730,7 @@
 
   <section id="fve-tuv-zdroje">
     <h3>Zdroje dat a jejich výpadek</h3>
-    <p>MaR neví nic o tvém měniči, dokud mu neřekneš, ze kterých senzorů má číst. To se dělá v podokně <strong>Nastavení zdrojů</strong>: přetok (kladné = export do sítě), výroba panelů a stav baterie v procentech. Pod nimi je kontrolní karta, na které je vidět, co se právě čte — tam se pozná překlep okamžitě.</p>
+    <p>MaR neví nic o tvém měniči, dokud mu neřekneš, ze kterých senzorů má číst. To se dělá v podokně <strong>Nastavení zdrojů</strong>: přetok (kladné = export do sítě), výroba panelů a stav baterie v procentech. Pod nimi je kontrolní karta, na které je vidět, co se právě čte — tam se pozná překlep okamžitě. Kdo má integraci GoodWe, najde pole při první instalaci předvyplněná; u jiného měniče zůstanou prázdná a vyplníš je sám. Kdo nemá baterii, nechá pole baterie prázdné.</p>
     <p>Tyhle zdroje se <strong>sdílejí s programem FVE topení</strong>, nastavují se jen jednou tady. Obráceně FVE TUV používá <strong>výkon baterie</strong>, který se nastavuje v okně FVE topení.</p>
     <p><strong>Ze stejných zdrojů kreslí i schéma.</strong> Síť, panely, baterie a dům ve schématu berou čísla z vlastních senzorů MaR, ne přímo ze střídače — proto schéma funguje s jakýmkoli měničem. Spotřebu domu MaR dopočítá (výroba − přetok − nabíjení baterie). Dnešní <strong>import, export a výrobu</strong> si sčítá sám z okamžitého výkonu a o půlnoci je vynuluje; je to orientační údaj, proti elektroměru se může lišit o pár procent a doba, kdy Home Assistant neběží, chybí. Kdo má přesné denní senzory (třeba měřič spotřeby nad čítači střídače), vyplní je v Nastavení zdrojů do nepovinných polí <em>Import dnes</em>, <em>Export dnes</em> a <em>Vyrobeno dnes</em> a schéma ukáže ty.</p>
     <p><strong>Ztráta zdroje baterie:</strong> krátký výpadek čtení ohřev drží — mrak v datech není důvod měnit topení. Když je ale zdroj němý <strong>déle než pět minut</strong>, ohřev se ukončí, teplota vody se vrátí a přijde notifikace. Typicky je to překlep v <code>entity_id</code> nebo přejmenování po aktualizaci integrace měniče.</p>
