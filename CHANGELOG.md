@@ -7,6 +7,7 @@ verze podle [sémantického verzování](https://semver.org/lang/cs/).
 ## [Nevydáno]
 
 ### Přidáno
+- Teploty (ouško): osa T ekv dál vpravo, mezi grafem a osou sloupec hodnot „teď“ (požadovaná, skutečná, výstup, ekviterma bez přídavku); výstup v rozsahu plnou čarou, mimo něj čárkovaně po okraji, hodnota vždy, bez šipky.
 - Logo integrace (složka `brand/`, převzaté beze změny z integrace Acond).
 - Upozornění v README a příručce: neoficiální doplněk (název a logo Acond jen k označení čerpadel) a bez záruky.
 - Zdroje FVE se předvyplní hodnotami GoodWe jen tehdy, když ta entita v HA existuje; jinak zůstanou prázdné (dřív MaR u cizího měniče nebo bez FVE/baterie usoudil, že je má).

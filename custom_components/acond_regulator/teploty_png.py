@@ -14,9 +14,10 @@ Rozvržení (dohodnuté s Pavlem 29. 9. 2026):
   • Přídavek na místnost jako jemná výplň mezi ekvitermou a výpočtem MaR:
     červená přidává, modrá ubírá.
   • TUV a odmrazování jako šedé pásy, křivky v nich přerušené, osy bez špiček.
-  • Výstup topné vody (30018) čárkovaně červeně, bez výplně; rozsah osy
-    nezvětšuje — co je mimo, se nekreslí a hodnota teď se ukáže u kraje
-    se šipkou (Pavle 9. 10. 2026).
+  • Výstup topné vody (30018) červeně, bez výplně: v rozsahu osy plnou čarou,
+    nad / pod ním čárkovaně po horním / dolním okraji; rozsah nezvětšuje.
+  • Hodnoty „teď“ u zpátečky (požadovaná, skutečná, výstup, ekviterma bez
+    přídavku) ve sloupci mezi grafem a osou T ekv, rozestrčené (Pavle 10. 10.).
 
 Plátno má poměr stran schématu (1200 × 700), aby graf schéma přesně překryl.
 """
@@ -47,7 +48,9 @@ PAS = (0, 0, 0, 18)
 POZADI = (250, 250, 251)
 
 # rozvržení v souřadnicích návrhu
-L, R, AX = 92, 1010, 1032          # levý okraj grafu, pravý okraj, pravá osa T ekv
+L, R, AX = 92, 955, 1062           # levý okraj grafu, pravý okraj, pravá osa T ekv
+                                   # (mezi R a AX sloupec hodnot „teď“ u zpátečky)
+ROZESTUP = 17                      # min. svislý odstup popisků hodnot
 P1 = (88, 258)                     # horní panel: top, bottom
 P2 = (318, 600)                    # dolní panel
 OS_CAS = 618                       # popisky času
@@ -359,7 +362,11 @@ def vykresli(d: TeplotyData) -> bytes:
     # výstup topné vody: jen co se vejde do osy, nic nevyplňuje
     vystup = d.vystup if len(d.vystup) == n else [None] * n
     v_osy = [v if v is not None and lo2 <= v <= hi2 else None for v in vystup]
-    carkovane(schody(v_osy, Y2), VODA, 2.0, 6, 4)
+    v_nad = [hi2 if v is not None and v > hi2 else None for v in vystup]
+    v_pod = [lo2 if v is not None and v < lo2 else None for v in vystup]
+    cara(schody(v_osy, Y2), VODA, 2.2)
+    carkovane(schody(v_nad, Y2), VODA, 2.0, 6, 4)     # mimo osu: po okraji
+    carkovane(schody(v_pod, Y2), VODA, 2.0, 6, 4)
     pod = lambda r: [None if v is not None and v < lo2 else v for v in r]
     cara(schody(pod(d.pozadovana), Y2, lo2, hi2), AMB, 2.6)
     cara(schody(pod(d.skutecna), Y2, lo2, hi2), ACT, 2.6)
@@ -376,15 +383,24 @@ def vykresli(d: TeplotyData) -> bytes:
                             radius=5 * S, fill=PUR)
         text(bx + 7, y_ukaz / S, popis, (255, 255, 255), 13, True, anchor="lm")
 
-    # hodnota výstupu teď u pravého kraje (mimo osu se šipkou u okraje)
-    v_ted = vystup[-1] if vystup and not d.pas[-1] else None
-    if v_ted is not None:
-        if v_ted > hi2:
-            text(R - 4, P2[0] + 4, "↑ " + _fmt(v_ted) + " °C", VODA, 14, True, anchor="ra")
-        elif v_ted < lo2:
-            text(R - 4, P2[1] - 4, "↓ " + _fmt(v_ted) + " °C", VODA, 14, True, anchor="rd")
-        else:
-            text(R - 4, Y2(v_ted) / S - 5, _fmt(v_ted) + " °C", VODA, 14, True, anchor="rd")
+    # hodnoty „teď“ ve sloupci mezi grafem a osou T ekv (bez šipek; mimo osu
+    # u okraje), rozestrčené, s podkladem, ať je nepřeškrtne čára do osy
+    popisky = []
+    for rada, col in ((d.pozadovana, AMB), (d.skutecna, ACT), (vystup, VODA),
+                      (d.ekv_zaklad, PUR)):
+        v = posledni(rada)
+        if v is not None:
+            popisky.append((Y2(max(lo2, min(hi2, v))) / S, _fmt(v) + " °C", col))
+    popisky.sort(key=lambda p: p[0])
+    ys: list[float] = []
+    for y, _t, _c in popisky:
+        ys.append(min(max(y, (ys[-1] + ROZESTUP) if ys else P2[0] + 6), P2[1] - 6))
+    for i in range(len(ys) - 2, -1, -1):
+        ys[i] = min(ys[i], ys[i + 1] - ROZESTUP)
+    for (_y, t, c), y in zip(popisky, ys):
+        tw = g.textlength(t, font=_font(13, True)) / S
+        g.rectangle([(R + 3) * S, (y - 8) * S, (R + 7 + tw) * S, (y + 8) * S], fill=POZADI)
+        text(R + 5, y, t, c, 13, True, anchor="lm")
 
     # pás TUV/odmraz — u každého pásu, kam se vejde, co v něm bylo
     for od, do in useky_pasu(d.pas):
@@ -415,7 +431,7 @@ def vykresli(d: TeplotyData) -> bytes:
     leg(L, "cara", AMB, "požadovaná" + (f" {_fmt(poz)} °C" if poz is not None else ""))
     vy = posledni(vystup)
     leg(L + 205, "cara", ACT, "skutečná" + (f" {_fmt(sk)} °C" if sk is not None else ""))
-    leg(L + 400, "cark", VODA, "výstup" + (f" {_fmt(vy)} °C" if vy is not None else ""))
+    leg(L + 400, "cara", VODA, "výstup" + (f" {_fmt(vy)} °C" if vy is not None else ""))
     leg(L + 575, "cark", PUR, "ekviterma bez přídavku")
     leg(L + 800, "vypln", (RED, BLU), "přídavek místnosti +/−")
 
