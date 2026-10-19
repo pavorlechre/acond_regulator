@@ -7,7 +7,7 @@ verze podle [sémantického verzování](https://semver.org/lang/cs/).
 ## [Nevydáno]
 
 ### Přidáno
-- Okno Schéma: pod schématem velký graf za 24 h (ApexCharts) — teploty (venku, uvnitř, výstup, zpátečka a požadovaná, TUV), výkony v kW (výkon a příkon TČ, FV, síť, baterie, dům), COP, baterie %, otáčky a proužky chodu kompresoru, TUV a odmrazování. Řady jdou skrýt ťuknutím v legendě, některé jsou na začátku skryté. Jen v samostatném okně, do Pohledu Aconda se nevkládá. Výkony mají v legendě jednotku kW.
+- Okno Schéma: pod schématem velký graf za 24 h (ApexCharts) — teploty (venku, uvnitř, výstup, zpátečka a požadovaná, TUV), výkony v kW (výkon a příkon TČ, FV, síť, baterie, dům), COP, baterie %, otáčky a proužky chodu kompresoru, TUV a odmrazování. Řady jdou skrýt ťuknutím v legendě, některé jsou na začátku skryté. Jen v samostatném okně, do Pohledu Aconda se nevkládá. Výkony mají v legendě jednotku kW. Po otevření jsou vidět teploty a stavy, výkony, COP, baterie a otáčky jsou skryté; chod kompresoru je červený proužek.
 - Teploty (ouško): osa T ekv dál vpravo, mezi grafem a osou sloupec hodnot „teď“ (požadovaná, skutečná, výstup, ekviterma bez přídavku); výstup v rozsahu plnou čarou, mimo něj čárkovaně po okraji, hodnota vždy, bez šipky.
 - Logo integrace (složka `brand/`, převzaté beze změny z integrace Acond).
 - Upozornění v README a příručce: neoficiální doplněk (název a logo Acond jen k označení čerpadel) a bez záruky.

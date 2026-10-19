@@ -3731,8 +3731,6 @@ views:
         group_by:
           func: last
           duration: 5min
-        show:
-          hidden_by_default: true
       - entity: sensor.acond_30018_t_act_water_outlet
         name: Výstup
         yaxis_id: t
@@ -3768,8 +3766,6 @@ views:
         group_by:
           func: last
           duration: 5min
-        show:
-          hidden_by_default: true
       # --- výkony (kW, pravá osa; zdroje jsou ve W) ---
       - entity: sensor.acond_30028_ahp
         name: Výkon TČ
@@ -3780,6 +3776,8 @@ views:
         color: '#ef5350'
         transform: return x / 1000;
         unit: kW
+        show:
+          hidden_by_default: true
       - entity: sensor.acond_30027_aep
         name: Příkon TČ
         yaxis_id: kw
@@ -3789,6 +3787,8 @@ views:
         color: '#5c6bc0'
         transform: return x / 1000;
         unit: kW
+        show:
+          hidden_by_default: true
       - entity: sensor.mar_fve_pv
         name: FV výroba
         yaxis_id: kw
@@ -3798,6 +3798,8 @@ views:
         color: '#fbc02d'
         transform: return x / 1000;
         unit: kW
+        show:
+          hidden_by_default: true
       - entity: sensor.mar_fve_pretok
         name: Síť (+ export / − odběr)
         yaxis_id: kw
@@ -3806,6 +3808,8 @@ views:
         color: '#26a69a'
         transform: return x / 1000;
         unit: kW
+        show:
+          hidden_by_default: true
       - entity: sensor.mar_fve_baterie_vykon
         name: Baterie (+ vybíjí / − nabíjí)
         yaxis_id: kw
@@ -3814,6 +3818,8 @@ views:
         color: '#8d6e63'
         transform: return x / 1000;
         unit: kW
+        show:
+          hidden_by_default: true
       - entity: sensor.mar_fve_dum
         name: Dům
         yaxis_id: kw
@@ -3831,6 +3837,8 @@ views:
         type: line
         stroke_width: 1
         color: '#2ca02c'
+        show:
+          hidden_by_default: true
       - entity: sensor.mar_fve_baterie
         name: Baterie %
         yaxis_id: pct
@@ -3839,6 +3847,8 @@ views:
         stroke_dash: 2
         color: '#6d4c41'
         float_precision: 0
+        show:
+          hidden_by_default: true
       - entity: sensor.acond_30024_comp_rpm_actual
         name: Otáčky
         yaxis_id: rpm
@@ -3854,9 +3864,9 @@ views:
         yaxis_id: stav
         type: area
         curve: stepline
-        opacity: 0.35
+        opacity: 0.45
         stroke_width: 0
-        color: '#ec407a'
+        color: '#e53935'
         transform: "return x === 'on' ? 1 : 0;"
         group_by:
           func: max
