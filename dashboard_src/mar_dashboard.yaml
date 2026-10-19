@@ -3779,6 +3779,7 @@ views:
         stroke_width: 1
         color: '#ef5350'
         transform: return x / 1000;
+        unit: kW
       - entity: sensor.acond_30027_aep
         name: Příkon TČ
         yaxis_id: kw
@@ -3787,6 +3788,7 @@ views:
         stroke_width: 1
         color: '#5c6bc0'
         transform: return x / 1000;
+        unit: kW
       - entity: sensor.mar_fve_pv
         name: FV výroba
         yaxis_id: kw
@@ -3795,6 +3797,7 @@ views:
         stroke_width: 1
         color: '#fbc02d'
         transform: return x / 1000;
+        unit: kW
       - entity: sensor.mar_fve_pretok
         name: Síť (+ export / − odběr)
         yaxis_id: kw
@@ -3802,6 +3805,7 @@ views:
         stroke_width: 1
         color: '#26a69a'
         transform: return x / 1000;
+        unit: kW
       - entity: sensor.mar_fve_baterie_vykon
         name: Baterie (+ vybíjí / − nabíjí)
         yaxis_id: kw
@@ -3809,6 +3813,7 @@ views:
         stroke_width: 1
         color: '#8d6e63'
         transform: return x / 1000;
+        unit: kW
       - entity: sensor.mar_fve_dum
         name: Dům
         yaxis_id: kw
@@ -3816,6 +3821,7 @@ views:
         stroke_width: 1
         color: '#757575'
         transform: return x / 1000;
+        unit: kW
         show:
           hidden_by_default: true
       # --- ostatní ---
