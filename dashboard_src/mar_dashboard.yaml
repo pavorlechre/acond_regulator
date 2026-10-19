@@ -3653,8 +3653,21 @@ views:
       apex_config:
         chart:
           height: 460
+          zoom:
+            enabled: true
+            type: xy
+            autoScaleYaxis: false
           toolbar:
-            show: false
+            show: true
+            autoSelected: zoom
+            tools:
+              download: false
+              selection: false
+              zoom: true
+              zoomin: true
+              zoomout: true
+              pan: true
+              reset: true
         grid:
           borderColor: '#e2e8f0'
           strokeDashArray: 4
