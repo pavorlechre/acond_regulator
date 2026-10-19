@@ -3632,6 +3632,8 @@ views:
           width: 15.000%
           cursor: pointer
     - type: custom:apexcharts-card
+      experimental:
+        hidden_by_default: true
       header:
         show: true
         title: Průběh za 24 h (ťuknutím na legendu řadu skryješ/ukážeš)
