@@ -78,10 +78,17 @@ def main() -> int:
         return 1
 
     schema = next(v for v in out_views if v["path"] == PREFIX + SCHEMA_PATH)
+    cards = copy.deepcopy(schema["cards"])
+    # Velký graf pod schématem patří jen do samostatného okna Schéma,
+    # do Pohledu ne – ze vsuvky se vyřadí.
+    for card in cards:
+        if card.get("type") == "vertical-stack":
+            card["cards"] = [c for c in card["cards"]
+                             if c.get("type") != "custom:apexcharts-card"]
     insert = [{
         "type": "grid",
         "column_span": 4,
-        "cards": copy.deepcopy(schema["cards"]),
+        "cards": cards,
     }]
     # Oddíl přes více sloupců má uvnitř 12 × column_span dílků; karta bez
     # grid_options si vezme jen 12, tedy jeden sloupec. „full“ = celá šířka.
