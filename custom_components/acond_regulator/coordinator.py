@@ -111,7 +111,10 @@ class MarCoordinator(DataUpdateCoordinator[RegulatorResult]):
         self.write_enabled: bool = False                    # vypínač zápisu (default vyp.)
         self.suspend_write: bool = False                    # kámen START/STOP běží -> nezasahovat do 40008
         self.utlum_pz: float | None = None                  # útlum PZ: drž 40008 na této hodnotě (None = ekviterma)
-        self.strategy: str = STRATEGY_EKVITERM              # aktivní strategie Patra 1
+        # Výchozí (čerstvá instalace, nic uloženého): Bez MaR — MaR jen sleduje a
+        # nezapisuje; zelené tlačítko pak odpovídá skutečnosti. Uložená strategie
+        # se obnoví v StrategySelect (Pavle 10. 10. 2026).
+        self.strategy: str = STRATEGY_BEZ_MAR
         self.standard_ok: bool = True                       # cache typu regulace (pro okno)
         self.minimum_target: float | None = None           # cíl držený smyčkou Minima (pro okno)
         self.topeni_owns: bool = False                      # topení podle přebytků vlastní 40008/40014 -> coordinator uhne

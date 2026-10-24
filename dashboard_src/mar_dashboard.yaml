@@ -1005,20 +1005,11 @@ views:
   - type: grid
     column_span: 2
     cards:
-    - type: entities
-      title: Zdroj výkonu baterie (znaménkový)
-      entities:
-      - entity: text.mar_topeni_zdroj_baterie_vykon
-        name: entity_id výkonu baterie
-        icon: mdi:battery-charging
-      - entity: switch.mar_topeni_baterie_vybijeni_kladne
-        name: Vybíjení je kladné (GoodWe → zapnuto)
-        icon: mdi:plus-minus-variant
     - type: markdown
-      content: 'Přetok a SoC baterie se sdílí s FVE ohřevem (nastav je ve FVE → Nastavení). Tady stačí vložit **výkon baterie** (znaménkový, nabíjení kladné).
+      content: '**Zdroje dat** (přetok, výroba, stav i výkon baterie) se nastavují na jednom místě, ve **FVE TUV → Nastavení zdrojů**, a sdílí je FVE TUV, FVE topení i schéma.
 
 
-        **Tímhle polem se volí větev.** Vyplněné = řízení podle stavu baterie. Prázdné = **bezbaterková větev** — řídí se přímo bilancí sítě. Rozhoduje to, jestli je pole vyplněné, ne jestli senzor zrovna
+        **Polem výkonu baterie se volí větev.** Vyplněné = řízení podle stavu baterie. Prázdné = **bezbaterková větev** — řídí se přímo bilancí sítě. Rozhoduje to, jestli je pole vyplněné, ne jestli senzor zrovna
         odpovídá; výpadek střídače tedy regulaci uprostřed mraku nepřepne.
 
         '
@@ -1027,6 +1018,12 @@ views:
     cards:
     - type: horizontal-stack
       cards:
+      - type: button
+        name: Nastavení zdrojů
+        icon: mdi:cog-outline
+        tap_action:
+          action: navigate
+          navigation_path: /dashboard-pokus2/fve_nastaveni
       - type: button
         name: Příručka — FVE topení
         show_name: false
@@ -1049,15 +1046,17 @@ views:
       content: '## Zdroje dat pro FVE
 
 
-        Regulace potřebuje vědět, ze kterých senzorů číst **okamžitý přetok** (kladné = export), **výrobu panelů** a **stav baterie**. Vlož sem `entity_id` — nejlíp zkopírovaný z **Vývojářské nástroje →
+        Regulace potřebuje vědět, ze kterých senzorů číst **okamžitý přetok** (kladné = export), **výrobu panelů**, **stav baterie** a **výkon baterie**. Vlož sem `entity_id` — nejlíp zkopírovaný z **Vývojářské nástroje →
         Stavy** a vložený ze schránky (Ctrl+V), ať se vyhneš překlepu.
 
 
-        Kdo má integraci **GoodWe**, najde pole předvyplněná (`sensor.active_power`, `sensor.pv_power`, `sensor.battery_state_of_charge`); jinak zůstanou prázdná a vyplníš je sám. Nemáš-li baterii, nech pole baterie prázdné — regulace pojede s tvrdším
-        defaultem.
+        Kdo má integraci **GoodWe**, najde pole předvyplněná (`sensor.active_power`, `sensor.pv_power`, `sensor.battery_state_of_charge`); jinak zůstanou prázdná a vyplníš je sám. Nemáš-li baterii, nech **obě** pole baterie prázdná — FVE TUV i FVE topení pak pojedou ve větvi bez baterie.
 
 
-        **Pro schéma (nepovinné):** denní import, export a výrobu MaR sčítá sám z přetoku a výroby. Kdo má přesné denní senzory (třeba měřič spotřeby nad čítači střídače), vyplní je dole a schéma ukáže ty. Výkon baterie se zadává v okně FVE topení.
+        **Výkon baterie** je znaménkový: zapni přepínač, pokud tvůj střídač hlásí vybíjení kladně (GoodWe ano). Správnost ověříš v kartě Kontrola: při vybíjení musí být „Baterie – výkon“ kladný.
+
+
+        **Pro schéma (nepovinné):** denní import, export a výrobu MaR sčítá sám z přetoku a výroby. Kdo má přesné denní senzory (třeba měřič spotřeby nad čítači střídače), vyplní je dole a schéma ukáže ty.
 
         '
     - type: entities
@@ -1072,6 +1071,12 @@ views:
       - entity: text.mar_fve_zdroj_baterie
         name: Baterie (SoC v %)
         icon: mdi:battery-70
+      - entity: text.mar_topeni_zdroj_baterie_vykon
+        name: Baterie (výkon ve W)
+        icon: mdi:battery-charging
+      - entity: switch.mar_topeni_baterie_vybijeni_kladne
+        name: Vybíjení je kladné (GoodWe → zapnuto)
+        icon: mdi:plus-minus-variant
     - type: entities
       title: Pro schéma — nepovinné (prázdné = MaR sčítá sám)
       entities:

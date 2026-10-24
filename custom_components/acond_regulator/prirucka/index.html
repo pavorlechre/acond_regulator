@@ -60,6 +60,8 @@
   }
   .upozorneni { font-size:14.5px; color:var(--dim); border-left:3px solid var(--rule); padding:.1rem 0 .1rem 1rem; margin:1.2rem 0 0; }
   .upozorneni p { margin:.5rem 0; }
+  .cesta { display:block; font-size:14.5px; color:var(--dim); background:var(--panel); border-left:3px solid var(--rule); padding:.15rem .6rem; margin:.3rem 0 .2rem; }
+  .cesta::before { content:"› "; font-weight:600; }
   h4 { font-size:1.05rem; font-weight:600; margin:1.9rem 0 .3rem; }
   p { margin:.95rem 0; }
   ul { margin:.95rem 0; padding-left:1.2rem; }
@@ -128,7 +130,7 @@
 <header id="nahoru">
   <p class="kicker">Acond Regulator (MaR) · příručka</p>
   <h1>Příručka MaR</h1>
-  <p class="lede">Sedm kapitol, jedna ke každému oknu programu. Popisují, co která páka dělá, co se stane, když dáš víc nebo míň, a co program naopak neudělá.</p>
+  <p class="lede">Úvodní kapitola Začínáme a pak sedm kapitol, jedna ke každému oknu programu. Popisují, co která páka dělá, co se stane, když dáš víc nebo míň, a co program naopak neudělá.</p>
   <div class="upozorneni">
     <p><strong>Neoficiální doplněk.</strong> MaR je komunitní projekt. Není spojený se společností Acond a.s., není jí schválený ani podporovaný. Název a logo Acond slouží jen k označení tepelných čerpadel, se kterými MaR spolupracuje.</p>
     <p><strong>Bez záruky.</strong> MaR je komunitní projekt a nemůže postihnout všechny konfigurace topných soustav. Nevhodné nastavení, ale i chyba v programu, může vést ke zvýšeným nákladům na vytápění, k nedotopení či přetopení objektu, případně i ke zvýšenému opotřebení tepelného čerpadla, byť všechny vlastní ochrany čerpadla v jeho řídicí jednotce zůstávají zachovány. Autoři se zříkají odpovědnosti za případné škody.</p>
@@ -139,6 +141,16 @@
 <nav class="obsah" id="obsah">
   <p>Obsah</p>
   <ol>
+    <li><a href="#zaciname">Začínáme</a>
+      <ol>
+        <li><a href="#zaciname-pred">Než začneš</a></li>
+        <li><a href="#zaciname-instalace">Instalace</a></li>
+        <li><a href="#zaciname-klid">MaR zatím nic nedělá — a to je dobře</a></li>
+        <li><a href="#zaciname-kroky">Pět kroků k prvnímu topení</a></li>
+        <li><a href="#zaciname-funguje">Jak poznat, že to funguje</a></li>
+        <li><a href="#zaciname-ven">Jak z toho ven</a></li>
+      </ol>
+    </li>
     <li><a href="#schema">Schéma</a>
       <ol>
         <li><a href="#schema-popis">Co je na obrázku</a></li>
@@ -150,7 +162,6 @@
         <li><a href="#schema-tlacitka">Tlačítka</a></li>
         <li><a href="#schema-nastaveni">Okno Nastavení</a></li>
         <li><a href="#schema-ouska">Ouška — grafy přes schéma</a></li>
-      <li><a href="#schema-ouska">Ouška — grafy přes schéma</a></li>
         <li><a href="#schema-sekundar">Sekundární čerpadlo — jediné nastavení</a></li>
         <li><a href="#schema-nesedi">Když schéma neodpovídá tvému domu</a></li>
       </ol>
@@ -225,6 +236,94 @@
 
 <main>
 
+
+<!-- ================================================================= -->
+<!--  KAPITOLA 0 — ZAČÍNÁME                                            -->
+<!-- ================================================================= -->
+<section class="kapitola" id="zaciname">
+  <h2>Začínáme</h2>
+  <p class="lede">Co udělat po instalaci, v jakém pořadí a kde to najdeš. U každého kroku je šedě <strong>cesta</strong> — kam klepnout.</p>
+
+  <nav class="obsah" id="o-zaciname">
+    <p>V této kapitole</p>
+    <ol>
+      <li><a href="#zaciname-pred">Než začneš</a></li>
+      <li><a href="#zaciname-instalace">Instalace</a></li>
+      <li><a href="#zaciname-klid">MaR zatím nic nedělá — a to je dobře</a></li>
+      <li><a href="#zaciname-kroky">Pět kroků k prvnímu topení</a></li>
+      <li><a href="#zaciname-funguje">Jak poznat, že to funguje</a></li>
+      <li><a href="#zaciname-ven">Jak z toho ven</a></li>
+    </ol>
+  </nav>
+
+  <section id="zaciname-pred">
+    <h3>Než začneš</h3>
+    <ul>
+      <li>Musí běžet integrace <strong>Acond</strong> — MaR čte a zapisuje přes ni.</li>
+      <li>Čerpadlo musí být v <strong>Typu regulace Standard</strong>. Jinak MaR jen přihlíží. Na čerpadle ani v aplikaci Acond se nic dalšího nastavovat nemusí.
+        <span class="cesta">Acond TČ → Entity → Ovládání → Typ regulace</span></li>
+      <li>Pro grafy je potřeba karta <strong>apexcharts-card</strong> z HACS.</li>
+    </ul>
+    <p class="nahoru"><a href="#o-zaciname">&#8593; Obsah kapitoly</a> &nbsp;·&nbsp; <a href="#obsah">&#8593; Celkový obsah</a></p>
+  </section>
+
+  <section id="zaciname-instalace">
+    <h3>Instalace</h3>
+    <ol>
+      <li>V HACS přidej vlastní repozitář <code>https://github.com/pavorlechre/acond_regulator</code> (typ Integrace), <strong>hned stáhni</strong> Acond Regulator a udělej <strong>plný restart</strong>.</li>
+      <li>Přidej integraci a v mapě zadej <strong>polohu</strong> domu — podle ní se stahuje předpověď počasí.
+        <span class="cesta">Nastavení → Zařízení a služby → Přidat integraci → Acond Regulator</span>
+        Polohu později změníš tady:
+        <span class="cesta">Nastavení → Zařízení a služby → Acond Regulator (MaR) → Konfigurovat</span></li>
+      <li>Po dalším restartu přibude v dashboardu <strong>Acond TČ</strong> nahoře v okně <strong>Pohled</strong> schéma s tlačítky a v liště tři okna MaR: <strong>Režimy</strong>, <strong>FVE TUV</strong> a <strong>Statistika</strong>.</li>
+    </ol>
+    <p class="nahoru"><a href="#o-zaciname">&#8593; Obsah kapitoly</a> &nbsp;·&nbsp; <a href="#obsah">&#8593; Celkový obsah</a></p>
+  </section>
+
+  <section id="zaciname-klid">
+    <h3>MaR zatím nic nedělá — a to je dobře</h3>
+    <p>Po instalaci je vybraná strategie <strong>Bez MaR</strong>: MaR jen sleduje a do čerpadla nezapisuje. Čerpadlo jede dál tak, jak jelo. Nastav si v klidu křivku a zdroje, a až budeš chtít, aby MaR začal řídit, klepni na <strong>Ekviterma</strong> (poslední krok níž).</p>
+    <p class="nahoru"><a href="#o-zaciname">&#8593; Obsah kapitoly</a> &nbsp;·&nbsp; <a href="#obsah">&#8593; Celkový obsah</a></p>
+  </section>
+
+  <section id="zaciname-kroky">
+    <h3>Pět kroků k prvnímu topení</h3>
+    <ol>
+      <li><strong>Ekvitermní křivka.</strong> Nejrychlejší je načíst <strong>vzor</strong>, který se nejvíc blíží tvému domu (podlahovka dobře či středně zateplená, radiátory), a ten pak dolaďovat. Body křivky jdou upravit i ručně.
+        <span class="cesta">Acond TČ → Režimy → Ekviterma → Profily · vzory označené [vzor]</span>
+        <span class="cesta">Acond TČ → Režimy → Ekviterma · body křivky</span> — víc v kapitole <a href="#ekviterma">Ekviterma</a></li>
+      <li><strong>Korekce a okna průměrování.</strong> Když jsi načetl vzor, jsou nastavené s ním. Jinak nech koeficient zatím na 1 a okna zvol podle tíhy domu.
+        <span class="cesta">Acond TČ → Režimy → Ekviterma</span></li>
+      <li><strong>Fotovoltaika</strong> (jen kdo ji má). Vyplň zdroje: přetok, výrobu, stav a výkon baterie s přepínačem znaménka. S integrací GoodWe jsou pole předvyplněná. Bez baterie nech obě pole baterie prázdná. Kontrolní karta pod poli ukáže, co se čte.
+        <span class="cesta">Acond TČ → FVE TUV → Nastavení zdrojů</span> — víc v kapitole <a href="#fve-tuv">FVE TUV</a></li>
+      <li><strong>Sekundární čerpadlo.</strong> Jen pro správný pohyb kuliček ve schématu.
+        <span class="cesta">Acond TČ → Režimy · karta Sekundární čerpadlo</span> — viz <a href="#schema-sekundar">Sekundární čerpadlo</a></li>
+      <li><strong>Zapni regulaci</strong> — klepni na strategii <strong>Ekviterma</strong> a potvrď.
+        <span class="cesta">Acond TČ → Pohled · schéma, tlačítka dole vlevo</span></li>
+    </ol>
+    <p class="nahoru"><a href="#o-zaciname">&#8593; Obsah kapitoly</a> &nbsp;·&nbsp; <a href="#obsah">&#8593; Celkový obsah</a></p>
+  </section>
+
+  <section id="zaciname-funguje">
+    <h3>Jak poznat, že to funguje</h3>
+    <ul>
+      <li>Ve <strong>Stavu regulace</strong> ve schématu je cíl zpátečky, hodnota zapsaná v registru a řádek „Zápis zpátečky – zapisuje“.</li>
+      <li>Po pár hodinách by v oušku <strong>Teploty</strong> měla skutečná zpátečka sledovat požadovanou.
+        <span class="cesta">Acond TČ → Pohled → ouško Teploty</span></li>
+    </ul>
+    <p class="nahoru"><a href="#o-zaciname">&#8593; Obsah kapitoly</a> &nbsp;·&nbsp; <a href="#obsah">&#8593; Celkový obsah</a></p>
+  </section>
+
+  <section id="zaciname-ven">
+    <h3>Jak z toho ven</h3>
+    <ul>
+      <li>Strategie <strong>Bez MaR</strong> — MaR přestane zapisovat a čerpadlo jede po svém.
+        <span class="cesta">Acond TČ → Pohled · tlačítko Bez MaR</span></li>
+      <li><strong>Odinstalace</strong> v HACS a restart — okna MaR zmizí a dashboard Acond se vrátí do původní podoby.</li>
+    </ul>
+    <p class="nahoru"><a href="#o-zaciname">&#8593; Obsah kapitoly</a> &nbsp;·&nbsp; <a href="#obsah">&#8593; Celkový obsah</a></p>
+  </section>
+</section>
 
 <!-- ================================================================= -->
 <!--  KAPITOLA — SCHÉMA (první okno)                                   -->
@@ -725,14 +824,14 @@
     <p>Samotný badget by jednu situaci nepoznal: <strong>čerpadlo topí z baterie</strong>. Typicky zimní podvečer — slunce nesvítí, přetok je nula, ale čerpadlo topí a bere velký příkon. Badget by to sečetl a vypadalo by to jako přebytek; ohřev by naskočil a prohřál by kus baterie do bojleru.</p>
     <p>Proto se od badgetu <strong>odečítá vybíjení baterie</strong>. Když čerpadlo bere 3 kW a baterie přitom 3 kW vybíjí, vyjde badget nula — přebytek není a ohřev se nespustí.</p>
     <p><strong>Nabíjení baterie se nepřičítá.</strong> Ve dne baterie přebytek spolkne a ohřev počká, až se baterie skoro nabije a přebytek začne přetékat. Kdyby se nabíjení počítalo, ohřev by se spustil hned ráno a bral by baterii proud.</p>
-    <p>Výkon baterie se čte ze stejného zdroje jako u FVE topení — nastavuje se jen jednou, v okně <strong>FVE topení</strong> na kartě <strong>Zdroj výkonu baterie</strong>, včetně přepínače, jestli je vybíjení kladné (GoodWe). Když zdroj výkonu vyplněný není nebo nic nehlásí, jede ohřev bez této opravy. Pak platí starší doporučení: nastav <em>Zapnout nad</em> bezpečně <strong>nad příkon čerpadla při ohřevu vody</strong>, aby večerní topení z baterie práh nepřelezlo.</p>
+    <p>Výkon baterie se nastavuje jednou pro všechny programy v <strong>Nastavení zdrojů</strong> (pole <em>Baterie – výkon</em>), včetně přepínače, jestli je vybíjení kladné (GoodWe). Když zdroj výkonu vyplněný není nebo nic nehlásí, jede ohřev bez této opravy. Pak platí starší doporučení: nastav <em>Zapnout nad</em> bezpečně <strong>nad příkon čerpadla při ohřevu vody</strong>, aby večerní topení z baterie práh nepřelezlo.</p>
     <p class="nahoru"><a href="#o-fve-tuv">&#8593; Obsah kapitoly</a> &nbsp;·&nbsp; <a href="#obsah">&#8593; Celkový obsah</a></p>
   </section>
 
   <section id="fve-tuv-zdroje">
     <h3>Zdroje dat a jejich výpadek</h3>
     <p>MaR neví nic o tvém měniči, dokud mu neřekneš, ze kterých senzorů má číst. To se dělá v podokně <strong>Nastavení zdrojů</strong>: přetok (kladné = export do sítě), výroba panelů a stav baterie v procentech. Pod nimi je kontrolní karta, na které je vidět, co se právě čte — tam se pozná překlep okamžitě. Kdo má integraci GoodWe, najde pole při první instalaci předvyplněná; u jiného měniče zůstanou prázdná a vyplníš je sám. Kdo nemá baterii, nechá pole baterie prázdné.</p>
-    <p>Tyhle zdroje se <strong>sdílejí s programem FVE topení</strong>, nastavují se jen jednou tady. Obráceně FVE TUV používá <strong>výkon baterie</strong>, který se nastavuje v okně FVE topení.</p>
+    <p>Tyhle zdroje se <strong>sdílejí s programem FVE topení</strong>, nastavují se jen jednou tady. Patří sem i <strong>výkon baterie</strong> s přepínačem znaménka — ten potřebuje FVE TUV (vybíjení se odečítá od badgetu), FVE topení (podle vyplnění volí větev s baterií nebo bez ní) i schéma (šipka u baterie, spotřeba domu). Kdo nemá baterii, nechá obě pole baterie prázdná.</p>
     <p><strong>Ze stejných zdrojů kreslí i schéma.</strong> Síť, panely, baterie a dům ve schématu berou čísla z vlastních senzorů MaR, ne přímo ze střídače — proto schéma funguje s jakýmkoli měničem. Spotřebu domu MaR dopočítá (výroba − přetok − nabíjení baterie). Dnešní <strong>import, export a výrobu</strong> si sčítá sám z okamžitého výkonu a o půlnoci je vynuluje; je to orientační údaj, proti elektroměru se může lišit o pár procent a doba, kdy Home Assistant neběží, chybí. Kdo má přesné denní senzory (třeba měřič spotřeby nad čítači střídače), vyplní je v Nastavení zdrojů do nepovinných polí <em>Import dnes</em>, <em>Export dnes</em> a <em>Vyrobeno dnes</em> a schéma ukáže ty.</p>
     <p><strong>Ztráta zdroje baterie:</strong> krátký výpadek čtení ohřev drží — mrak v datech není důvod měnit topení. Když je ale zdroj němý <strong>déle než pět minut</strong>, ohřev se ukončí, teplota vody se vrátí a přijde notifikace. Typicky je to překlep v <code>entity_id</code> nebo přejmenování po aktualizaci integrace měniče.</p>
     <p class="nahoru"><a href="#o-fve-tuv">&#8593; Obsah kapitoly</a> &nbsp;·&nbsp; <a href="#obsah">&#8593; Celkový obsah</a></p>

@@ -10,6 +10,10 @@ verze podle [sémantického verzování](https://semver.org/lang/cs/).
 - FVE topení bez baterie: bilance (palivo) se počítá ze samotného přetoku do sítě. Dřív vyžadovala i výkon baterie, takže bez baterie byla trvale N/A a topení se nikdy nerozjelo.
 
 ### Přidáno
+- Příručka: kapitola 0 · Začínáme (než začneš, instalace, pět kroků k prvnímu topení, jak poznat, že to funguje, jak z toho ven) s cestou ke každému nastavení.
+- Výkon baterie a přepínač znaménka přesunuty do FVE TUV → Nastavení zdrojů k ostatním zdrojům (dřív schované ve FVE topení); ve FVE topení tlačítko Nastavení zdrojů.
+- Čerstvá instalace začíná strategií Bez MaR (MaR jen sleduje a nezapisuje), dokud uživatel neklepne na Ekvitermu. Uložená strategie se obnovuje jako dosud.
+- Příručka: opraven dvojitý řádek „Ouška“ v celkovém obsahu.
 - Graf 24 h přesunut ze Schématu do samostatného okna „Průběh 24 h“ (šipka zpět na Schéma); pod schématem je jen tlačítko. Schéma se tak načítá bez čekání na graf. V Pohledu Aconda tlačítko není.
 - Okno Schéma: pod schématem velký graf za 24 h (ApexCharts) — teploty (venku, uvnitř, výstup, zpátečka a požadovaná, TUV), výkony v kW (výkon a příkon TČ, FV, síť, baterie, dům), COP, baterie %, otáčky a proužky chodu kompresoru, TUV a odmrazování. Řady jdou skrýt ťuknutím v legendě, některé jsou na začátku skryté. Jen v samostatném okně, do Pohledu Aconda se nevkládá. Výkony mají v legendě jednotku kW. Po otevření jsou vidět teploty a stavy, výkony, COP, baterie a otáčky jsou skryté; chod kompresoru je červený proužek. Pokusně zoom obdélníkem (čas i hodnoty) s tlačítky přiblížit/oddálit/posun/zpět nahoře vpravo.
 - Teploty (ouško): osa T ekv dál vpravo, mezi grafem a osou sloupec hodnot „teď“ (požadovaná, skutečná, výstup, ekviterma bez přídavku); výstup v rozsahu plnou čarou, mimo něj čárkovaně po okraji, hodnota vždy, bez šipky.
