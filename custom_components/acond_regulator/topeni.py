@@ -321,8 +321,11 @@ class TopeniController:
         return round(area / span, 0) if span > 0 else round(self._buf[-1][1], 0)
 
     def bilance_syrova(self) -> float | None:
-        """Okamžitá bilance přetok + výkon baterie (do grafu/diagnostiky)."""
+        """Okamžitá bilance přetok + výkon baterie (do grafu/diagnostiky).
+        Bez baterky (zdroj výkonu baterie nevyplněn) je bilance = samotný přetok."""
         pretok = self.fve.pretok_value() if self.fve else None
+        if not self.ma_baterku:
+            return None if pretok is None else round(pretok, 0)
         bp = self.batt_vykon_value()   # normalizováno na „nabíjení +"
         # výkon baterie je TVRDÁ podmínka: bez něj je bilance maskovaná (viz destilát)
         if pretok is None or bp is None:

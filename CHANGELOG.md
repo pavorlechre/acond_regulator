@@ -6,6 +6,9 @@ verze podle [sémantického verzování](https://semver.org/lang/cs/).
 
 ## [Nevydáno]
 
+### Opraveno
+- FVE topení bez baterie: bilance (palivo) se počítá ze samotného přetoku do sítě. Dřív vyžadovala i výkon baterie, takže bez baterie byla trvale N/A a topení se nikdy nerozjelo.
+
 ### Přidáno
 - Okno Schéma: pod schématem velký graf za 24 h (ApexCharts) — teploty (venku, uvnitř, výstup, zpátečka a požadovaná, TUV), výkony v kW (výkon a příkon TČ, FV, síť, baterie, dům), COP, baterie %, otáčky a proužky chodu kompresoru, TUV a odmrazování. Řady jdou skrýt ťuknutím v legendě, některé jsou na začátku skryté. Jen v samostatném okně, do Pohledu Aconda se nevkládá. Výkony mají v legendě jednotku kW. Po otevření jsou vidět teploty a stavy, výkony, COP, baterie a otáčky jsou skryté; chod kompresoru je červený proužek. Pokusně zoom obdélníkem (čas i hodnoty) s tlačítky přiblížit/oddálit/posun/zpět nahoře vpravo.
 - Teploty (ouško): osa T ekv dál vpravo, mezi grafem a osou sloupec hodnot „teď“ (požadovaná, skutečná, výstup, ekviterma bez přídavku); výstup v rozsahu plnou čarou, mimo něj čárkovaně po okraji, hodnota vždy, bez šipky.
