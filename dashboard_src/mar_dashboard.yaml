@@ -3631,291 +3631,15 @@ views:
           left: 57.000%
           width: 15.000%
           cursor: pointer
-    - type: custom:apexcharts-card
-      experimental:
-        hidden_by_default: true
-      header:
-        show: true
-        title: Průběh za 24 h (ťuknutím na legendu řadu skryješ/ukážeš)
-        show_states: false
-      graph_span: 24h
-      update_interval: 5min
-      now:
-        show: true
-        label: teď
-        color: '#888888'
-      all_series_config:
-        float_precision: 1
-        stroke_width: 2
-        group_by:
-          func: avg
-          duration: 5min
-      apex_config:
-        chart:
-          height: 460
-          zoom:
-            enabled: true
-            type: xy
-            autoScaleYaxis: false
-          toolbar:
-            show: true
-            autoSelected: zoom
-            tools:
-              download: false
-              selection: false
-              zoom: true
-              zoomin: true
-              zoomout: true
-              pan: true
-              reset: true
-        grid:
-          borderColor: '#e2e8f0'
-          strokeDashArray: 4
-        legend:
-          position: bottom
-          horizontalAlign: center
-          fontSize: 12px
-        tooltip:
-          shared: true
-          x:
-            format: dd.MM. HH:mm
-        xaxis:
-          labels:
-            datetimeFormatter:
-              hour: HH:mm
-      yaxis:
-      - id: t
-        min: ~0
-        max: ~50
-        decimals: 0
-        apex_config:
-          tickAmount: 10
-          title:
-            text: °C
-      - id: kw
-        opposite: true
-        min: ~0
-        max: ~4
-        decimals: 1
-        apex_config:
-          title:
-            text: kW
-      - id: pct
-        opposite: true
-        min: 0
-        max: 100
-        decimals: 0
-        apex_config:
-          tickAmount: 5
-          title:
-            text: '%'
-      - id: cop
-        show: false
-        min: 0
-        max: 8
-      - id: rpm
-        show: false
-        min: 0
-        max: ~6000
-      - id: stav
-        show: false
-        min: 0
-        max: 10
-      series:
-      # --- teploty (°C, levá osa) ---
-      - entity: sensor.acond_30010_t_act_air
-        name: Venku
-        yaxis_id: t
-        type: line
-        stroke_width: 3
-        stroke_dash: 4
-        color: '#00acc1'
-      - entity: sensor.acond_30002_t_act_indoor1
-        name: Uvnitř
-        yaxis_id: t
-        type: line
-        color: '#e91e63'
-      - entity: number.acond_40001_t_set_indoor1
-        name: Uvnitř žádaná
-        yaxis_id: t
-        type: line
-        curve: stepline
-        stroke_width: 1
-        stroke_dash: 3
-        color: '#e91e63'
-        group_by:
-          func: last
-          duration: 5min
-      - entity: sensor.acond_30018_t_act_water_outlet
-        name: Výstup
-        yaxis_id: t
-        type: line
-        color: '#d62728'
-      - entity: sensor.acond_30009_t_act_water_back
-        name: Zpátečka
-        yaxis_id: t
-        type: line
-        color: '#1f77b4'
-      - entity: sensor.acond_30008_t_set_water_back
-        name: Zpátečka požadovaná
-        yaxis_id: t
-        type: line
-        curve: stepline
-        color: '#f1c40f'
-        group_by:
-          func: last
-          duration: 5min
-      - entity: sensor.acond_30006_t_act_tuv
-        name: TUV
-        yaxis_id: t
-        type: line
-        color: '#ff7f0e'
-      - entity: sensor.acond_30005_t_set_tuv
-        name: TUV žádaná
-        yaxis_id: t
-        type: line
-        curve: stepline
-        stroke_width: 1
-        stroke_dash: 3
-        color: '#ff7f0e'
-        group_by:
-          func: last
-          duration: 5min
-      # --- výkony (kW, pravá osa; zdroje jsou ve W) ---
-      - entity: sensor.acond_30028_ahp
-        name: Výkon TČ
-        yaxis_id: kw
-        type: area
-        opacity: 0.2
-        stroke_width: 1
-        color: '#ef5350'
-        transform: return x / 1000;
-        unit: kW
-        show:
-          hidden_by_default: true
-      - entity: sensor.acond_30027_aep
-        name: Příkon TČ
-        yaxis_id: kw
-        type: area
-        opacity: 0.3
-        stroke_width: 1
-        color: '#5c6bc0'
-        transform: return x / 1000;
-        unit: kW
-        show:
-          hidden_by_default: true
-      - entity: sensor.mar_fve_pv
-        name: FV výroba
-        yaxis_id: kw
-        type: area
-        opacity: 0.15
-        stroke_width: 1
-        color: '#fbc02d'
-        transform: return x / 1000;
-        unit: kW
-        show:
-          hidden_by_default: true
-      - entity: sensor.mar_fve_pretok
-        name: Síť (+ export / − odběr)
-        yaxis_id: kw
-        type: line
-        stroke_width: 1
-        color: '#26a69a'
-        transform: return x / 1000;
-        unit: kW
-        show:
-          hidden_by_default: true
-      - entity: sensor.mar_fve_baterie_vykon
-        name: Baterie (+ vybíjí / − nabíjí)
-        yaxis_id: kw
-        type: line
-        stroke_width: 1
-        color: '#8d6e63'
-        transform: return x / 1000;
-        unit: kW
-        show:
-          hidden_by_default: true
-      - entity: sensor.mar_fve_dum
-        name: Dům
-        yaxis_id: kw
-        type: line
-        stroke_width: 1
-        color: '#757575'
-        transform: return x / 1000;
-        unit: kW
-        show:
-          hidden_by_default: true
-      # --- ostatní ---
-      - entity: sensor.acond_30029_cop
-        name: COP
-        yaxis_id: cop
-        type: line
-        stroke_width: 1
-        color: '#2ca02c'
-        show:
-          hidden_by_default: true
-      - entity: sensor.mar_fve_baterie
-        name: Baterie %
-        yaxis_id: pct
-        type: line
-        stroke_width: 2
-        stroke_dash: 2
-        color: '#6d4c41'
-        float_precision: 0
-        show:
-          hidden_by_default: true
-      - entity: sensor.acond_30024_comp_rpm_actual
-        name: Otáčky
-        yaxis_id: rpm
-        type: line
-        stroke_width: 1
-        color: '#9e9e9e'
-        float_precision: 0
-        show:
-          hidden_by_default: true
-      # --- stavy jako proužky dole (skrytá osa 0–10) ---
-      - entity: binary_sensor.acond_30045_hp_comp_bit_0
-        name: Kompresor běží
-        yaxis_id: stav
-        type: area
-        curve: stepline
-        opacity: 0.45
-        stroke_width: 0
-        color: '#e53935'
-        transform: "return x === 'on' ? 1 : 0;"
-        group_by:
-          func: max
-          duration: 5min
-        show:
-          legend_value: false
-      - entity: binary_sensor.acond_30007_tc_status_bit_3
-        name: Ohřev TUV
-        yaxis_id: stav
-        type: area
-        curve: stepline
-        opacity: 0.5
-        stroke_width: 0
-        color: '#ffa726'
-        transform: "return x === 'on' ? 0.7 : 0;"
-        group_by:
-          func: max
-          duration: 5min
-        show:
-          legend_value: false
-      - entity: binary_sensor.acond_30007_tc_status_bit_8
-        name: Odmrazování
-        yaxis_id: stav
-        type: area
-        curve: stepline
-        opacity: 0.6
-        stroke_width: 0
-        color: '#64b5f6'
-        transform: "return x === 'on' ? 0.4 : 0;"
-        group_by:
-          func: max
-          duration: 5min
-        show:
-          legend_value: false
+    - type: button
+      name: Průběh za 24 h
+      icon: mdi:chart-line
+      show_name: true
+      show_icon: true
+      icon_height: 32px
+      tap_action:
+        action: navigate
+        navigation_path: /dashboard-pokus2/prubeh
   subview: true
   back_path: /dashboard-pokus2/rezimy
 - type: sections
@@ -4240,3 +3964,295 @@ views:
     - type: markdown
       content: Programy se zapínají tlačítky na schématu. Tady se dají nastavit předem,
         i když zrovna neběží.
+- type: panel
+  title: Průběh 24 h
+  path: prubeh
+  icon: mdi:chart-line
+  subview: true
+  back_path: /dashboard-pokus2/schema
+  cards:
+  - type: custom:apexcharts-card
+    experimental:
+      hidden_by_default: true
+    header:
+      show: true
+      title: Průběh za 24 h (ťuknutím na legendu řadu skryješ/ukážeš)
+      show_states: false
+    graph_span: 24h
+    update_interval: 5min
+    now:
+      show: true
+      label: teď
+      color: '#888888'
+    all_series_config:
+      float_precision: 1
+      stroke_width: 2
+      group_by:
+        func: avg
+        duration: 5min
+    apex_config:
+      chart:
+        height: 460
+        zoom:
+          enabled: true
+          type: xy
+          autoScaleYaxis: false
+        toolbar:
+          show: true
+          autoSelected: zoom
+          tools:
+            download: false
+            selection: false
+            zoom: true
+            zoomin: true
+            zoomout: true
+            pan: true
+            reset: true
+      grid:
+        borderColor: '#e2e8f0'
+        strokeDashArray: 4
+      legend:
+        position: bottom
+        horizontalAlign: center
+        fontSize: 12px
+      tooltip:
+        shared: true
+        x:
+          format: dd.MM. HH:mm
+      xaxis:
+        labels:
+          datetimeFormatter:
+            hour: HH:mm
+    yaxis:
+    - id: t
+      min: ~0
+      max: ~50
+      decimals: 0
+      apex_config:
+        tickAmount: 10
+        title:
+          text: °C
+    - id: kw
+      opposite: true
+      min: ~0
+      max: ~4
+      decimals: 1
+      apex_config:
+        title:
+          text: kW
+    - id: pct
+      opposite: true
+      min: 0
+      max: 100
+      decimals: 0
+      apex_config:
+        tickAmount: 5
+        title:
+          text: '%'
+    - id: cop
+      show: false
+      min: 0
+      max: 8
+    - id: rpm
+      show: false
+      min: 0
+      max: ~6000
+    - id: stav
+      show: false
+      min: 0
+      max: 10
+    series:
+    # --- teploty (°C, levá osa) ---
+    - entity: sensor.acond_30010_t_act_air
+      name: Venku
+      yaxis_id: t
+      type: line
+      stroke_width: 3
+      stroke_dash: 4
+      color: '#00acc1'
+    - entity: sensor.acond_30002_t_act_indoor1
+      name: Uvnitř
+      yaxis_id: t
+      type: line
+      color: '#e91e63'
+    - entity: number.acond_40001_t_set_indoor1
+      name: Uvnitř žádaná
+      yaxis_id: t
+      type: line
+      curve: stepline
+      stroke_width: 1
+      stroke_dash: 3
+      color: '#e91e63'
+      group_by:
+        func: last
+        duration: 5min
+    - entity: sensor.acond_30018_t_act_water_outlet
+      name: Výstup
+      yaxis_id: t
+      type: line
+      color: '#d62728'
+    - entity: sensor.acond_30009_t_act_water_back
+      name: Zpátečka
+      yaxis_id: t
+      type: line
+      color: '#1f77b4'
+    - entity: sensor.acond_30008_t_set_water_back
+      name: Zpátečka požadovaná
+      yaxis_id: t
+      type: line
+      curve: stepline
+      color: '#f1c40f'
+      group_by:
+        func: last
+        duration: 5min
+    - entity: sensor.acond_30006_t_act_tuv
+      name: TUV
+      yaxis_id: t
+      type: line
+      color: '#ff7f0e'
+    - entity: sensor.acond_30005_t_set_tuv
+      name: TUV žádaná
+      yaxis_id: t
+      type: line
+      curve: stepline
+      stroke_width: 1
+      stroke_dash: 3
+      color: '#ff7f0e'
+      group_by:
+        func: last
+        duration: 5min
+    # --- výkony (kW, pravá osa; zdroje jsou ve W) ---
+    - entity: sensor.acond_30028_ahp
+      name: Výkon TČ
+      yaxis_id: kw
+      type: area
+      opacity: 0.2
+      stroke_width: 1
+      color: '#ef5350'
+      transform: return x / 1000;
+      unit: kW
+      show:
+        hidden_by_default: true
+    - entity: sensor.acond_30027_aep
+      name: Příkon TČ
+      yaxis_id: kw
+      type: area
+      opacity: 0.3
+      stroke_width: 1
+      color: '#5c6bc0'
+      transform: return x / 1000;
+      unit: kW
+      show:
+        hidden_by_default: true
+    - entity: sensor.mar_fve_pv
+      name: FV výroba
+      yaxis_id: kw
+      type: area
+      opacity: 0.15
+      stroke_width: 1
+      color: '#fbc02d'
+      transform: return x / 1000;
+      unit: kW
+      show:
+        hidden_by_default: true
+    - entity: sensor.mar_fve_pretok
+      name: Síť (+ export / − odběr)
+      yaxis_id: kw
+      type: line
+      stroke_width: 1
+      color: '#26a69a'
+      transform: return x / 1000;
+      unit: kW
+      show:
+        hidden_by_default: true
+    - entity: sensor.mar_fve_baterie_vykon
+      name: Baterie (+ vybíjí / − nabíjí)
+      yaxis_id: kw
+      type: line
+      stroke_width: 1
+      color: '#8d6e63'
+      transform: return x / 1000;
+      unit: kW
+      show:
+        hidden_by_default: true
+    - entity: sensor.mar_fve_dum
+      name: Dům
+      yaxis_id: kw
+      type: line
+      stroke_width: 1
+      color: '#757575'
+      transform: return x / 1000;
+      unit: kW
+      show:
+        hidden_by_default: true
+    # --- ostatní ---
+    - entity: sensor.acond_30029_cop
+      name: COP
+      yaxis_id: cop
+      type: line
+      stroke_width: 1
+      color: '#2ca02c'
+      show:
+        hidden_by_default: true
+    - entity: sensor.mar_fve_baterie
+      name: Baterie %
+      yaxis_id: pct
+      type: line
+      stroke_width: 2
+      stroke_dash: 2
+      color: '#6d4c41'
+      float_precision: 0
+      show:
+        hidden_by_default: true
+    - entity: sensor.acond_30024_comp_rpm_actual
+      name: Otáčky
+      yaxis_id: rpm
+      type: line
+      stroke_width: 1
+      color: '#9e9e9e'
+      float_precision: 0
+      show:
+        hidden_by_default: true
+    # --- stavy jako proužky dole (skrytá osa 0–10) ---
+    - entity: binary_sensor.acond_30045_hp_comp_bit_0
+      name: Kompresor běží
+      yaxis_id: stav
+      type: area
+      curve: stepline
+      opacity: 0.45
+      stroke_width: 0
+      color: '#e53935'
+      transform: "return x === 'on' ? 1 : 0;"
+      group_by:
+        func: max
+        duration: 5min
+      show:
+        legend_value: false
+    - entity: binary_sensor.acond_30007_tc_status_bit_3
+      name: Ohřev TUV
+      yaxis_id: stav
+      type: area
+      curve: stepline
+      opacity: 0.5
+      stroke_width: 0
+      color: '#ffa726'
+      transform: "return x === 'on' ? 0.7 : 0;"
+      group_by:
+        func: max
+        duration: 5min
+      show:
+        legend_value: false
+    - entity: binary_sensor.acond_30007_tc_status_bit_8
+      name: Odmrazování
+      yaxis_id: stav
+      type: area
+      curve: stepline
+      opacity: 0.6
+      stroke_width: 0
+      color: '#64b5f6'
+      transform: "return x === 'on' ? 0.4 : 0;"
+      group_by:
+        func: max
+        duration: 5min
+      show:
+        legend_value: false
