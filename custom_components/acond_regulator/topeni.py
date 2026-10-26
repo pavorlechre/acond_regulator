@@ -29,7 +29,8 @@ přitom držet SoC baterie kolem hranice (default 95 %), aby do sítě neteklo s
               slábne -> v cíli se vypne sám. Ořez: zvednutý setpoint nikdy nedosáhne na
               strop místnosti, aby si program sám neshodil master. Obě návnady jdou
               kombinovat i používat samostatně (kterákoli smí být 0).
-  Strop stroje: 40014 smí být jen ±10 % kolem SKUTEČNÝCH otáček -> nahoru po špičkách,
+  Strop stroje: 40014 smí být jen ±10 % (aspoň ±TOPENI_DEADBAND_RPM) kolem SKUTEČNÝCH
+              otáček -> nahoru po špičkách,
               na stropu se cmd zasekne ~10 % nad skutečnem (signál, ne útěk na 5000).
   Plná baterka: SoC >= 98 % -> slider rovnou na MAX (baterka nemá kam brát, stroj ať
               žere co umí); pod prahem převezme normální modulace. Nahrazuje slepý tik. Nahoře
@@ -81,7 +82,7 @@ ZDROJE: přetok (net_grid) a SoC baterie SDÍLÍ s FVE (fve.pretok_value/battery
   už nakonfigurováno, nezadává se dvakrát). NOVÝ = znaménkový VÝKON baterie (nabíjení +)
   přes text.mar_topeni_zdroj_baterie_vykon. aep = nativní 30027 napevno (auto W/kW).
 
-GATE: běží jen ve strategiích TOPENI_STRATEGIE (Ekviterma, Stálý výkon) + Typ regulace
+GATE: běží jen ve strategiích TOPENI_STRATEGIE (Ekviterma, Stálý výkon, Minimum) + Typ regulace
   Standard (mimo -> vrať a zhasni). Zadrátováno do OR-brány binary_sensor.mar_fve_aktivni
   (přes .active) – jinak ho Dovolená guard mine.
   PODLAHA (TOPENI_PODLAHA_STRATEGIE = Stálý výkon): slider uložený při převzetí je
@@ -89,6 +90,9 @@ GATE: běží jen ve strategiích TOPENI_STRATEGIE (Ekviterma, Stálý výkon) +
   k ní; když přebytek nestačí ani na ni, předá a vrátí ji. Předání vrací řízení
   STRATEGII, ne natvrdo ekvitermě: coordinator po uvolnění blokace zapíše cíl aktivní
   strategie (Stálý výkon = ekviterma + posun) a slider se vrátí ze Store.
+  MINIMUM: po dobu převzetí smyčka Minima mlčí (coordinator.topeni_owns), po předání
+  ji _cleanup probudí; slider se vrátí na minimum stroje. Hlídač restartu se pod
+  Minimem nenasazuje – zpátečku pod skutečnou drží Minimum samo.
 """
 
 from __future__ import annotations
@@ -126,6 +130,7 @@ from .const import (
     MAX_RETURN,
     MIN_RETURN,
     POKOJOVKA_CLAIM_TOPENI,
+    STRATEGY_MINIMUM,
     TOPENI_BAND,
     TOPENI_FULL_SOC,
     TOPENI_MIN_RPM,
@@ -165,6 +170,7 @@ class TopeniController:
         self.seq = None                # SequenceRunner – doplní __init__ (kámen Topit)
         self.dennoc = None             # háček „smí se teď topit?" (Den/noc má přednost)
         self.zebra = None              # …a pauza Zebry taky
+        self.minimum = None            # smyčka Minima – po předání ji probudíme
         self._store: Store = Store(
             hass, TOPENI_STORE_VERSION, f"{DOMAIN}_topeni_{entry.entry_id}"
         )
@@ -331,7 +337,7 @@ class TopeniController:
             return "Acond není v Typu regulace Standard"
         if not self.strategie_ok:
             return (f"ve strategii {self.coordinator.strategy} nepřebírám "
-                    f"(jen Ekviterma a Stálý výkon)")
+                    f"(jen Ekviterma, Stálý výkon a Minimum)")
         if self._is_on(ACOND_SUMMER):
             return "letní režim"
         if self.coordinator.utlum_pz is not None:
@@ -462,7 +468,7 @@ class TopeniController:
         """Smí se topení podle přebytků teď zapnout? Jen ve strategiích TOPENI_STRATEGIE
         + Typ regulace Standard (sahá na zpátečku). -> (ok, důvod pro hlášku)."""
         if not self.strategie_ok:
-            return (False, "Nejdřív přepni strategii na Ekviterma nebo Stálý výkon.")
+            return (False, "Nejdřív přepni strategii na Ekviterma, Stálý výkon nebo Minimum.")
         if not self.coordinator.is_standard():
             return (False, "Acond musí být v Typu regulace Standard.")
         return (True, "")
@@ -811,8 +817,12 @@ class TopeniController:
         # Nahoru "po špičkách" (max +BAND nad skutečné -> stroj dojede, pak zas +BAND);
         # když stroj nereaguje (na stropu), cmd se zasekne ~BAND nad skutečnem = signál
         # stropu, ne útěk na 5000. Dolů symetricky (na minimu níž nejede).
-        new_cmd = min(new_cmd, n_skut * (1 + TOPENI_BAND))
-        new_cmd = max(new_cmd, n_skut * (1 - TOPENI_BAND))
+        # Pásmo ale nikdy užší než pásmo necitlivosti zápisu: pod ~1000 ot. je 10 %
+        # méně než TOPENI_DEADBAND_RPM a bezbaterková větev by krok nikdy nezapsala
+        # (stroj na minimu, typicky pod Minimem, by se z něj nehnul).
+        pasmo = max(n_skut * TOPENI_BAND, TOPENI_DEADBAND_RPM)
+        new_cmd = min(new_cmd, n_skut + pasmo)
+        new_cmd = max(new_cmd, n_skut - pasmo)
 
         # mez slideru z flow (comp_capacity_min/max = min/max atribut 40014)
         # + PODLAHA (Stálý výkon): níž než uživatelova volba neubíráme, i kdyby
@@ -887,7 +897,9 @@ class TopeniController:
             self._last_handback_ts = dt_util.utcnow().timestamp()
             self._deficit_since = None
             _LOGGER.debug("TOPENI: měkké předání strategii %s", self.coordinator.strategy)
-            if arm:
+            # Pod Minimem hlídač nenasazuj: smyčka Minima drží zpátečku pod skutečnou
+            # a stroj jí sám naskočí, kámen by se jen přetahoval o registr.
+            if arm and self.coordinator.strategy != STRATEGY_MINIMUM:
                 self._arm_watchdog()
 
     async def _hard_off(self, why: str, flag: str = "mistnost") -> None:
@@ -917,7 +929,10 @@ class TopeniController:
         self._last_40008 = None
         self._last_act_soc = None
         await self._clear_store()
-        await self.coordinator.async_request_refresh()   # ekviterma hned přepočítá 40008
+        await self.coordinator.async_request_refresh()   # strategie hned přepočítá 40008
+        # Minimum si 40008 píše vlastní smyčkou, coordinator do něj nesahá -> probuď ji
+        if self.minimum is not None:
+            await self.minimum.async_resume_after_topeni()
 
     # ------------------------------------------------------------------ #
     # Návnada B: pokojovka přes správce 40001
@@ -1038,6 +1053,7 @@ class TopeniController:
             not self.enabled
             or not self.coordinator.is_standard()
             or not self.strategie_ok
+            or self.coordinator.strategy == STRATEGY_MINIMUM
             or self._is_on(ACOND_SUMMER)
         ):
             self._disarm_watchdog()

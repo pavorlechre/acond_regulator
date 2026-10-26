@@ -187,6 +187,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     topeni.seq = seq             # kámen Topit pro hlídač restartu po předání ekvitermě
     topeni.dennoc = dennoc       # háček „smí se teď topit?" – Den/noc má přednost
     topeni.zebra = zebra         # …a pauza Zebry taky (časové programy > přebytky)
+    topeni.minimum = minimum     # po předání pod Minimem probudí jeho smyčku
     minimum.seq = seq            # originál 40008 se při běžícím kameni bere z ekvitermy
     # Dovolená (osa B, executor na 40001 + 40005) drží coordinator (is_standard,
     # refresh, strategie pro guard), okna (guard „Okna musí být vyplá") a fve
@@ -259,6 +260,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # start: buď obnov (ve Standardu), nebo rovnou čistý stůl (mimo Standard)
     if coordinator.is_standard():
         if coordinator.strategy in (STRATEGY_MINIMUM, STRATEGY_BOOST):
+            # NEJDŘÍV případnou půjčku FVE topení: Minimum musí vidět, že řízení drží
+            # topení (topeni_owns), jinak by si hned přepsalo návnadu na 40008
+            await topeni.async_restore_borrow()
             await minimum.async_resume_if_needed()
         await zebra.async_resume_if_needed()
         # Den/noc AŽ po Zebře: bezstavový, jen zreconciluje železo dle rozvrhu

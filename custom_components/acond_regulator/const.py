@@ -105,11 +105,13 @@ STRATEGY_OPTIONS = [
 STALY_OFFSET = 10.0
 
 # FVE Topení (topeni.py) smí převzít řízení jen v těchto strategiích. BOOST jede
-# naplno (není co přidat), Bez MaR nezapisuje nikdy.
-TOPENI_STRATEGIE = (STRATEGY_EKVITERM, STRATEGY_STALY)
+# naplno (není co přidat), Bez MaR nezapisuje nikdy. Pod Minimem smyčka Minima po
+# dobu převzetí mlčí a po předání se hned chytí (minimum.py).
+TOPENI_STRATEGIE = (STRATEGY_EKVITERM, STRATEGY_STALY, STRATEGY_MINIMUM)
 # …a v těchhle je uživatelův slider 40014 PODLAHA: FVE Topení smí přidávat, ubírat
 # jen zpátky k hodnotě, kterou si uživatel zvolil (Stálý výkon = „chci aspoň 2000").
-# Pod Ekvitermou je slider jen strop, podlahou je minimum stroje.
+# Pod Ekvitermou je slider jen strop, podlahou je minimum stroje. Pod Minimem je
+# uložený slider beztak minimum stroje, takže zvláštní podlahu nepotřebuje.
 TOPENI_PODLAHA_STRATEGIE = (STRATEGY_STALY,)
 
 # --- Patro 2: Zebra (časový překryv, ne strategie) -------------------------

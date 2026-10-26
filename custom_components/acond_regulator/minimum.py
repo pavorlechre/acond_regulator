@@ -186,6 +186,14 @@ class MinimumController:
         # BOOST: slider je na max z HW, zpátečku píše coordinator -> nic víc netřeba
         _LOGGER.debug("Sliderová strategie obnovena po restartu, mode=%s, orig=%s", self.mode, self._orig)
 
+    async def async_resume_after_topeni(self) -> None:
+        """FVE Topení právě předalo řízení -> hned srovnej zpátečku pod skutečnou
+        (návnada na registru by jinak dál tlačila stroj nahoru až do pojistného tiku)."""
+        if not self.active or self.mode != "minimum":
+            return
+        self._last_write_ts = 0.0
+        await self._tick(force=True)
+
     def shutdown(self) -> None:
         self._disarm()
 
@@ -227,6 +235,10 @@ class MinimumController:
         # „skutečná − 1,2\", kompresor by boost nedostal a kámen by nenaskočil.
         # Zrcadlí gate v coordinatoru (ten suspend_write respektuje taky).
         if self.coordinator.suspend_write:
+            return
+        # PŘEDNOST FVE TOPENÍ: převzalo řízení (drží návnadu na 40008 a moduluje
+        # slider) -> Minimum mlčí. Po předání ho topení probudí (async_resume_after_topeni).
+        if getattr(self.coordinator, "topeni_owns", False):
             return
         # mimo Standard je 40008 do prázdna -> nezapisuj (MaR je hluchý)
         if not self.coordinator.is_standard():

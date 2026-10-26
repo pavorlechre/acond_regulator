@@ -838,7 +838,7 @@ views:
         name: FVE Topení — žrout přebytků (SoC-řízený)
         icon: mdi:radiator
     - type: markdown
-      content: '{{ state_attr(''sensor.mar_stav'',''topeni_veta'') or ''Vypnuto — zapni ve strategii Ekviterma nebo Stálý výkon; převezme, když je přebytek.'' }}
+      content: '{{ state_attr(''sensor.mar_stav'',''topeni_veta'') or ''Vypnuto — zapni ve strategii Ekviterma, Stálý výkon nebo Minimum; převezme, když je přebytek.'' }}
 
         '
     - type: conditional

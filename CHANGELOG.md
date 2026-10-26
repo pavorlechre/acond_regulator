@@ -9,8 +9,10 @@ verze podle [sémantického verzování](https://semver.org/lang/cs/).
 ### Změněno
 - FVE topení běží i nad strategií **Stálý výkon** (dřív jen Ekviterma). Uživatelův slider je přitom podlaha: program přidává nad něj, pod něj neubere; když přebytek nestačí, po prodlevě předá a slider vrátí. Předání vrací řízení aktivní strategii, ne natvrdo ekvitermě; hlídač restartu porovnává s cílem strategie.
 - Při jakékoli změně strategie FVE topení nejdřív vrátí slider a zpátečku (dřív jen při odchodu z Ekvitermy).
+- FVE topení běží i nad strategií **Minimum**. Po dobu převzetí smyčka Minima mlčí, po předání se slider vrátí na minimum a Minimum se hned chytí. Hlídač restartu se pod Minimem nenasazuje.
 
 ### Opraveno
+- FVE topení bez baterie: pod ~1000 ot. se slider nikdy nezvedl (krok ±10 % byl menší než pásmo necitlivosti zápisu 100 ot.). Krok je teď aspoň 100 ot.
 - Stav MaR: když FVE topení čeká kvůli blokaci (strategie, Den/noc, pauza Zebry, útlum, TUV, odmraz, letní režim, strop místnosti, chybějící čidlo), věta píše skutečný důvod („FVE Topení: čekám – …“). Dřív vždy tvrdila „čekám na přebytek“, i když přebytek byl.
 - FVE topení bez baterie: bilance (palivo) se počítá ze samotného přetoku do sítě. Dřív vyžadovala i výkon baterie, takže bez baterie byla trvale N/A a topení se nikdy nerozjelo.
 
