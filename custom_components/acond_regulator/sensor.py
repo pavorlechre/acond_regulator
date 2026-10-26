@@ -604,14 +604,24 @@ class StavSensor(SensorEntity):
             zaklad = (f"Ekviterma připravuje teplotu pro FVE Topení: cíl {cil} °C, "
                       f"na registru {reg} °C jako návnada. Beru přebytek, řídím výkon "
                       f"stroje")
+            # Stálý výkon: uživatelův slider je podlaha – řekni to, ať nikoho
+            # nepřekvapí, že FVE Topení pod jeho otáčky nejde.
+            if tp.get("podlaha") is not None:
+                zaklad = (f"{zaklad} (nad Stálým výkonem, neuberu pod nastavených "
+                          f"{float(tp['podlaha']):.0f})")
             if tp.get("ma_baterku"):
                 return f"{zaklad}, držím SoC kolem {self._cz(tp.get('hranice'))} %"
             konec = ""
             if tp.get("odchazi"):
-                konec = (f", jsem na minimu a nestačí to — za {self._cz(tp.get('prodleva_min'))}"
-                         f" min předám ekvitermě")
+                dno = "na podlaze" if tp.get("podlaha") is not None else "na minimu"
+                konec = (f", jsem {dno} a nestačí to — za {self._cz(tp.get('prodleva_min'))}"
+                         f" min předám strategii {tp.get('strategie') or ''}".rstrip())
             return f"{zaklad}, držím přebytek nad {self._cz(tp.get('stop'))} W{konec}"
 
+        # ČEKÁ kvůli blokaci (strategie, časový program, TUV, strop…): napiš skutečný
+        # důvod. Věta „čekám na přebytek" by tu lhala – přebytek klidně je.
+        if tp.get("ceka_na"):
+            return f"FVE Topení: čekám – {tp['ceka_na']}"
         if tp.get("ma_baterku"):
             return f"FVE Topení: čekám, až baterka dojede na {self._cz(tp.get('hranice'))} %"
         return (f"FVE Topení: čekám na přebytek nad {self._cz(tp.get('start'))} W "

@@ -202,10 +202,11 @@
     <li><a href="#fve-topeni">FVE topení</a>
       <ol>
         <li><a href="#fve-topeni-k-cemu">K čemu to je</a></li>
+        <li><a href="#fve-topeni-strategie">Ve kterých strategiích běží</a></li>
         <li><a href="#fve-topeni-paky">Dvě páky, kterými to funguje</a></li>
         <li><a href="#fve-topeni-navnady">Návnada zpátečky vs. návnada pokojovkou</a></li>
         <li><a href="#fve-topeni-stropy">Stropy — jeden měkký, jeden tvrdý</a></li>
-        <li><a href="#fve-topeni-predani">Předání ekvitermě a restart</a></li>
+        <li><a href="#fve-topeni-predani">Předání a restart</a></li>
         <li><a href="#fve-topeni-tuv">Souběh s ohřevem vody</a></li>
         <li><a href="#fve-topeni-baterie">Větev s baterií</a></li>
         <li><a href="#fve-topeni-bez-baterie">Větev bez baterie</a></li>
@@ -877,10 +878,11 @@
     <p>V této kapitole</p>
     <ol>
       <li><a href="#fve-topeni-k-cemu">K čemu to je</a></li>
+      <li><a href="#fve-topeni-strategie">Ve kterých strategiích běží</a></li>
       <li><a href="#fve-topeni-paky">Dvě páky, kterými to funguje</a></li>
       <li><a href="#fve-topeni-navnady">Návnada zpátečky vs. návnada pokojovkou</a></li>
       <li><a href="#fve-topeni-stropy">Stropy — jeden měkký, jeden tvrdý</a></li>
-      <li><a href="#fve-topeni-predani">Předání ekvitermě a restart</a></li>
+      <li><a href="#fve-topeni-predani">Předání a restart</a></li>
       <li><a href="#fve-topeni-tuv">Souběh s ohřevem vody</a></li>
       <li><a href="#fve-topeni-baterie">Větev s baterií</a></li>
       <li><a href="#fve-topeni-bez-baterie">Větev bez baterie</a></li>
@@ -892,7 +894,16 @@
     <h3>K čemu to je</h3>
     <p>Tepelné čerpadlo normálně topí podle <strong>ekvitermy</strong> — čím je venku chladněji, tím teplejší vodu posílá do domu. Ekviterma neví nic o slunci ani o ceně elektřiny; topí přesně tolik, kolik dům potřebuje.</p>
     <p><strong>FVE topení</strong> je nadstavba, která se zapne jen tehdy, když máš elektřinu zadarmo. Dočasně přesvědčí čerpadlo, aby topilo <strong>víc, než je nutné</strong>, a to teplo uloží do domu — do betonu v podlaze, do akumulační nádrže, do zdí. Večer si ho dům vybere sám. Nekupuje se tedy nic navíc, jen se přesune spotřeba do doby, kdy svítí.</p>
-    <p>Když přebytek zmizí, program <strong>předá kormidlo zpátky ekvitermě</strong> a zmizí. Dům topí dál normálně — jen se přestane přitápět nad rámec potřeby.</p>
+    <p>Když přebytek zmizí, program <strong>předá kormidlo zpátky strategii</strong>, ve které jsi byl, a zmizí. Dům topí dál normálně — jen se přestane přitápět nad rámec potřeby.</p>
+    <p class="nahoru"><a href="#o-fve-topeni">&#8593; Obsah kapitoly</a> &nbsp;·&nbsp; <a href="#obsah">&#8593; Celkový obsah</a></p>
+  </section>
+
+  <section id="fve-topeni-strategie">
+    <h3>Ve kterých strategiích běží</h3>
+    <p>FVE topení přebírá řízení ve strategiích <strong>Ekviterma</strong> a <strong>Stálý výkon</strong>. V Minimu, BOOSTu a Bez MaR jen čeká — vypínač zůstane zapnutý a po návratu do Ekvitermy nebo Stálého výkonu převezme sám.</p>
+    <p><strong>Nad Ekvitermou</strong> je slider jen strop: program smí přidávat i ubírat až k minimu stroje.</p>
+    <p><strong>Nad Stálým výkonem</strong> je tvůj slider <strong>podlaha</strong>. Jedeš-li celý den na 2000, program přidává nad 2000, když je přebytek, ale pod 2000 nikdy neubere. Když přebytek nestačí ani na tvých 2000, po prodlevě předá a slider vrátí na 2000. Návnada zpátečky je u Stálého výkonu stejná jako u něj samotného (ekviterma +10 °C), takže přidané teplo jde hlavně z vyššího slideru a z návnady pokojovkou.</p>
+    <p>Když za běhu programu přepneš strategii, program nejdřív vrátí slider a zpátečku a teprve pak se přepne. Půjčený slider patří vždy té strategii, ve které si ho program půjčil.</p>
     <p class="nahoru"><a href="#o-fve-topeni">&#8593; Obsah kapitoly</a> &nbsp;·&nbsp; <a href="#obsah">&#8593; Celkový obsah</a></p>
   </section>
 
@@ -923,11 +934,11 @@
   </section>
 
   <section id="fve-topeni-predani">
-    <h3>Předání ekvitermě a restart</h3>
+    <h3>Předání a restart</h3>
     <p>Když přebytek dojde, program vrátí slider i návnady na původní hodnoty a odejde. Jenže po vydatném přitápění je voda v topení hodně teplá — teplejší, než chce ekviterma. Čerpadlo se na to podívá a <strong>vypne</strong>, protože kolem své požadované teploty spíná s pásmem zhruba ±2 °C. A samo by naskočilo, až voda spadne 2 °C <strong>pod</strong> požadovanou. U podlahovky nebo akumulační nádrže to trvá hodiny — dům by mezitím zůstal bez topení.</p>
-    <p>Proto se po předání nasadí <strong>hlídač</strong>. Když čerpadlo stojí, voda u čidla stojí taky a ukazuje nesmysl; stroj proto zhruba každou čtvrthodinu krátce protočí oběhové čerpadlo a okruh prožene. Konec toho proplachu je jediný okamžik, kdy je teplota pravdivá — a hlídač si ho vezme jako signál. Jakmile je voda dost blízko tomu, co chce ekviterma (<strong>křivka plus korekce na místnost</strong>, ne holá křivka), <strong>nastartuje čerpadlo</strong> a skončí. Vystřelí <strong>jen jednou</strong>.</p>
+    <p>Proto se po předání nasadí <strong>hlídač</strong>. Když čerpadlo stojí, voda u čidla stojí taky a ukazuje nesmysl; stroj proto zhruba každou čtvrthodinu krátce protočí oběhové čerpadlo a okruh prožene. Konec toho proplachu je jediný okamžik, kdy je teplota pravdivá — a hlídač si ho vezme jako signál. Jakmile je voda dost blízko tomu, co chce ekviterma (<strong>křivka plus korekce na místnost</strong>, ne holá křivka), <strong>nastartuje čerpadlo</strong> a skončí. Vystřelí <strong>jen jednou</strong>. Pod Stálým výkonem se místo ekvitermy porovnává s tím, co zapisuje Stálý výkon (ekviterma +10 °C).</p>
     <p>Hlídač jde vypnout přepínačem <strong>Hlídač restartu po předání</strong> (na kartě Návnady a stropy, výchozí zapnuto). Vypnutý hlídač znamená, že po předání se restart nechá čistě na čerpadle — naskočí samo, až voda spadne asi 2 °C pod ekvitermu. U podlahovky v betonu to může trvat hodiny. Vypnutí má smysl, když nechceš, aby MaR stroj startoval sám.</p>
-    <p><strong>Časové programy mají přednost:</strong> mimo povolené okno Den/noc, během pauzy Zebry nebo v Útlumu program nepřevezme řízení, hlídač nevystřelí a stroj se nestartuje. Běžící epizoda se při zavření okna nebo na začátku pauzy měkce předá ekvitermě — <strong>vypínač FVE topení přitom zůstane zapnutý</strong> — a po otevření okna nebo konci pauzy se přebytky zase normálně převezmou.</p>
+    <p><strong>Časové programy mají přednost:</strong> mimo povolené okno Den/noc, během pauzy Zebry nebo v Útlumu program nepřevezme řízení, hlídač nevystřelí a stroj se nestartuje. Běžící epizoda se při zavření okna nebo na začátku pauzy měkce předá strategii — <strong>vypínač FVE topení přitom zůstane zapnutý</strong> — a po otevření okna nebo konci pauzy se přebytky zase normálně převezmou.</p>
     <p>Stejný startovací postup se použije i <strong>na začátku</strong>, když program přebírá kormidlo a stroj zrovna stojí — jinak by se čekalo, až naskočí sám.</p>
     <p class="nahoru"><a href="#o-fve-topeni">&#8593; Obsah kapitoly</a> &nbsp;·&nbsp; <a href="#obsah">&#8593; Celkový obsah</a></p>
   </section>
@@ -964,6 +975,7 @@
   <section id="fve-topeni-potize">
     <h3>Když se to chová divně</h3>
     <p><strong>Slider je vysoko, ale otáčky nízké.</strong> Normální. Slider je povolení, ne příkaz — stroj brzdí sám, protože voda je dost teplá. Regulace začne kousat, teprve až se stroj o strop opře.</p>
+    <p><strong>Program je zapnutý, ale nepřebírá.</strong> Přečti si větu ve stavu MaR — za „FVE Topení: čekám –“ stojí skutečný důvod: strategie, ve které program neběží, okno Den/noc, pauza Zebry, ohřev vody, strop místnosti a podobně. Věta „čekám na přebytek nad … W“ znamená, že žádná blokace není a opravdu chybí přebytek.</p>
     <p><strong>Program běží, ale čerpadlo stojí.</strong> Podívej se, jestli neběží ohřev vody nebo odmrazování — program v tu dobu schválně dřímá.</p>
     <p><strong>Nastavil jsem návnadu pokojovkou a nic se neděje.</strong> Nejspíš je strop místnosti moc nízko: návnada se ořezává tak, aby se ke stropu nedostala, a při těsném nastavení jí nezbyde nic.</p>
     <p><strong>Program se vypnul sám a nevrací se.</strong> Narazil na strop místnosti. To je záměr — dům je přetopený a rozhodnout má člověk.</p>

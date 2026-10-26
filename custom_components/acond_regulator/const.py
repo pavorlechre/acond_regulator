@@ -104,6 +104,14 @@ STRATEGY_OPTIONS = [
 # 40014 nesahá; před/po režimu si slider nastaví sám (nápověda).
 STALY_OFFSET = 10.0
 
+# FVE Topení (topeni.py) smí převzít řízení jen v těchto strategiích. BOOST jede
+# naplno (není co přidat), Bez MaR nezapisuje nikdy.
+TOPENI_STRATEGIE = (STRATEGY_EKVITERM, STRATEGY_STALY)
+# …a v těchhle je uživatelův slider 40014 PODLAHA: FVE Topení smí přidávat, ubírat
+# jen zpátky k hodnotě, kterou si uživatel zvolil (Stálý výkon = „chci aspoň 2000").
+# Pod Ekvitermou je slider jen strop, podlahou je minimum stroje.
+TOPENI_PODLAHA_STRATEGIE = (STRATEGY_STALY,)
+
 # --- Patro 2: Zebra (časový překryv, ne strategie) -------------------------
 # Cykluje topení/pauzu POUZE když je v pokoji natopeno (30002 > 40001, ostře).
 # Pauzuje přes Kámen A (Vypnout šetrně), zpět přes Kámen B (Zapnout jistě).
@@ -380,7 +388,7 @@ PLATFORMS = ["sensor", "binary_sensor", "number", "time", "datetime", "switch", 
 # Přetok (net_grid) a SoC baterie SDÍLÍ s FVE (fve.pretok_value/battery_value);
 # NOVÝ zdroj = znaménkový VÝKON baterie (nabíjení +). Zadrátováno do OR-brány
 # binary_sensor.mar_fve_aktivni (jinak ho Dovolená guard mine). Gate: běží jen ve
-# strategii Ekviterma + Standard (mimo -> vrať a zhasni). Viz topeni.py.
+# strategiích TOPENI_STRATEGIE + Standard (mimo -> vrať a zhasni). Viz topeni.py.
 TOPENI_STORE_VERSION = 1
 TOPENI_TICK_S = 30                 # vzorkování bilance + evaluate (rovnoměrná kadence)
 TOPENI_STEP_SAFETY_S = 180         # pojistný tik KROKU 40014, i když SoC nemění celé %

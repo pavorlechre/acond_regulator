@@ -81,9 +81,14 @@ ZDROJE: přetok (net_grid) a SoC baterie SDÍLÍ s FVE (fve.pretok_value/battery
   už nakonfigurováno, nezadává se dvakrát). NOVÝ = znaménkový VÝKON baterie (nabíjení +)
   přes text.mar_topeni_zdroj_baterie_vykon. aep = nativní 30027 napevno (auto W/kW).
 
-GATE: běží jen ve strategii Ekviterma + Typ regulace Standard (mimo -> vrať a zhasni).
-  Zadrátováno do OR-brány binary_sensor.mar_fve_aktivni (přes .active) – jinak ho
-  Dovolená guard mine.
+GATE: běží jen ve strategiích TOPENI_STRATEGIE (Ekviterma, Stálý výkon) + Typ regulace
+  Standard (mimo -> vrať a zhasni). Zadrátováno do OR-brány binary_sensor.mar_fve_aktivni
+  (přes .active) – jinak ho Dovolená guard mine.
+  PODLAHA (TOPENI_PODLAHA_STRATEGIE = Stálý výkon): slider uložený při převzetí je
+  uživatelova volba („jedu na 2000"), ne jen strop. FVE Topení smí přidávat, ubírat jen
+  k ní; když přebytek nestačí ani na ni, předá a vrátí ji. Předání vrací řízení
+  STRATEGII, ne natvrdo ekvitermě: coordinator po uvolnění blokace zapíše cíl aktivní
+  strategie (Stálý výkon = ekviterma + posun) a slider se vrátí ze Store.
 """
 
 from __future__ import annotations
@@ -121,7 +126,6 @@ from .const import (
     MAX_RETURN,
     MIN_RETURN,
     POKOJOVKA_CLAIM_TOPENI,
-    STRATEGY_EKVITERM,
     TOPENI_BAND,
     TOPENI_FULL_SOC,
     TOPENI_MIN_RPM,
@@ -137,7 +141,9 @@ from .const import (
     TOPENI_STONE_POLL_S,
     TOPENI_STONE_WAIT_S,
     TOPENI_STEP_SAFETY_S,
+    TOPENI_PODLAHA_STRATEGIE,
     TOPENI_STORE_VERSION,
+    TOPENI_STRATEGIE,
     TOPENI_TICK_S,
     signal_topeni_updated,
 )
@@ -299,8 +305,55 @@ class TopeniController:
 
     @property
     def heating(self) -> bool:
-        """Právě drží řízení (převzato od ekvitermy) – pro banner / mar_stav."""
+        """Právě drží řízení (převzato od strategie) – pro banner / mar_stav."""
         return self._active
+
+    @property
+    def strategie_ok(self) -> bool:
+        """Je aktivní strategie taková, nad kterou smí FVE Topení převzít?"""
+        return self.coordinator.strategy in TOPENI_STRATEGIE
+
+    @property
+    def podlaha(self) -> float | None:
+        """Uživatelova podlaha slideru (Stálý výkon) = hodnota půjčená při převzetí.
+        None = podlaha není (Ekviterma) nebo ještě nic nedržíme."""
+        if self.coordinator.strategy not in TOPENI_PODLAHA_STRATEGIE:
+            return None
+        return self._store_40014
+
+    def cekani(self) -> str | None:
+        """Proč FVE Topení právě nepřebírá, když je zapnuté a netopí. Kopíruje pořadí
+        podmínek v async_evaluate. None = žádná blokace, čeká se jen na přebytek
+        (tu větu si složí sensor sám, zná prahy). Lidská věta pro mar_stav."""
+        if not self.enabled or self._active:
+            return None
+        if not self.coordinator.is_standard():
+            return "Acond není v Typu regulace Standard"
+        if not self.strategie_ok:
+            return (f"ve strategii {self.coordinator.strategy} nepřebírám "
+                    f"(jen Ekviterma a Stálý výkon)")
+        if self._is_on(ACOND_SUMMER):
+            return "letní režim"
+        if self.coordinator.utlum_pz is not None:
+            return "běží útlum (Netopit)"
+        if self.dennoc is not None and not self.dennoc.may_heat_now():
+            return "mimo okno Den/noc"
+        if self.zebra is not None and self.zebra.pausing:
+            return "pauza Zebry"
+        if self._is_on(ACOND_BIT_TUV):
+            return "ohřev TUV"
+        if self._is_on(ACOND_BIT_DEFROST):
+            return "odmrazování"
+        if self.coordinator.suspend_write:
+            return "běží start/stop stroje"
+        t_room = self._num(ACOND_INDOOR)
+        if t_room is not None and t_room >= self.strop_mist:
+            return f"místnost na stropu {self.strop_mist:g} °C".replace(".", ",")
+        if self.bilance() is None:
+            return "chybí údaj o přetoku"
+        if self.ma_baterku and (self.soc_value() is None or self.batt_vykon_value() is None):
+            return "chybí údaj o baterii (SoC / výkon)"
+        return None
 
     def bilance(self) -> float | None:
         """Časově vážený průměr B = přetok + výkon baterie (W). None bez vzorků."""
@@ -379,6 +432,9 @@ class TopeniController:
             "prodleva_min": self.prodleva_min,
             "blok_min": self.blok_min,
             "odchazi": self._deficit_since is not None,
+            "strategie": self.coordinator.strategy,
+            "podlaha": self.podlaha,
+            "ceka_na": self.cekani(),
         }
 
     # ------------------------------------------------------------------ #
@@ -403,18 +459,19 @@ class TopeniController:
         self._notify()
 
     def can_enable(self) -> tuple[bool, str]:
-        """Smí se topení podle přebytků teď zapnout? Jen ve strategii Ekviterma
+        """Smí se topení podle přebytků teď zapnout? Jen ve strategiích TOPENI_STRATEGIE
         + Typ regulace Standard (sahá na zpátečku). -> (ok, důvod pro hlášku)."""
-        if self.coordinator.strategy != STRATEGY_EKVITERM:
-            return (False, "Nejdřív přepni strategii na Ekviterma.")
+        if not self.strategie_ok:
+            return (False, "Nejdřív přepni strategii na Ekviterma nebo Stálý výkon.")
         if not self.coordinator.is_standard():
             return (False, "Acond musí být v Typu regulace Standard.")
         return (True, "")
 
     async def async_yield_control(self) -> None:
-        """Vynucené měkké předání ekvitermě (opouští se Ekviterma / kolize os A).
-        Vrátí 40014, uvolní blokaci; MASTER ZŮSTANE zapnutý (dřímá, dokud se
-        nevrátíme do Ekvitermy). Volá select při odchodu ze strategie."""
+        """Vynucené měkké předání (mění se strategie / kolize os A). Vrátí 40014,
+        uvolní blokaci; MASTER ZŮSTANE zapnutý (v nové strategii z TOPENI_STRATEGIE
+        převezme znovu, jinak dřímá). Volá select při KAŽDÉ změně strategie – půjčený
+        slider patří té strategii, ve které jsme si ho půjčili."""
         self._disarm_watchdog()
         if self._active:
             await self._cleanup()
@@ -490,12 +547,12 @@ class TopeniController:
             self._last_40008 = None
         self._was_frozen = frozen
 
-        # GATE: master off / mimo Standard / mimo Ekvitermu / léto -> vrať a zhasni.
-        # (Topení sahá na zpátečku -> dává smysl jen v ekvitermě + Standardu, ne v létě.)
+        # GATE: master off / mimo Standard / mimo TOPENI_STRATEGIE / léto -> vrať a zhasni.
+        # (Topení sahá na zpátečku -> dává smysl jen v Ekvitermě / Stálém + Standardu.)
         if (
             not self.enabled
             or not self.coordinator.is_standard()
-            or self.coordinator.strategy != STRATEGY_EKVITERM
+            or not self.strategie_ok
             or self._is_on(ACOND_SUMMER)
         ):
             self._disarm_watchdog()      # mimo naše podmínky nestartuj
@@ -674,8 +731,8 @@ class TopeniController:
         await self._claim_room()
 
         # ODCHOD: ubírání není vypínání. Dokud je kam ubírat, ubíráme; teprve když je
-        # stroj na svém minimu a PŘESTO se je pod STOP, znamená to, že minimum stroje
-        # je větší než dostupný přebytek -> po prodlevě předej ekvitermě.
+        # slider na dně (minimum stroje / podlaha Stálého výkonu) a PŘESTO se je pod STOP,
+        # znamená to, že dno je větší než dostupný přebytek -> po prodlevě předej strategii.
         if b < self.stop and self._at_minimum():
             if self._deficit_since is None:
                 self._deficit_since = now
@@ -693,12 +750,21 @@ class TopeniController:
         await self._step_common(b - self.stop, "bez baterky", nobatt=True)
 
     def _at_minimum(self) -> bool:
-        """Stroj je na svém dně = povolujeme mu jen jeho minimum."""
+        """Slider je na dně = níž už ubírat nesmíme. Dno = minimum stroje, pod
+        Stálým výkonem uživatelova podlaha (viz podlaha)."""
         cmd = self._num(ACOND_CAPACITY)
-        cap_min = self._attr(ACOND_CAPACITY, "min")
-        if cmd is None or cap_min is None:
+        dno = self._dno()
+        if cmd is None or dno is None:
             return False
-        return cmd <= cap_min + TOPENI_DEADBAND_RPM
+        return cmd <= dno + TOPENI_DEADBAND_RPM
+
+    def _dno(self) -> float | None:
+        """Nejnižší povolená hodnota slideru: max(minimum stroje, podlaha)."""
+        cap_min = self._attr(ACOND_CAPACITY, "min")
+        podlaha = self.podlaha
+        if podlaha is None:
+            return cap_min
+        return podlaha if cap_min is None else max(cap_min, podlaha)
 
     # ------------------------------------------------------------------ #
     # Krok páky 40014
@@ -749,10 +815,12 @@ class TopeniController:
         new_cmd = max(new_cmd, n_skut * (1 - TOPENI_BAND))
 
         # mez slideru z flow (comp_capacity_min/max = min/max atribut 40014)
-        cap_min = self._attr(ACOND_CAPACITY, "min")
+        # + PODLAHA (Stálý výkon): níž než uživatelova volba neubíráme, i kdyby
+        # pásmo kolem skutečných otáček chtělo dolů (stroj pod sliderem jede i sám).
         cap_max = self._attr(ACOND_CAPACITY, "max")
-        if cap_min is not None:
-            new_cmd = max(new_cmd, cap_min)
+        dno = self._dno()
+        if dno is not None:
+            new_cmd = max(new_cmd, dno)
         if cap_max is not None:
             new_cmd = min(new_cmd, cap_max)
         new_cmd = round(new_cmd, 1)
@@ -812,13 +880,13 @@ class TopeniController:
             await self._step_40014(soc)
 
     async def _handback(self, soft: bool, arm: bool = False) -> None:
-        """Měkké předání ekvitermě: vrať 40014, uvolni blokaci. MASTER ZŮSTANE.
+        """Měkké předání strategii: vrať 40014, uvolni blokaci. MASTER ZŮSTANE.
         `arm=True` nasadí hlídač restartu (jen když jsme opravdu topili)."""
         if self._active:
             await self._cleanup()
             self._last_handback_ts = dt_util.utcnow().timestamp()
             self._deficit_since = None
-            _LOGGER.debug("TOPENI: měkké předání ekvitermě")
+            _LOGGER.debug("TOPENI: měkké předání strategii %s", self.coordinator.strategy)
             if arm:
                 self._arm_watchdog()
 
@@ -830,7 +898,7 @@ class TopeniController:
         self.enabled = False
         self.strop_padl = flag
         self._disarm_watchdog()     # tvrdý konec -> stroj startovat nechceme
-        _LOGGER.warning("TOPENI: TVRDÝ KONEC (%s) -> ekviterma, master OFF", why)
+        _LOGGER.warning("TOPENI: TVRDÝ KONEC (%s) -> strategie, master OFF", why)
         self._notify()
 
     async def _cleanup(self) -> None:
@@ -875,7 +943,7 @@ class TopeniController:
         await self.pokojovka.async_claim(POKOJOVKA_CLAIM_TOPENI, round(want, 1))
 
     # ------------------------------------------------------------------ #
-    # Hlídač restartu po předání ekvitermě
+    # Hlídač restartu po předání strategii
     # ------------------------------------------------------------------ #
     async def _maybe_stone_start(self) -> None:
         """Stroj při převzetí stojí -> rozjeď ho kamenem Topit.
@@ -969,7 +1037,7 @@ class TopeniController:
         if (
             not self.enabled
             or not self.coordinator.is_standard()
-            or self.coordinator.strategy != STRATEGY_EKVITERM
+            or not self.strategie_ok
             or self._is_on(ACOND_SUMMER)
         ):
             self._disarm_watchdog()
@@ -990,8 +1058,14 @@ class TopeniController:
         if self._num(ACOND_INDOOR) is None or self._num(ACOND_ROOM_SET) is None:
             return
 
+        # CÍL STRATEGIE, ne holá ekviterma: pod Stálým výkonem coordinator po předání
+        # zapíše ekvitermu + posun, a s tou se readback musí srovnat (jinak by hlídač
+        # čekal na hodnotu, která do registru nikdy nedorazí). Pod Ekvitermou je
+        # target == return_final, takže beze změny.
         data = self.coordinator.data
-        cil = getattr(data, "return_final", None) if data else None
+        cil = getattr(data, "target", None) if data else None
+        if cil is None and data is not None:
+            cil = getattr(data, "return_final", None)
         t_zp = self._num(ACOND_RETURN_ACT)
         readback = self._num(ACOND_RETURN_READBACK)
         if cil is None or t_zp is None or readback is None:

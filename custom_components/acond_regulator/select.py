@@ -113,11 +113,12 @@ class StrategySelect(RestoreEntity, SelectEntity):
             )
             self.async_write_ha_state()  # UI se vrátí na Ekviterma (může krátce probliknout)
             return
-        # Opouštíme Ekvitermu -> topení podle přebytků MUSÍ vrátit 40014 a uvolnit
-        # blokaci 40008 DŘÍV, než sliderová strategie sáhne na registry (jinak by
-        # Minimum uložilo naši návnadu/slider jako „orig"). Master topení zůstane
-        # zapnutý (dřímá), po návratu do Ekvitermy zase převezme na hranici SoC.
-        if option != STRATEGY_EKVITERM and prev == STRATEGY_EKVITERM:
+        # Mění se strategie -> topení podle přebytků MUSÍ vrátit 40014 a uvolnit
+        # blokaci 40008 DŘÍV, než nová strategie sáhne na registry (jinak by Minimum
+        # uložilo naši návnadu/slider jako „orig" a Stálý výkon by zdědil náš slider
+        # místo uživatelova). Půjčený slider patří strategii, ve které jsme si ho
+        # půjčili. Master zůstane zapnutý; v Ekvitermě / Stálém převezme znovu sám.
+        if option != prev:
             await self.topeni.async_yield_control()
 
         slider_strats = (STRATEGY_MINIMUM, STRATEGY_BOOST)

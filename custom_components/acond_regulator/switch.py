@@ -366,7 +366,7 @@ class TopeniMasterSwitch(RestoreEntity, SwitchEntity):
     """Master „Topení podle přebytků" (osa A, executor 40014 + návnada 40008).
 
     Zapnutí je HLÍDANÉ vstupním guardem (`can_enable`): jde jen ve strategii
-    Ekviterma + Typ regulace Standard (sahá na zpátečku). Jinak se zapnutí zamítne +
+    Ekviterma / Stálý výkon + Typ regulace Standard (sahá na zpátečku). Jinak se zapnutí zamítne +
     notifikace. Stav se persistuje (RestoreEntity); parametry drží number entity,
     zdroj výkonu baterie text entity. Půjčku 40014 vrací controller.
 
