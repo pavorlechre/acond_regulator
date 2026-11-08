@@ -4290,7 +4290,7 @@ views:
       content: >-
         Plánovač mění nastavení podle času: **v tuto hodinu udělej tohle**.
         Zapisuj stejné hodnoty, jaké bys nastavil prstem v Nastavení.
-        **Jedna věc = jeden plán.** Naplánuješ-li tutéž věc v obou kartách,
+        **Jedna věc = jeden plán.** Naplánuješ-li tutéž věc ve dvou kartách,
         plány se budou přetahovat.
 
 
@@ -4404,3 +4404,37 @@ views:
       exclude:
       - button.acond_40006_tc_set_bit_5
       - button.acond_40021_reset_plc_set
+  - type: grid
+    column_span: 2
+    cards:
+    - type: custom:scheduler-card
+      title: Plánovač – vše ostatní
+      time_step: 15
+      include:
+      - automation
+      - script
+      - scene
+      - switch
+      - light
+      - climate
+      - water_heater
+      - cover
+      - fan
+      - humidifier
+      - valve
+      - lock
+      - vacuum
+      - media_player
+      - input_boolean
+      - input_number
+      - input_select
+      - input_button
+      - number
+      - select
+      - button
+      - time
+      - binary_sensor
+      exclude: []
+      exclude_tags:
+      - mar
+      - acond

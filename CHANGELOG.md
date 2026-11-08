@@ -19,6 +19,7 @@ verze podle [sémantického verzování](https://semver.org/lang/cs/).
 
 ### Přidáno
 - Okno **Plánovač** (změny nastavení podle času): karta Plánovač MaR (strategie, Zebra a její délky, Den/noc, Okna ±, Dovolená, FVE TUV, FVE topení, kameny, okruh 1, TUV, otáčky) a karta Plánovač Acond (vše zapisovatelné v čerpadle kromě Potvrzení poruchy a Resetu PLC). Každá karta drží své plány pod vlastním štítkem (`mar`, `acond`). Vstup tlačítkem v řádku Režimů a dole v Nastavení, šipka zpět vrací odkud uživatel přišel. Vyžaduje nepovinný doplněk Scheduler z HACS; bez něj okno ukáže, co chybí.
+- Okno Plánovač: třetí karta **Plánovač – vše ostatní** pro celý HA (všechny běžné domény včetně MaR a Acondu); plány z karet MaR a Acond v ní nejsou (`exclude_tags`).
 - Příručka: kapitola Plánování časem (instalace Scheduleru v pěti krocích, dvě karty, jak založit plán, příklady, na co dát pozor). README: Scheduler jako nepovinný doplněk.
 - Příručka: kapitola 0 · Začínáme (než začneš, instalace, pět kroků k prvnímu topení, jak poznat, že to funguje, jak z toho ven) s cestou ke každému nastavení.
 - Výkon baterie a přepínač znaménka přesunuty do FVE TUV → Nastavení zdrojů k ostatním zdrojům (dřív schované ve FVE topení); ve FVE topení tlačítko Nastavení zdrojů.

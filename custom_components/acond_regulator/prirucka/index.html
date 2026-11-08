@@ -181,7 +181,7 @@
     <li><a href="#planovani">Plánování časem</a>
       <ol>
         <li><a href="#planovani-instalace">Instalace</a></li>
-        <li><a href="#planovani-okno">Okno Plánovač — dvě karty</a></li>
+        <li><a href="#planovani-okno">Okno Plánovač — tři karty</a></li>
         <li><a href="#planovani-jak">Jak založit plán</a></li>
         <li><a href="#planovani-priklady">Příklady</a></li>
         <li><a href="#planovani-pozor">Na co dát pozor</a></li>
@@ -690,7 +690,7 @@
     <p>V této kapitole</p>
     <ol>
       <li><a href="#planovani-instalace">Instalace</a></li>
-      <li><a href="#planovani-okno">Okno Plánovač — dvě karty</a></li>
+      <li><a href="#planovani-okno">Okno Plánovač — tři karty</a></li>
       <li><a href="#planovani-jak">Jak založit plán</a></li>
       <li><a href="#planovani-priklady">Příklady</a></li>
       <li><a href="#planovani-pozor">Na co dát pozor</a></li>
@@ -712,12 +712,14 @@
   </section>
 
   <section id="planovani-okno">
-    <h3>Okno Plánovač — dvě karty</h3>
-    <p>Do okna se dostaneš tlačítkem <strong>Plánovač</strong> v řádku Režimů nebo dole v okně Nastavení. Jsou v něm dvě karty, každá si drží jen své plány:</p>
+    <h3>Okno Plánovač — tři karty</h3>
+    <p>Do okna se dostaneš tlačítkem <strong>Plánovač</strong> v řádku Režimů nebo dole v okně Nastavení. Jsou v něm tři karty, každá si drží jen své plány:</p>
     <ul>
       <li><strong>Plánovač MaR</strong> — strategie, Zebra a její délky, Den/noc, Okna ±, Dovolená, FVE TUV, FVE topení, kameny Topit/Netopit a z Aconda tři věci, se kterými se běžně pracuje: požadovaná teplota okruhu 1, TUV a max. otáčky. Nastavení „pro instalaci" (zdroje, stropy, profily, statistika) tu záměrně nejsou.</li>
       <li><strong>Plánovač Acond</strong> — všechno, co jde do čerpadla zapsat: teploty, režimy, tichý provoz, bazén, solár, chlazení, léto/zima… Hodí se i <strong>Bez MaR</strong>. Jen dvě tlačítka chybí záměrně: <em>Potvrzení poruchy</em> (naplánované potvrzování by poruchu tiše zametalo) a <em>Reset PLC</em> (restart řídicí jednotky v pevný čas, třeba uprostřed odmrazování).</li>
+      <li><strong>Plánovač – vše ostatní</strong> — celý Home Assistant: automatizace, skripty, scény, světla, spínače, termostaty, pomocníci a klidně i entity MaR a Acondu. Ukazuje tvoje plány bez štítku (i ty, které už máš odjinud), plány z karet MaR a Acond ne, aby nebyly dvakrát.</li>
     </ul>
+    <p>Karty v okně jsou pevné a v dashboardu je upravit nejde. Chceš-li kartu jinak, otevři v okně její úpravy, zkopíruj YAML do vlastního dashboardu a uprav si ho — plány zůstanou tytéž, karta je jen okno, kterým se na ně díváš.</p>
     <p class="nahoru"><a href="#o-planovani">&#8593; Obsah kapitoly</a> &nbsp;·&nbsp; <a href="#obsah">&#8593; Celkový obsah</a></p>
   </section>
 
@@ -743,7 +745,7 @@
   <section id="planovani-pozor">
     <h3>Na co dát pozor</h3>
     <ul>
-      <li><strong>Jedna věc = jeden plán.</strong> Okruh 1, TUV a otáčky jsou v obou kartách. Naplánuješ-li je v obou, plány se budou přetahovat.</li>
+      <li><strong>Jedna věc = jeden plán.</strong> Okruh 1, TUV a otáčky jsou v kartě MaR i Acond, a ve „vše ostatní“ je vůbec všechno. Naplánuješ-li tutéž věc ve dvou kartách, plány se budou přetahovat.</li>
       <li><strong>Karta Acond sahá přímo do čerpadla.</strong> Co v ní naplánuješ, může MaR přepsat — nebo ty MaR. Typicky zpátečku řídí MaR sám; plánovat ji má smysl hlavně Bez MaR.</li>
       <li><strong>Pojistky MaR platí i pro plán.</strong> Běží-li Dovolená, naplánovaná změna strategie se odmítne a přijde hláška. Přepnutí na BOOST nebo Bez MaR vypne Zebru — stejně jako tlačítkem.</li>
       <li><strong>Změna délky Zebry</strong> uprostřed fáze nezkrátí ani neprodlouží fázi, která právě běží. Nová délka platí od další fáze.</li>
