@@ -12,6 +12,7 @@ verze podle [sémantického verzování](https://semver.org/lang/cs/).
 - FVE topení běží i nad strategií **Minimum**. Po dobu převzetí smyčka Minima mlčí, po předání se slider vrátí na minimum a Minimum se hned chytí. Hlídač restartu se pod Minimem nenasazuje.
 
 ### Opraveno
+- Instalace přes HACS z commitu selhávala (prázdný soubor `statistics/__init__.py` HACS nestáhl). Soubor má teď jednořádkový popis.
 - FVE topení bez baterie: pod ~1000 ot. se slider nikdy nezvedl (krok ±10 % byl menší než pásmo necitlivosti zápisu 100 ot.). Krok je teď aspoň 100 ot.
 - Stav MaR: když FVE topení čeká kvůli blokaci (strategie, Den/noc, pauza Zebry, útlum, TUV, odmraz, letní režim, strop místnosti, chybějící čidlo), věta píše skutečný důvod („FVE Topení: čekám – …“). Dřív vždy tvrdila „čekám na přebytek“, i když přebytek byl.
 - FVE topení bez baterie: bilance (palivo) se počítá ze samotného přetoku do sítě. Dřív vyžadovala i výkon baterie, takže bez baterie byla trvale N/A a topení se nikdy nerozjelo.
