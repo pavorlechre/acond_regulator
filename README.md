@@ -14,6 +14,8 @@ MaR (Měření a Regulace) je nadstavba integrace [Acond Heat Pump](https://gith
 
 Potřebuješ integraci Acond Heat Pump a kartu [`apexcharts-card`](https://github.com/RomRider/apexcharts-card).
 
+Nepovinně: pro okno **Plánovač** (změny nastavení podle času) doplněk [Scheduler](https://github.com/nielsfaber/scheduler-component) z HACS – komponentu i kartu. Postup je v příručce, kapitola Plánování časem.
+
 ## Upozornění
 
 **Neoficiální doplněk.** MaR je komunitní projekt. Není spojený se společností Acond a.s., není jí schválený ani podporovaný. Název a logo Acond slouží jen k označení tepelných čerpadel, se kterými MaR spolupracuje.

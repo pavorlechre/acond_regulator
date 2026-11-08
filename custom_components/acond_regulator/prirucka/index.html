@@ -178,6 +178,15 @@
         <li><a href="#rezimy-vypinani">Režim vypínání</a></li>
       </ol>
     </li>
+    <li><a href="#planovani">Plánování časem</a>
+      <ol>
+        <li><a href="#planovani-instalace">Instalace</a></li>
+        <li><a href="#planovani-okno">Okno Plánovač — dvě karty</a></li>
+        <li><a href="#planovani-jak">Jak založit plán</a></li>
+        <li><a href="#planovani-priklady">Příklady</a></li>
+        <li><a href="#planovani-pozor">Na co dát pozor</a></li>
+      </ol>
+    </li>
     <li><a href="#ekviterma">Ekviterma</a>
       <ol>
         <li><a href="#ekviterma-k-cemu">K čemu to je</a></li>
@@ -666,6 +675,83 @@
     </ul>
     <p>Cesta zpátky se najde vždycky sama — Topit přepne z léta do zimy, zruší útlum a nahodí kompresor. Přepínač tedy řešíš jen kvůli vypínání.</p>
     <p class="nahoru"><a href="#o-rezimy">&#8593; Obsah kapitoly</a> &nbsp;·&nbsp; <a href="#obsah">&#8593; Celkový obsah</a></p>
+  </section>
+</section>
+
+
+<!-- ================================================================= -->
+<!--  KAPITOLA — PLÁNOVÁNÍ ČASEM                                       -->
+<!-- ================================================================= -->
+<section class="kapitola" id="planovani">
+  <h2>Plánování časem</h2>
+  <p class="lede">Okno Plánovač mění nastavení podle hodin: <strong>v tuto hodinu udělej tohle</strong>. Ráno vyšší TUV, v noci Minimum, ráno zpátky Ekviterma — co nastavíš prstem, to jde naplánovat.</p>
+
+  <nav class="obsah" id="o-planovani">
+    <p>V této kapitole</p>
+    <ol>
+      <li><a href="#planovani-instalace">Instalace</a></li>
+      <li><a href="#planovani-okno">Okno Plánovač — dvě karty</a></li>
+      <li><a href="#planovani-jak">Jak založit plán</a></li>
+      <li><a href="#planovani-priklady">Příklady</a></li>
+      <li><a href="#planovani-pozor">Na co dát pozor</a></li>
+    </ol>
+  </nav>
+
+  <section id="planovani-instalace">
+    <h3>Instalace</h3>
+    <p>Plánovač stojí na doplňku <strong>Scheduler</strong> (autor nielsfaber), který není součástí MaR — je to samostatný doplněk z HACS s vlastní licencí. Bez něj je okno Plánovač prázdné a místo karet ukazuje červenou chybu; zbytek MaR funguje beze změny.</p>
+    <ol>
+      <li>HACS → vyhledej <strong>Scheduler component</strong> (integrace) → stáhnout.</li>
+      <li>HACS → vyhledej <strong>Scheduler card</strong> (karta) → stáhnout.</li>
+      <li><strong>Plný restart</strong> Home Assistantu.</li>
+      <li>Nastavení → Zařízení a služby → <strong>Přidat integraci → Scheduler</strong>. Na tenhle krok se nejčastěji zapomíná.</li>
+      <li>Obnov prohlížeč. V mobilní aplikaci někdy pomůže až vymazat mezipaměť (Nastavení telefonu → Aplikace → Home Assistant → Úložiště → <strong>Vymazat mezipaměť</strong>, ne data).</li>
+    </ol>
+    <p>Nic víc: karty, entity i české názvy jsou v okně připravené. Pokud už máš vlastní kartu Scheduleru jinde, přidej do ní <code>exclude_tags: [mar, acond]</code>, ať se plány MaR neukazují dvakrát.</p>
+    <p class="nahoru"><a href="#o-planovani">&#8593; Obsah kapitoly</a> &nbsp;·&nbsp; <a href="#obsah">&#8593; Celkový obsah</a></p>
+  </section>
+
+  <section id="planovani-okno">
+    <h3>Okno Plánovač — dvě karty</h3>
+    <p>Do okna se dostaneš tlačítkem <strong>Plánovač</strong> v řádku Režimů nebo dole v okně Nastavení. Jsou v něm dvě karty, každá si drží jen své plány:</p>
+    <ul>
+      <li><strong>Plánovač MaR</strong> — strategie, Zebra a její délky, Den/noc, Okna ±, Dovolená, FVE TUV, FVE topení, kameny Topit/Netopit a z Aconda tři věci, se kterými se běžně pracuje: požadovaná teplota okruhu 1, TUV a max. otáčky. Nastavení „pro instalaci" (zdroje, stropy, profily, statistika) tu záměrně nejsou.</li>
+      <li><strong>Plánovač Acond</strong> — všechno, co jde do čerpadla zapsat: teploty, režimy, tichý provoz, bazén, solár, chlazení, léto/zima… Hodí se i <strong>Bez MaR</strong>. Jen dvě tlačítka chybí záměrně: <em>Potvrzení poruchy</em> (naplánované potvrzování by poruchu tiše zametalo) a <em>Reset PLC</em> (restart řídicí jednotky v pevný čas, třeba uprostřed odmrazování).</li>
+    </ul>
+    <p class="nahoru"><a href="#o-planovani">&#8593; Obsah kapitoly</a> &nbsp;·&nbsp; <a href="#obsah">&#8593; Celkový obsah</a></p>
+  </section>
+
+  <section id="planovani-jak">
+    <h3>Jak založit plán</h3>
+    <p>V kartě <strong>Přidat</strong> → vyber, co se má změnit → co s tím (zapnout, vybrat strategii, nastavit hodnotu) → kdy a ve které dny. Plán se uloží a dá se kdykoli vypnout přepínačem vedle něj.</p>
+    <p><strong>Zapiš totéž, co bys zadal v Nastavení.</strong> Délka Zebry je v minutách (třeba 110), teploty ve °C, otáčky v ot/min. Plánovač nedělá nic jiného, než že ve správnou chvíli „stiskne" totéž, co bys stiskl prstem — se všemi pojistkami MaR.</p>
+    <p>Časové schéma (víc změn za den v jednom plánu) je na mobilu piplačka; na počítači jde pohodlně. Krok času je 15 minut.</p>
+    <p class="nahoru"><a href="#o-planovani">&#8593; Obsah kapitoly</a> &nbsp;·&nbsp; <a href="#obsah">&#8593; Celkový obsah</a></p>
+  </section>
+
+  <section id="planovani-priklady">
+    <h3>Příklady</h3>
+    <ul>
+      <li><strong>Víc teplé vody večer:</strong> v 17:00 TUV na 50 °C, ve 21:00 zpátky na 42 °C. Celý den hřát na 50 je zbytečně drahé, večerní koupání na 42 nestačí.</li>
+      <li><strong>Noční Minimum:</strong> ve 22:00 strategie Minimum, v 6:00 strategie Ekviterma.</li>
+      <li><strong>Noční útlum přes okruh 1:</strong> ve 22:00 požadovaná teplota okruhu 1 na 21 °C, v 5:00 zpátky na 22,5 °C. Projeví se přes ekvitermní korekci.</li>
+      <li><strong>Zebra jinak ve dne a v noci:</strong> v 8:00 délka topení 120 min, ve 20:00 délka 60 min.</li>
+    </ul>
+    <p class="nahoru"><a href="#o-planovani">&#8593; Obsah kapitoly</a> &nbsp;·&nbsp; <a href="#obsah">&#8593; Celkový obsah</a></p>
+  </section>
+
+  <section id="planovani-pozor">
+    <h3>Na co dát pozor</h3>
+    <ul>
+      <li><strong>Jedna věc = jeden plán.</strong> Okruh 1, TUV a otáčky jsou v obou kartách. Naplánuješ-li je v obou, plány se budou přetahovat.</li>
+      <li><strong>Karta Acond sahá přímo do čerpadla.</strong> Co v ní naplánuješ, může MaR přepsat — nebo ty MaR. Typicky zpátečku řídí MaR sám; plánovat ji má smysl hlavně Bez MaR.</li>
+      <li><strong>Pojistky MaR platí i pro plán.</strong> Běží-li Dovolená, naplánovaná změna strategie se odmítne a přijde hláška. Přepnutí na BOOST nebo Bez MaR vypne Zebru — stejně jako tlačítkem.</li>
+      <li><strong>Změna délky Zebry</strong> uprostřed fáze nezkrátí ani neprodlouží fázi, která právě běží. Nová délka platí od další fáze.</li>
+      <li><strong>Otáčky a FVE topení:</strong> když běží FVE topení, otáčky si řídí samo a naplánovaná hodnota vydrží jen do jeho dalšího kroku. Otáčky plánuj, když FVE topení neběží.</li>
+      <li><strong>Léto/zima je přepínač.</strong> Naplánovaný stisk obrátí stav, ať je jakýkoli — dvakrát za sebou vrátí, kde byl.</li>
+      <li><strong>Restart.</strong> Pokud Home Assistant v čase plánu neběží, změna se nemusí provést. Po restartu se podívej, jestli stav odpovídá.</li>
+    </ul>
+    <p class="nahoru"><a href="#o-planovani">&#8593; Obsah kapitoly</a> &nbsp;·&nbsp; <a href="#obsah">&#8593; Celkový obsah</a></p>
   </section>
 </section>
 
