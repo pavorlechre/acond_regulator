@@ -28,6 +28,12 @@ views:
         tap_action:
           action: navigate
           navigation_path: /dashboard-pokus2/schema
+      - type: button
+        name: Plánovač
+        icon: mdi:calendar-clock
+        tap_action:
+          action: navigate
+          navigation_path: /dashboard-pokus2/planovac
   - type: grid
     column_span: 2
     cards:
@@ -3969,6 +3975,15 @@ views:
     - type: markdown
       content: Programy se zapínají tlačítky na schématu. Tady se dají nastavit předem,
         i když zrovna neběží.
+    - type: button
+      name: Plánovač – změny podle času
+      icon: mdi:calendar-clock
+      show_name: true
+      show_icon: true
+      icon_height: 32px
+      tap_action:
+        action: navigate
+        navigation_path: /dashboard-pokus2/planovac
 - type: panel
   title: Průběh 24 h
   path: prubeh
@@ -4261,3 +4276,131 @@ views:
         duration: 5min
       show:
         legend_value: false
+- type: sections
+  title: Plánovač
+  path: planovac
+  icon: mdi:calendar-clock
+  max_columns: 2
+  subview: true
+  sections:
+  - type: grid
+    column_span: 2
+    cards:
+    - type: markdown
+      content: >-
+        Plánovač mění nastavení podle času: **v tuto hodinu udělej tohle**.
+        Zapisuj stejné hodnoty, jaké bys nastavil prstem v Nastavení.
+        **Jedna věc = jeden plán.** Naplánuješ-li tutéž věc v obou kartách,
+        plány se budou přetahovat.
+
+
+        Vidíš-li níže červenou chybu, chybí doplněk **Scheduler** z HACS –
+        viz [příručka, kapitola Plánování časem](/mar-prirucka/index.html#planovani).
+  - type: grid
+    cards:
+    - type: custom:scheduler-card
+      title: Plánovač MaR
+      tags: mar
+      discover_existing: false
+      time_step: 15
+      include:
+      - "*mar_*"
+      - number.acond_40001_t_set_indoor1
+      - number.acond_40005_t_set_tuv
+      - number.acond_40014_comp_capacity_max_set
+      exclude:
+      - switch.mar_zapis_zpatecky
+      - switch.mar_profil_ulozit_fve
+      - switch.mar_profil_nacist_fve
+      - switch.mar_vrstva_vykon
+      - switch.mar_topeni_baterie_vybijeni_kladne
+      - select.mar_vrstva
+      - select.mar_profil
+      - select.mar_schema_sekundar
+      - button.mar_profil_*
+      - button.mar_statistika_*
+      - number.mar_topeni_strop_zpatecka
+      - number.mar_topeni_strop_mistnost
+      - number.mar_topeni_cidlo_timeout
+      - number.mar_hodiny_minulost
+      - number.mar_hodiny_predpoved
+      customize:
+        select.mar_strategie:
+          name: Strategie
+          icon: mdi:tune-variant
+        switch.mar_zebra:
+          name: Zebra
+          icon: mdi:sine-wave
+        number.mar_zebra_topeni:
+          name: Zebra – délka topení (min)
+          icon: mdi:fire
+        number.mar_zebra_pauza:
+          name: Zebra – délka pauzy (min)
+          icon: mdi:pause-circle
+        switch.mar_dennoc:
+          name: Den/noc
+          icon: mdi:theme-light-dark
+        switch.mar_okna_teploty:
+          name: Okna ±
+          icon: mdi:swap-vertical
+        switch.mar_dovolena:
+          name: Dovolená
+          icon: mdi:beach
+        switch.mar_fve_tuv:
+          name: FVE TUV
+          icon: mdi:solar-power
+        switch.mar_topeni:
+          name: FVE topení
+          icon: mdi:radiator
+        button.mar_zapnout_jiste:
+          name: TČ zapnout jistě
+          icon: mdi:play-circle
+        button.mar_vypnout_setrne:
+          name: TČ vypnout šetrně
+          icon: mdi:stop-circle
+        number.acond_40001_t_set_indoor1:
+          name: Okruh 1 – požadovaná teplota
+          icon: mdi:home-thermometer
+          actions:
+          - service: number.set_value
+            name: Okruh 1[ na {value} °C]
+            icon: mdi:thermometer
+            variables:
+              value:
+                name: Teplota
+                unit: °C
+                min: 10
+                max: 30
+                step: 0.1
+        number.acond_40005_t_set_tuv:
+          name: TUV – požadovaná teplota
+          icon: mdi:water-boiler
+          actions:
+          - service: number.set_value
+            name: TUV[ na {value} °C]
+            icon: mdi:thermometer
+            variables:
+              value:
+                name: Teplota
+                unit: °C
+                min: 10
+                max: 50
+                step: 0.5
+        number.acond_40014_comp_capacity_max_set:
+          name: Max. otáčky kompresoru
+          icon: mdi:speedometer
+  - type: grid
+    cards:
+    - type: custom:scheduler-card
+      title: Plánovač Acond
+      tags: acond
+      discover_existing: false
+      time_step: 15
+      include:
+      - number.acond_400*
+      - switch.acond_400*
+      - select.acond_400*
+      - button.acond_400*
+      exclude:
+      - button.acond_40006_tc_set_bit_5
+      - button.acond_40021_reset_plc_set
