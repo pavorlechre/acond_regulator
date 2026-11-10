@@ -53,6 +53,9 @@ async def async_setup_entry(
             # čekat na pollování selectu (30 s) ani na restart HA
             ProfilButton(entry, "Profil obnovit seznam", "mdi:folder-refresh-outline",
                          lambda: data["profily"].async_refresh(force=True)),
+            # -> button.mar_export: CSV po minutách za zvolenou délku (select.mar_export_delka)
+            ProfilButton(entry, "Export", "mdi:file-delimited-outline",
+                         data["export"].async_export),
         ]
     )
 

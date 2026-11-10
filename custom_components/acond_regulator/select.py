@@ -26,6 +26,9 @@ from homeassistant.helpers.event import async_call_later
 
 from .const import (
     DOMAIN,
+    EXPORT_DELKA_DEFAULT,
+    EXPORT_DELKA_KEY,
+    EXPORT_DELKY,
     OFFMODE_DEFAULT,
     OFFMODE_OPTIONS,
     OFFMODE_PZ,
@@ -65,8 +68,36 @@ async def async_setup_entry(
             ProfilSelect(data["profily"], entry),
             SchemaSekundarSelect(entry),
             VrstvaSelect(entry),
+            ExportDelkaSelect(data["export"], entry),
         ]
     )
+
+
+class ExportDelkaSelect(RestoreEntity, SelectEntity):
+    """Délka exportu dat po minutách (okno Statistika). -> select.mar_export_delka"""
+
+    _attr_has_entity_name = True
+    _attr_name = "Export delka"
+    _attr_icon = "mdi:calendar-range"
+    _attr_options = list(EXPORT_DELKY)
+
+    def __init__(self, export, entry: ConfigEntry) -> None:
+        self._export = export
+        self._attr_unique_id = f"{entry.entry_id}_{EXPORT_DELKA_KEY}"
+        self._attr_device_info = device_info(entry.entry_id)
+
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+        last = await self.async_get_last_state()
+        self._export.set_delka(last.state if last is not None else EXPORT_DELKA_DEFAULT)
+
+    @property
+    def current_option(self) -> str:
+        return self._export.delka
+
+    async def async_select_option(self, option: str) -> None:
+        self._export.set_delka(option)
+        self.async_write_ha_state()
 
 
 class StrategySelect(RestoreEntity, SelectEntity):

@@ -2441,6 +2441,29 @@
       show_name: false
       tap_action:
         action: more-info
+    - type: markdown
+      content: '### Data po minutách (CSV)
+
+
+        Pro ladění regulace: teploty, zpátečka, otáčky, strop, příkon, výkon, TUV, odmraz, strategie a stav R-Ekvitermy po minutách. Vyber délku, stiskni Export a soubor stáhni odkazem níž — otevře se v Excelu. Home Assistant drží historii 10 dní.
+
+        '
+    - type: entities
+      entities:
+      - entity: select.mar_export_delka
+        name: Délka
+      - entity: sensor.mar_export
+        name: Poslední export
+    - type: button
+      name: Export
+      icon: mdi:file-delimited-outline
+      tap_action:
+        action: perform-action
+        perform_action: button.press
+        target:
+          entity_id: button.mar_export
+    - type: markdown
+      content: '{% set u = state_attr(''sensor.mar_export'',''url'') %}{% if states(''sensor.mar_export'') == ''probíhá'' %}Export běží…{% elif u %}<a href="{{ u }}" target="_blank" rel="noreferrer">Stáhnout CSV</a> · {{ state_attr(''sensor.mar_export'',''delka'') }}, {{ state_attr(''sensor.mar_export'',''radku'') }} řádků{% elif state_attr(''sensor.mar_export'',''chyba'') %}Export selhal: {{ state_attr(''sensor.mar_export'',''chyba'') }}{% else %}Zatím žádný export.{% endif %}'
   - type: grid
     column_span: 2
     cards:

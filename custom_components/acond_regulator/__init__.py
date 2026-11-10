@@ -30,6 +30,7 @@ from .const import (
 from .coordinator import MarCoordinator
 from .dennoc import DenNocController
 from .dovolena import DovolenaController
+from .export import ExportManager
 from .fve import FveController
 from .minimum import MinimumController
 from .okna_teploty import OknaTeplotyController
@@ -222,6 +223,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "topeni": topeni,
         "profily": profily,
         "radiatory": radiatory,
+        # Export dat po minutách (okno Statistika) – jen na stisk, žádný tik
+        "export": ExportManager(hass, entry),
     }
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

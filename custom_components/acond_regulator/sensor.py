@@ -58,6 +58,7 @@ from .const import (
     signal_seq_updated,
     signal_topeni_updated,
     signal_r_updated,
+    signal_export_updated,
     signal_zebra_updated,
 )
 from .coordinator import MarCoordinator
@@ -136,6 +137,7 @@ async def async_setup_entry(
             FveDenniCitac(data["fve"], entry, FVE_VYROBA_DNES_KEY, "Fve vyroba dnes",
                           VYROBA, "mdi:solar-power-variant"),
             ProfilStavSensor(data["profily"], entry),
+            ExportStavSensor(data["export"], entry),
         ]
         + build_statistics_sensors(stats, entry)
     )
@@ -1065,3 +1067,44 @@ class KompresorVizualSensor(SensorEntity):
         if rez == "chl":
             return "klid-chl-z"
         return f"klid-{rez}-{'l' if leto else 'z'}"
+
+
+class ExportStavSensor(SensorEntity):
+    """Stav exportu dat po minutách (okno Statistika). -> sensor.mar_export
+
+    Hodnota: „probíhá“ / čas posledního exportu / „chyba“ / „—“.
+    Atributy: url (odkaz ke stažení), soubor, radku, od, do, delka, chyba."""
+
+    _attr_has_entity_name = True
+    _attr_name = "Export"
+    _attr_icon = "mdi:file-delimited-outline"
+    _attr_should_poll = False
+
+    def __init__(self, export, entry: ConfigEntry) -> None:
+        self._export = export
+        self._entry = entry
+        self._attr_unique_id = f"{entry.entry_id}_export_stav"
+        self._attr_device_info = device_info(entry.entry_id)
+
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, signal_export_updated(self._entry.entry_id), self.async_write_ha_state
+            )
+        )
+
+    @property
+    def native_value(self) -> str:
+        if self._export.bezi:
+            return "probíhá"
+        v = self._export.vysledek
+        if v.get("chyba"):
+            return "chyba"
+        if v.get("cas"):
+            return v["cas"][:16].replace("T", " ")
+        return "—"
+
+    @property
+    def extra_state_attributes(self) -> dict:
+        return dict(self._export.vysledek)

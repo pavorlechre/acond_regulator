@@ -1052,3 +1052,20 @@ R_STORE_VERSION = 1
 def signal_r_updated(entry_id: str) -> str:
     """Dispatcher signál R-Ekvitermy (RadiatoryController -> switch/number)."""
     return f"{DOMAIN}_r_updated_{entry_id}"
+
+
+# --- Export dat po minutách (Statistika) ------------------------------------
+# Obecný ladicí export (zamčeno 9.–10. 11. 2026): tlačítko vyrobí CSV z historie
+# HA po minutách za zvolenou délku a uloží ho do config/www/mar_export/; odkaz ke
+# stažení je v okně Statistika. Délka je výběr (jednodušší na mobilu). HA drží
+# historii standardně 10 dní (recorder purge_keep_days) -> víc nenabízíme.
+EXPORT_SUBDIR = "mar_export"
+EXPORT_DELKA_KEY = "export_delka"           # -> select.mar_export_delka
+EXPORT_DELKY = {"1 den": 1, "3 dny": 3, "7 dní": 7, "10 dní": 10}
+EXPORT_DELKA_DEFAULT = "1 den"
+EXPORT_KEEP = 5                             # kolik posledních exportů nechat na disku
+
+
+def signal_export_updated(entry_id: str) -> str:
+    """Dispatcher signál exportu (ExportManager -> sensor/select)."""
+    return f"{DOMAIN}_export_updated_{entry_id}"
