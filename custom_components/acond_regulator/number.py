@@ -7,13 +7,19 @@ Vše živě editovatelné; tytéž hodnoty bude umět přepsat i CSV import na d
 
 from __future__ import annotations
 
-from homeassistant.components.number import NumberMode, RestoreNumber
+from homeassistant.components.number import NumberEntity, NumberMode, RestoreNumber
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.event import async_track_state_change_event
 
 from .const import (
+    ACOND_ROOM_SET,
     BUFFER_HOURS,
+    POZADOVANA_MISTNOST_KEY,
+    POZADOVANA_MISTNOST_STEP,
+    ROOM_SET_MAX,
+    ROOM_SET_MIN,
     CURVE_KEYS,
     CURVE_Y_DEFAULT,
     DEFAULT_COEF,
@@ -215,7 +221,69 @@ async def async_setup_entry(
     entities.append(FveNumber(topeni, entry, TOPENI_CIDLO_KEY, "Topeni cidlo timeout",
         TOPENI_CIDLO_MIN, TOPENI_CIDLO_MAX, TOPENI_CIDLO_STEP, TOPENI_CIDLO_DEFAULT,
         "min", "mdi:timer-alert-outline", topeni.set_cidlo_timeout))
+    # -> number.mar_pozadovana_mistnost: SKUTEČNÁ požadovaná (40001 − posun +1 °C)
+    entities.append(PozadovanaMistnostNumber(coordinator, data["pokojovka"], entry))
     async_add_entities(entities)
+
+
+class PozadovanaMistnostNumber(NumberEntity):
+    """Požadovaná teplota místnosti tak, jak ji chce uživatel.
+
+    Bez volby „Sekundární čerpadlo +1 °C“ je totožná s 40001. S volbou ukazuje
+    40001 − 1 a zápis sem jde do 40001 + 1 (přes správce pokojovky, jediného
+    vlastníka 40001). Všude v MaR (dlaždice, schéma, grafy, Plánovač) se ukazuje
+    tahle entita, takže uživatel v MaR vidí svoje číslo. Nic se neukládá – hodnota
+    se vždy počítá z registru."""
+
+    _attr_has_entity_name = True
+    _attr_name = "Pozadovana mistnost"
+    _attr_icon = "mdi:home-thermometer"
+    _attr_native_unit_of_measurement = "\u00b0C"
+    _attr_mode = NumberMode.BOX
+    _attr_native_min_value = ROOM_SET_MIN
+    _attr_native_max_value = ROOM_SET_MAX
+
+    def __init__(self, coordinator: MarCoordinator, pokojovka, entry) -> None:
+        self.coordinator = coordinator
+        self._pokojovka = pokojovka
+        self._attr_unique_id = f"{entry.entry_id}_{POZADOVANA_MISTNOST_KEY}"
+        self._attr_device_info = device_info(entry.entry_id)
+
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            async_track_state_change_event(self.hass, [ACOND_ROOM_SET], self._zmena)
+        )
+        # posun se mění v coordinatoru (room_posun) -> překresli po každém cyklu
+        self.async_on_remove(self.coordinator.async_add_listener(self.async_write_ha_state))
+
+    @callback
+    def _zmena(self, _event) -> None:  # noqa: ANN001
+        self.async_write_ha_state()
+
+    @property
+    def available(self) -> bool:
+        return self.coordinator.room_set() is not None
+
+    @property
+    def native_value(self) -> float | None:
+        return self.coordinator.room_set()
+
+    @property
+    def native_step(self) -> float:
+        # krok převezmi od entity Acondu, ať se nedá zadat, co Acond neumí
+        st = self.hass.states.get(ACOND_ROOM_SET) if self.hass else None
+        try:
+            return float(st.attributes.get("step")) if st is not None else POZADOVANA_MISTNOST_STEP
+        except (TypeError, ValueError):
+            return POZADOVANA_MISTNOST_STEP
+
+    @property
+    def extra_state_attributes(self) -> dict:
+        return {"posun": self.coordinator.room_posun}
+
+    async def async_set_native_value(self, value: float) -> None:
+        await self._pokojovka.async_set_skutecna(value)
 
 
 class _BaseNumber(RestoreNumber):

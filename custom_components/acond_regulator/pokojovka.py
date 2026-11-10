@@ -57,6 +57,18 @@ Naslouchátko dělá ještě druhou práci: vyžádá si přepočet ekvitermy. C
 totiž tiká jednou za 10 minut a na 40001 se sám nedívá – ruční změna požadované
 teploty se proto dřív projevila v korekci až s několikaminutovým zpožděním.
 
+POSUN +1 °C (volba „Sekundární čerpadlo +1 °C")
+------------------------------------------------
+Firmware Acondu vypíná sekundární čerpadlo při 30002 > 40001 + 0,3. S volbou drží
+správce na registru o SEKUNDAR_POSUN víc, než chce uživatel:
+
+    registr = skutečná (uživatelova) + přání zákazníků + posun
+
+`base` je vždy SKUTEČNÁ hodnota (bez posunu). Posun se zapíše jednou při zapnutí
+(volba zapnutá, strategie není Bez MaR, Typ regulace = Standard) a jednou se vrátí
+při odchodu. Uložený je ve Store dřív, než se zapíše -> restart HA ho nepřičte
+podruhé. Coordinator dostává `room_posun` a všude počítá se `registr − posun`.
+
 MIGRACE
 -------
 Originál dřív bydlel ve Store Oken. Kdyby uživatel aktualizoval UPROSTŘED běžícího
@@ -81,6 +93,8 @@ from homeassistant.util import dt as dt_util
 from .const import (
     ACOND_ROOM_SET,
     DOMAIN,
+    SEKUNDAR_POSUN,
+    STRATEGY_BEZ_MAR,
     OKNA_STORE_VERSION,
     POKOJOVKA_RETRY_S,
     POKOJOVKA_STORE_VERSION,
@@ -114,6 +128,10 @@ class PokojovkaOwner:
         self._unsub_retry = None
         self._unsub_room = None                   # naslouchátko na 40001
         self._settled = False                     # po startu: čekáme, až se ozvou zákazníci
+        self._posun: float = 0.0                  # posun +1 °C, který je teď NA REGISTRU
+        self.chce_posun: bool = False             # volba „Sekundární čerpadlo +1 °C" (switch)
+        self._posun_busy = False                  # právě přepisujeme posun -> neopakovat
+        self._unsub_coord = None                  # posluchač coordinatoru (změna strategie)
 
     # ------------------------------------------------------------------ #
     # Veřejné čtení
@@ -122,6 +140,11 @@ class PokojovkaOwner:
     def base(self) -> float | None:
         """Uživatelův originál, dokud držíme půjčku. None = nepůjčeno."""
         return self._base
+
+    @property
+    def posun(self) -> float:
+        """Posun, který je teď na registru 40001 (0 nebo SEKUNDAR_POSUN)."""
+        return self._posun
 
     def claim_of(self, key: str) -> float | None:
         return self._claims.get(key)
@@ -134,6 +157,7 @@ class PokojovkaOwner:
 
     def as_attr(self) -> dict:
         return {
+            "posun": self._posun,
             "base": self._base,
             "delta": self.effective_delta(),
             "zakaznici": dict(sorted(self._claims.items())),
@@ -176,22 +200,23 @@ class PokojovkaOwner:
 
         if self._base is None:
             # čerstvá půjčka: zachyť originál PŘED jakýmkoli zápisem (synchronně)
-            base = self._num(ACOND_ROOM_SET)
-            if base is None:
+            raw = self._num(ACOND_ROOM_SET)
+            if raw is None:
                 self._schedule_retry()     # 40001 po startu ještě nežije -> zkus později
                 return
+            base = round(raw - self._posun, 1)   # originál = SKUTEČNÁ (bez posunu)
             self._base = base
             await self._save()
             _LOGGER.debug("Pokojovka: půjčka base=%s (zákazníci %s)", base, self._claims)
 
-        await self._write(self._clamp(self._base + delta))
+        await self._write(self._clamp(self._base + delta + self._posun))
 
     async def _give_back(self) -> None:
         """Vrať originál (držíme-li půjčku) a zapomeň. Přání zůstávají – zákazníci
         si je odhlásí sami; po návratu do Standardu se půjčka obnoví."""
         if self._base is None:
             return
-        await self._write(self._clamp(self._base))
+        await self._write(self._clamp(self._base + self._posun))
         _LOGGER.debug("Pokojovka: vráceno base=%s", self._base)
         self._base = None
         self._last_written = None
@@ -205,6 +230,9 @@ class PokojovkaOwner:
         NEREKONCILUJE – to udělá až `async_settle()`, aby se nevrátil originál
         dřív, než se stihnou přihlásit zákazníci (jinak zbytečný přepis tam a zpět)."""
         data = await self._store.async_load()
+        if data and data.get("posun") is not None:
+            self._posun = float(data["posun"])
+            self.coordinator.room_posun = self._posun
         if data and data.get("base") is not None:
             self._base = float(data["base"])
             _LOGGER.debug("Pokojovka: obnoven base=%s", self._base)
@@ -234,11 +262,18 @@ class PokojovkaOwner:
             if delta is not None:
                 # na registru je (z doby před restartem) base+delta -> přednastav
                 # _last_written, ať se zbytečně nepřepisuje stejná hodnota
-                self._last_written = self._clamp(self._base + delta)
+                self._last_written = self._clamp(self._base + delta + self._posun)
         await self.async_reconcile()
+        # posun +1: hlídej změny strategie / Standardu (jdou přes refresh coordinatoru)
+        if self._unsub_coord is None:
+            self._unsub_coord = self.coordinator.async_add_listener(self._on_coordinator)
+        await self.async_reconcile_posun()
 
     def shutdown(self) -> None:
         self._cancel_retry()
+        if self._unsub_coord is not None:
+            self._unsub_coord()
+            self._unsub_coord = None
         if self._unsub_room is not None:
             self._unsub_room()
             self._unsub_room = None
@@ -265,7 +300,7 @@ class PokojovkaOwner:
         if self._base is not None:
             delta = self.effective_delta()
             if delta is not None:
-                ocekavane = self._clamp(self._base + delta)
+                ocekavane = self._clamp(self._base + delta + self._posun)
                 rozdil = val - ocekavane
                 if abs(rozdil) > POKOJOVKA_TOL:
                     # sáhl uživatel: posuň základ, na registr NESAHEJ (už je správně)
@@ -277,6 +312,67 @@ class PokojovkaOwner:
                         round(rozdil, 1), self._base,
                     )
         await self.coordinator.async_request_refresh()
+
+    # ------------------------------------------------------------------ #
+    # Posun +1 °C a skutečná hodnota
+    # ------------------------------------------------------------------ #
+    def _chteny_posun(self) -> float:
+        if (
+            self.chce_posun
+            and self.coordinator.strategy != STRATEGY_BEZ_MAR
+            and self.coordinator.is_standard()
+        ):
+            return SEKUNDAR_POSUN
+        return 0.0
+
+    @callback
+    def _on_coordinator(self) -> None:
+        if self._settled and not self._posun_busy and self._chteny_posun() != self._posun:
+            self.hass.async_create_task(self.async_reconcile_posun())
+
+    async def async_set_chce_posun(self, value: bool) -> None:
+        """Volá switch.mar_sekundar_plus1."""
+        self.chce_posun = bool(value)
+        await self.async_reconcile_posun()
+
+    async def async_reconcile_posun(self) -> None:
+        """Srovnej posun na registru s tím, co má platit. Zapisuje JEN při změně."""
+        if not self._settled or self._posun_busy:
+            return
+        chci = self._chteny_posun()
+        if chci == self._posun:
+            return
+        self._posun_busy = True
+        try:
+            if self._base is None:
+                raw = self._num(ACOND_ROOM_SET)
+                if raw is None:
+                    self._schedule_retry()
+                    return
+                nova = self._clamp(raw - self._posun + chci)
+            else:
+                nova = self._clamp(self._base + (self.effective_delta() or 0.0) + chci)
+            # NEJDŘÍV ulož, pak zapiš: restart mezi tím posun nepřičte podruhé
+            self._posun = chci
+            self.coordinator.room_posun = chci
+            await self._save()
+            _LOGGER.debug("Pokojovka: posun %s -> registr %s", chci, nova)
+            self._last_written = None      # vynuť zápis (registr mohl uživatel mezitím změnit)
+            await self._write(nova)
+        finally:
+            self._posun_busy = False
+
+    async def async_set_skutecna(self, value: float) -> None:
+        """Uživatel nastavil požadovanou v MaR (skutečnou). Na registr jde + posun;
+        běží-li půjčka, posune se její základ (slib „vrátíme, cos naposled chtěl")."""
+        v = round(float(value), 1)
+        self._last_written = None          # vynuť zápis
+        if self._base is not None:
+            self._base = v
+            await self._save()
+            await self._write(self._clamp(v + (self.effective_delta() or 0.0) + self._posun))
+        else:
+            await self._write(self._clamp(v + self._posun))
 
     # ------------------------------------------------------------------ #
     # Zápis + pomocné
@@ -320,6 +416,7 @@ class PokojovkaOwner:
             # MUSÍ být @callback (jinak běží v executoru a async_create_task tiše selže)
             self._unsub_retry = None
             self.hass.async_create_task(self.async_reconcile())
+            self.hass.async_create_task(self.async_reconcile_posun())
 
         self._unsub_retry = async_track_point_in_time(
             self.hass, _fire, dt_util.utcnow() + timedelta(seconds=POKOJOVKA_RETRY_S)
@@ -331,7 +428,8 @@ class PokojovkaOwner:
             self._unsub_retry = None
 
     async def _save(self) -> None:
-        await self._store.async_save({"base": self._base})
+        await self._store.async_save({"base": self._base, "posun": self._posun})
 
     async def _clear_store(self) -> None:
-        await self._store.async_save({})
+        # posun se nemaže s půjčkou – drží se, dokud ho správce sám nevrátí
+        await self._store.async_save({"posun": self._posun} if self._posun else {})

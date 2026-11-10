@@ -33,7 +33,6 @@ from homeassistant.util import dt as dt_util
 
 from .const import (
     ACOND_INDOOR,
-    ACOND_ROOM_SET,
     DOMAIN,
     SEQ_BUSY_RETRY_S,
     STRATEGY_EKVITERM,
@@ -263,7 +262,7 @@ class ZebraController:
             # neopakuj naslepo, jen krátce počkej; Den/noc nás beztak uspí.
             self._schedule_retry()
             return
-        room_set = self._num(ACOND_ROOM_SET)   # 40001 (jen ČTU)
+        room_set = self.coordinator.room_set()   # 40001 − posun +1 (jen ČTU)
         room_act = self._num(ACOND_INDOOR)      # 30002
 
         # „natopeno“ = skutečná ostře větší než požadovaná (30002 > 40001).

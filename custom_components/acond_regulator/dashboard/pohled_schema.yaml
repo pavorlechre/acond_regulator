@@ -368,7 +368,7 @@
           text-shadow: '0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff'
           white-space: nowrap
       - type: state-label
-        entity: number.acond_40001_t_set_indoor1
+        entity: number.mar_pozadovana_mistnost
         tap_action:
           action: more-info
         style:

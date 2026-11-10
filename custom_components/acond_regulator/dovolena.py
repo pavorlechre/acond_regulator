@@ -179,7 +179,10 @@ class DovolenaController:
                 "Dovolená: půjčka base_room=%s base_tuv=%s", base_r, base_t
             )
 
-        await self._write(ACOND_ROOM_SET, self._clamp_room(self.room_target), "room")
+        # cíl dovolené je SKUTEČNÁ teplota; na registr jde + posun +1 °C (je-li zapnutý),
+        # ať sekundár ani na dovolené nevypíná. Originál (base_room) je holý registr
+        # a vrací se doslova.
+        await self._write(ACOND_ROOM_SET, self._room_reg(), "room")
         await self._write(ACOND_TUV_SET, self._clamp_tuv(self.tuv_target), "tuv")
         await self.coordinator.async_request_refresh()
 
@@ -210,7 +213,7 @@ class DovolenaController:
             self._base_tuv = data.get("base_tuv")
             # na registrech je (z doby před restartem) cíl dovolené -> přednastav
             # _last_*, ať idempotentní reconcile uvnitř intervalu nepřepisuje
-            self._last_room = self._clamp_room(self.room_target)
+            self._last_room = self._room_reg()
             self._last_tuv = self._clamp_tuv(self.tuv_target)
             _LOGGER.debug(
                 "Dovolená: obnovena půjčka base_room=%s base_tuv=%s",
@@ -254,6 +257,9 @@ class DovolenaController:
             {"entity_id": entity_id, "value": v},
             blocking=False,
         )
+
+    def _room_reg(self) -> float:
+        return round(self._clamp_room(self.room_target) + self.coordinator.room_posun, 1)
 
     @staticmethod
     def _clamp_room(value: float) -> float:

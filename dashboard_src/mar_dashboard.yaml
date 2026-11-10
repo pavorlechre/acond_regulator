@@ -81,7 +81,7 @@ views:
         {% set faze = state_attr(e, 'faze') %}\n{% if reg %}\n> ✍️ **Zápis zpátečky – zapisuje**\n{% elif reg is none %}\n> ✍️ **Zápis zpátečky:** stav ještě neznám (MaR se načítá)\n{% else %}\n> ✍️ **Ekviterma\
         \ – nezapisuje** — {{ duvod if duvod else 'vede FVE topení, na registru je návnada' }}\n{% endif %}\n{% if aktiv %}\n> ⏳ **Probíhá {{ 'zapínání' if aktiv == 'start' else 'vypínání' }}:** {{ faze\
         \ }}\n{% elif banner %}\n> ℹ️ **{{ banner }}** — kompresor běží, netopí dům.\n{% endif %}\n{% set z = state_attr(e, 'zebra') %}\n{% if z and z.aktivni %}\n{% set ra = states('sensor.acond_30002_t_act_indoor1')\
-        \ | float(0) %}\n{% set rs = states('number.acond_40001_t_set_indoor1') | float(0) %}\n{% set konec = z.konec_faze %}\n{% set zbyva = (((as_timestamp(konec) - as_timestamp(now())) / 60) | round(0))\
+        \ | float(0) %}\n{% set rs = states('number.mar_pozadovana_mistnost') | float(0) %}\n{% set konec = z.konec_faze %}\n{% set zbyva = (((as_timestamp(konec) - as_timestamp(now())) / 60) | round(0))\
         \ if konec else '?' %}\n> \U0001F993 **Zebra:** {{ z.faze or '—' }} · konec fáze za **{{ zbyva }} min** · startů dnes: {{ z.starty_dnes }}\n>\n{% if z.faze == 'pauza' %}> Po pauze → **vždy Zapnout\
         \ jistě** (topí dál nezávisle na termostatu)\n{% else %}> Pokoj {{ ra }} °C / žádá {{ rs }} °C → {{ 'natopeno → po intervalu pauza' if ra > rs else 'nenatopeno → topí dál (pauza až když pokoj > žádá)'\
         \ }}\n{% endif %}              {% endif %}\n{% set dn = state_attr(e, 'dennoc') %}\n{% if dn and dn.aktivni %}\n{% set zmena = dn.pristi_zmena %}\n{% set zm = (zmena | as_datetime | as_local).strftime('%H:%M')\
@@ -97,7 +97,7 @@ views:
         \ | float(0) -%}\n{%- set zp = states('sensor.acond_30009_t_act_water_back') | float(0) -%}\n{%- set delta = tv - zp -%}\n\n\n| | | | |\n|---|--:|---|--:|\n| Zpátečka | {{ c(states('sensor.acond_30009_t_act_water_back'),\
         \ '°C', 1) }} | Topná voda | {{ c(states('sensor.acond_30018_t_act_water_outlet'), '°C', 1) }} |\n| Žádaná zpátečka | {{ c(state_attr(e, 'zpatecka_cil'), '°C') }} | Zapsaná | {{ c(state_attr(e,\
         \ 'zpatecka_na_registru'), '°C') }} |\n| Z křivky | {{ c(state_attr(e, 'zpatecka_z_krivky'), '°C') }} | Korekce | {{ c(state_attr(e, 'korekce'), '°C') }} |\n| Vnitřní | {{ c(states('sensor.acond_30002_t_act_indoor1'),\
-        \ '°C', 1) }} | Žádaná | {{ c(states('number.acond_40001_t_set_indoor1'), '°C', 1) }} |\n| Venkovní | {{ c(states('sensor.acond_30010_t_act_air'), '°C', 1) }} | Modelová | {{ c(state_attr(e, 'model_teplota'),\
+        \ '°C', 1) }} | Žádaná | {{ c(states('number.mar_pozadovana_mistnost'), '°C', 1) }} |\n| Venkovní | {{ c(states('sensor.acond_30010_t_act_air'), '°C', 1) }} | Modelová | {{ c(state_attr(e, 'model_teplota'),\
         \ '°C') }} |\n| TUV | {{ c(states('sensor.acond_30006_t_act_tuv'), '°C', 1) }} | Žádaná | {{ c(states('number.acond_40005_t_set_tuv'), '°C', 1) }} |\n| Otáčky | {{ c(states('sensor.acond_30024_comp_rpm_actual'),\
         \ 'rpm', 0) }} | Limit | {{ c(states('number.acond_40014_comp_capacity_max_set'), 'rpm', 0) }} |\n| Spotřeba | {{ c(states('sensor.acond_30027_aep'), 'W', 0) }} | Výkon | {{ c(states('sensor.acond_30028_ahp'),\
         \ 'W', 0) }} |\n| COP | {{ c(states('sensor.acond_30029_cop'), '', 2) }} | Rozdíl T | {{ c(delta, 'K') }} |\n"
@@ -2749,7 +2749,7 @@ views:
           text-shadow: '0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff'
           white-space: nowrap
       - type: state-label
-        entity: number.acond_40001_t_set_indoor1
+        entity: number.mar_pozadovana_mistnost
         tap_action:
           action: more-info
         style:
@@ -3666,7 +3666,7 @@ views:
     - type: markdown
       content: '## Teploty a výkon'
     - type: tile
-      entity: number.acond_40001_t_set_indoor1
+      entity: number.mar_pozadovana_mistnost
       name: Okruh 1 – zadání
       icon: mdi:home-thermometer
       vertical: false
@@ -3704,6 +3704,22 @@ views:
       grid_options:
         columns: 3
         rows: 2
+    - type: entities
+      entities:
+      - entity: switch.mar_sekundar_plus1
+        name: Sekundární čerpadlo +1 °C
+        icon: mdi:pump
+      - type: attribute
+        entity: switch.mar_sekundar_plus1
+        attribute: posun_na_registru
+        name: Na registru Acondu navíc
+        suffix: °C
+    - type: markdown
+      content: <small>Volba drží sekundární čerpadlo v chodu – termostat Acondu ho
+        vypíná až o 0,3 °C nad požadovanou. MaR zapíše do Acondu o 1 °C víc, ale všude
+        v MaR uvidíš a nastavuješ svou teplotu. V aplikaci Acond, na panelu TČ a v
+        integraci Acond je o 1 °C víc – tam nastavuj o stupeň víc. Pod Bez MaR se
+        teplota vrátí.</small>
     - type: markdown
       content: Ekvitermu (křivku, korekci na místnost, okna průměrování a Profily)
         nastavíš v okně **Ekviterma**.
@@ -4095,7 +4111,7 @@ views:
       yaxis_id: t
       type: line
       color: '#e91e63'
-    - entity: number.acond_40001_t_set_indoor1
+    - entity: number.mar_pozadovana_mistnost
       name: Uvnitř žádaná
       yaxis_id: t
       type: line
@@ -4305,7 +4321,7 @@ views:
       time_step: 15
       include:
       - "*mar_*"
-      - number.acond_40001_t_set_indoor1
+      - number.mar_pozadovana_mistnost
       - number.acond_40005_t_set_tuv
       - number.acond_40014_comp_capacity_max_set
       exclude:
@@ -4358,7 +4374,7 @@ views:
         button.mar_vypnout_setrne:
           name: TČ vypnout šetrně
           icon: mdi:stop-circle
-        number.acond_40001_t_set_indoor1:
+        number.mar_pozadovana_mistnost:
           name: Okruh 1 – požadovaná teplota
           icon: mdi:home-thermometer
           actions:

@@ -949,7 +949,7 @@ class TopeniController:
             # originál drží správce; než ho má, vezmi aktuální 40001 jako odhad
             base = self.pokojovka.base
             if base is None:
-                base = self._num(ACOND_ROOM_SET)
+                base = self.coordinator.room_set()
             if base is not None:
                 want = min(want, self.strop_mist - TOPENI_ROOM_MARGIN - base)
         if want <= 0:

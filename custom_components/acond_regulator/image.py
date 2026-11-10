@@ -55,6 +55,7 @@ from .const import (
     ACOND_RETURN_ACT,
     ACOND_RETURN_READBACK,
     ACOND_ROOM_SET,
+    POZADOVANA_MISTNOST_KEY,
     ACOND_STARTS_TOTAL,
     CURVE_X,
     DOMAIN,
@@ -686,6 +687,12 @@ def _prevzorkuj(stavy: list, casy: list[dt.datetime], prevod):
     return out
 
 
+def _cil_skutecna(mar: list, holy: list) -> list:
+    """Požadovaná místnosti do grafu: skutečná z MaR (40001 − posun +1 °C), a kde
+    její historie ještě není (před aktualizací), holý registr – tehdy posun nebyl."""
+    return [m if m is not None else h for m, h in zip(mar, holy)]
+
+
 def _prevzorkuj_kdykoli(stavy: list, casy: list[dt.datetime], test) -> list[bool]:
     """True, když stav splnil `test` KDYKOLI v kroku mřížky (od minulého bodu).
 
@@ -814,6 +821,11 @@ class _VrstvaImage(ImageEntity):
         return er.async_get(self.hass).async_get_entity_id(
             "sensor", DOMAIN, f"{self._entry.entry_id}_{klic}")
 
+    def _cil_id(self) -> str | None:
+        """number.mar_pozadovana_mistnost = skutečná požadovaná (40001 − posun +1 °C)."""
+        return er.async_get(self.hass).async_get_entity_id(
+            "number", DOMAIN, f"{self._entry.entry_id}_{POZADOVANA_MISTNOST_KEY}")
+
     async def _vyrob(self) -> bytes:
         raise NotImplementedError
 
@@ -846,6 +858,7 @@ class TeplotyImage(_VrstvaImage):
         zdroje = {
             "mistnost": ACOND_INDOOR,
             "cil": ACOND_ROOM_SET,
+            "cil_mar": self._cil_id(),
             "pozadovana": ACOND_RETURN_READBACK,
             "skutecna": ACOND_RETURN_ACT,
             "vystup": ACOND_OUTLET,
@@ -853,7 +866,7 @@ class TeplotyImage(_VrstvaImage):
             "odmraz": ACOND_BIT_DEFROST,
             **{k: v for k, v in mar.items() if v},
         }
-        historie = await _historie(self.hass, start - dt.timedelta(hours=1), list(zdroje.values()))
+        historie = await _historie(self.hass, start - dt.timedelta(hours=1), [v for v in zdroje.values() if v])
 
         def rada(klic, prevod=_cislo):
             eid = zdroje.get(klic)
@@ -866,7 +879,7 @@ class TeplotyImage(_VrstvaImage):
         return TeplotyData(
             casy=mistni,
             mistnost=rada("mistnost"),
-            cil=rada("cil"),
+            cil=_cil_skutecna(rada("cil_mar"), rada("cil")),
             t_ekv=rada("t_ekv"),
             ekv_zaklad=rada("ekv_zaklad"),
             vypocet=rada("vypocet"),
@@ -1093,16 +1106,18 @@ class MiniTeplotyImage(_VrstvaImage):
         zdroje = {
             "mistnost": ACOND_INDOOR,
             "cil": ACOND_ROOM_SET,
+            "cil_mar": self._cil_id(),
             "vystup": ACOND_OUTLET,
             "pozadovana": ACOND_RETURN_READBACK,
             "skutecna": ACOND_RETURN_ACT,
             "tuv": ACOND_BIT_TUV,
             "odmraz": ACOND_BIT_DEFROST,
         }
-        historie = await _historie(self.hass, start - dt.timedelta(hours=1), list(zdroje.values()))
+        historie = await _historie(self.hass, start - dt.timedelta(hours=1), [v for v in zdroje.values() if v])
 
         def rada(klic, prevod=_cislo):
-            return _prevzorkuj(historie.get(zdroje[klic], []), casy, prevod)
+            eid = zdroje.get(klic)
+            return _prevzorkuj(historie.get(eid, []) if eid else [], casy, prevod)
 
         zap = lambda s: s == "on"
         tuv = _prevzorkuj_kdykoli(historie.get(ACOND_BIT_TUV, []), casy, zap)
@@ -1110,7 +1125,7 @@ class MiniTeplotyImage(_VrstvaImage):
         return MiniTeplotyData(
             casy=[dt_util.as_local(c) for c in casy],
             mistnost=rada("mistnost"),
-            cil=rada("cil"),
+            cil=_cil_skutecna(rada("cil_mar"), rada("cil")),
             vystup=rada("vystup"),
             pozadovana=rada("pozadovana"),
             skutecna=rada("skutecna"),

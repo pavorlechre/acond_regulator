@@ -21,6 +21,7 @@ from .const import (
     FVE_MASTER_KEY,
     PROFIL_NACIST_FVE_KEY,
     PROFIL_ULOZIT_FVE_KEY,
+    SEKUNDAR_PLUS1_KEY,
     TOPENI_MASTER_KEY,
     TOPENI_BATT_DISPOS_KEY,
     TOPENI_HLIDAC_KEY,
@@ -62,6 +63,7 @@ async def async_setup_entry(
             ProfilFveSwitch(data["profily"], entry, PROFIL_NACIST_FVE_KEY,
                             "Profil nacist fve", data["profily"].set_nacist_fve),
             VrstvaVykonSwitch(hass, entry),
+            SekundarPlus1Switch(data["pokojovka"], data["dovolena"], entry),
         ]
     )
 
@@ -304,6 +306,55 @@ def _odmitni(zprava: str) -> None:
     MaR přitom nikdy nic nezapíná ani nevypíná za uživatele – jen odmítne a řekne
     proč; po návratu z dovolené si program zapne sám."""
     raise _OdmitnutoError(zprava)
+
+
+class SekundarPlus1Switch(RestoreEntity, SwitchEntity):
+    """Volba „Sekundární čerpadlo +1 °C“ – udržení sekundáru v chodu.
+
+    Zapnutá: správce pokojovky zapíše do 40001 jednou o stupeň víc a MaR všude
+    počítá i ukazuje skutečnou hodnotu (registr − 1). Platí jen mimo Bez MaR a ve
+    Standardu; při odchodu se registr vrátí. Během Dovolené přepínat nejde
+    (Dovolená drží 40001 sama).
+
+    -> switch.mar_sekundar_plus1"""
+
+    _attr_has_entity_name = True
+    _attr_name = "Sekundar plus1"
+    _attr_icon = "mdi:pump"
+
+    def __init__(self, pokojovka, dovolena, entry: ConfigEntry) -> None:
+        self._pokojovka = pokojovka
+        self._dovolena = dovolena
+        self._attr_unique_id = f"{entry.entry_id}_{SEKUNDAR_PLUS1_KEY}"
+        self._attr_device_info = device_info(entry.entry_id)
+
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+        last = await self.async_get_last_state()
+        if last is not None:
+            # jen příznak; posun srovná správce pokojovky po settle (__init__)
+            self._pokojovka.chce_posun = last.state == "on"
+
+    @property
+    def is_on(self) -> bool:
+        return self._pokojovka.chce_posun
+
+    @property
+    def extra_state_attributes(self) -> dict:
+        return {"posun_na_registru": self._pokojovka.posun}
+
+    async def _prepni(self, value: bool) -> None:
+        if self._dovolena.enabled:
+            _odmitni("Běží Dovolená — volbu +1 °C nelze měnit. Nejdřív ukonči Dovolenou.")
+            return
+        await self._pokojovka.async_set_chce_posun(value)
+        self.async_write_ha_state()
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        await self._prepni(True)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        await self._prepni(False)
 
 
 def _blok_dovolena(program: str) -> None:

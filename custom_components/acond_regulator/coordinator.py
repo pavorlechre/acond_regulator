@@ -120,6 +120,9 @@ class MarCoordinator(DataUpdateCoordinator[RegulatorResult]):
         self.topeni_owns: bool = False                      # topení podle přebytků vlastní 40008/40014 -> coordinator uhne
         self.topeni_target: float | None = None            # návnada 40008, kterou topení drží (pro okno)
         self._model_smooth: float | None = None             # stav EMA vyhlazení model_temp
+        # Posun +1 °C na 40001 (volba „Sekundární čerpadlo +1 °C“). Drží ho správce
+        # pokojovky; všude v MaR se počítá se SKUTEČNOU požadovanou = registr − posun.
+        self.room_posun: float = 0.0
 
         # buffer minulé venkovní teploty (version-proof, přežije restart)
         self._buffer: list[list] = []
@@ -419,9 +422,17 @@ class MarCoordinator(DataUpdateCoordinator[RegulatorResult]):
                 return round(ys[i] + f * (ys[i + 1] - ys[i]), 1)
         return round(ys[-1], 1)
 
+    def room_set(self) -> float | None:
+        """SKUTEČNÁ požadovaná teplota místnosti = 40001 − posun +1 °C.
+        Jediné místo, kde se posun odečítá; čtou ho regulace, Zebra, topení i entity."""
+        raw = self._state_float(ACOND_ROOM_SET)
+        if raw is None:
+            return None
+        return round(raw - self.room_posun, 1)
+
     def _correction(self) -> float:
         """koeficient * (požadovaná - skutečná teplota místnosti)."""
-        room_set = self._state_float(ACOND_ROOM_SET)
+        room_set = self.room_set()
         room_act = self._state_float(ACOND_INDOOR)
         if room_set is None or room_act is None:
             return 0.0

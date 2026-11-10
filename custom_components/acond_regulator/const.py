@@ -199,6 +199,18 @@ POKOJOVKA_CLAIM_TOPENI = "fve_topeni"   # zákazník: FVE Topení (návnada poko
 # bereme jako ÚMYSL (posuň základ), menší jako zaokrouhlení desky (ignoruj).
 POKOJOVKA_TOL = 0.3
 
+# --- Sekundární čerpadlo +1 °C (udržení sekundáru v chodu) -----------------
+# Firmware Acondu vypíná sekundární (oběhové) čerpadlo na pokojové hysterezi
+# 40001 + 0,3. S volbou zapíše MaR do 40001 JEDNOU o stupeň víc a všude v MaR
+# (regulace, Zebra, schéma, grafy, dlaždice) počítá a ukazuje skutečnou hodnotu
+# = registr − posun. Při odchodu z MaR (Bez MaR, mimo Standard, vypnutí volby)
+# se registr vrátí. Posun drží správce pokojovky (jediný vlastník 40001) ve Store,
+# takže restart HA ho nepřičte podruhé. Integrace Acond ukazuje holý registr.
+SEKUNDAR_PLUS1_KEY = "sekundar_plus1"          # -> switch.mar_sekundar_plus1
+SEKUNDAR_POSUN = 1.0                           # °C
+POZADOVANA_MISTNOST_KEY = "pozadovana_mistnost"  # -> number.mar_pozadovana_mistnost
+POZADOVANA_MISTNOST_STEP = 0.5
+
 # --- Patro 2 / OSA B: Dovolená (jeden dlouhý interval, executor na 40001 + 40005)
 # Půjč-a-vrať jako Okna, ale: JEDEN interval (datetime od/do = datum+hodina, ne
 # denní rozvrh), ABSOLUTNÍ cíle (drž X °C, ne delta), DVA registry (místnost 40001

@@ -446,9 +446,18 @@
     <h3>Okno Nastavení</h3>
     <p>Programy se zapínají tlačítky na schématu, ale jejich čísla se nastavují tady. Všechno je vidět pořád, i když program zrovna neběží, takže si ho můžeš připravit předem a pak jen zapnout.</p>
     <ul>
-      <li><strong>Nahoře</strong> je požadovaná teplota místnosti a teplé vody (tlačítky − a +) a slider otáček kompresoru. Vedle něj je odkaz na tuhle příručku.</li>
+      <li><strong>Nahoře</strong> je požadovaná teplota místnosti a teplé vody (tlačítky − a +) a slider otáček kompresoru. Vedle něj je odkaz na tuhle příručku. Pod nimi volba <a href="#sekundar-plus1">Sekundární čerpadlo +1 °C</a>.</li>
       <li><strong>Časové programy:</strong> intervaly Zebry, okna Den/noc, okna Okna ± s posunem teploty a interval a cíle Dovolené. Další okno se ukáže, až je vyplněné předchozí.</li>
       <li><strong>FVE TUV a FVE topení:</strong> prahy a meze obou programů na přebytky. Ukazuje se jen ta větev, která odpovídá tomu, jestli máš baterii.</li>
+    </ul>
+    <h4 id="sekundar-plus1">Sekundární čerpadlo +1 °C</h4>
+    <p>Termostat Acondu vypíná sekundární (oběhové) čerpadlo, jakmile je v místnosti o 0,3 °C tepleji, než je požadovaná. Dům pak nebere teplo a kompresor brzy vypne taky. Volba pod teplotami tomu brání: MaR zapíše do Acondu <strong>o 1 °C víc</strong>, takže termostat čerpadlo vypne až o 1,3 °C nad tvou teplotou. Topí se ale dál na tvou teplotu.</p>
+    <ul>
+      <li><strong>V MaR vidíš a nastavuješ svou teplotu</strong> — dlaždice, schéma, grafy, Zebra i Plánovač počítají se skutečnou hodnotou.</li>
+      <li><strong>V aplikaci Acond, na panelu TČ a v integraci Acond je o 1 °C víc.</strong> Kdo tam teplotu mění, zadá o stupeň víc.</li>
+      <li>Platí ve všech strategiích kromě Bez MaR. Přepnutím na Bez MaR, vypnutím volby nebo odchodem z Typu regulace Standard se teplota v Acondu vrátí. Restart Home Assistanta posun nezdvojí.</li>
+      <li>Během Dovolené volbu přepínat nejde.</li>
+      <li>Když Home Assistant spadne nebo MaR odinstaluješ, zůstane v Acondu teplota o 1 °C vyšší. Je to neškodné, jen si ji pak srovnej.</li>
     </ul>
     <p><strong>Ekvitermu tu nenajdeš.</strong> Křivka, korekce na místnost, okna průměrování i uložení a načtení nastavení (Profily) jsou v okně <a href="#ekviterma">Ekviterma</a>.</p>
     <p>Šipkou vlevo nahoře se vrátíš na schéma.</p>
