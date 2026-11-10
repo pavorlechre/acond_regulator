@@ -783,14 +783,15 @@
       <li><a href="#ekviterma-korekce">Korekce na místnost</a></li>
       <li><a href="#ekviterma-zapis">Co se opravdu zapíše do čerpadla</a></li>
       <li><a href="#ekviterma-ladeni">Jak křivku vyladit</a></li>
+      <li><a href="#ekviterma-radiatory">Radiátory, silné čerpadlo</a></li>
     </ol>
   </nav>
 
   <section id="ekviterma-k-cemu">
     <h3>K čemu to je</h3>
     <p>Dům ztrácí teplo tím rychleji, čím je venku chladněji. Ekvitermní regulace na to odpovídá jedinou věcí: <strong>teplotou vody, která se vrací z topení</strong>. Když se trefí, čerpadlo jede pomalu a skoro nevypíná — a to je nejúspornější provoz, jaký umí.</p>
-    <p>MaR tuhle úlohu nedělá za čerpadlo, jen mu pořád dokola říká, jakou zpátečku má chtít. Vlastní výkon, starty a odmrazování si řídí stroj sám.</p>
-    <p>Požadovanou teplotu místnosti MaR <strong>nikdy nepřepisuje</strong>; ta zůstává tvoje. Vstupuje jen do korekce, viz níž.</p>
+    <p>MaR tuhle úlohu nedělá za čerpadlo, jen mu pořád dokola říká, jakou zpátečku má chtít. Vlastní výkon, starty a odmrazování si řídí stroj sám — s výjimkou volby <a href="#ekviterma-radiatory">Radiátory, silné čerpadlo</a>, kde MaR vede i výkon.</p>
+    <p>Požadovanou teplotu místnosti MaR <strong>nikdy nepřepisuje</strong>; ta zůstává tvoje. Vstupuje jen do korekce, viz níž. (Výjimkou je volba <a href="#sekundar-plus1">Sekundární čerpadlo +1 °C</a> — i s ní ale v MaR vidíš a nastavuješ svou teplotu.)</p>
     <p class="nahoru"><a href="#o-ekviterma">&#8593; Obsah kapitoly</a> &nbsp;·&nbsp; <a href="#obsah">&#8593; Celkový obsah</a></p>
   </section>
 
@@ -860,6 +861,24 @@
       <li><strong>Teplota v pokoji se houpe nahoru dolů</strong> → sniž koeficient korekce, případně prodluž okna průměrování.</li>
     </ul>
     <p>Cíl není trefit teplotu na desetinu. Cíl je, aby čerpadlo <strong>jelo dlouho a pomalu</strong> místo krátkých startů na plný výkon.</p>
+    <p class="nahoru"><a href="#o-ekviterma">&#8593; Obsah kapitoly</a> &nbsp;·&nbsp; <a href="#obsah">&#8593; Celkový obsah</a></p>
+  </section>
+
+  <section id="ekviterma-radiatory">
+    <h3>Radiátory, silné čerpadlo</h3>
+    <p>Volba pro <strong>přímou soustavu bez akumulační nádrže</strong>: radiátory, málo vody a čerpadlo, jehož nejmenší výkon je větší, než dům v přechodném období potřebuje. Taková soustava je rychlá — Acond po startu šlápne naplno, zpátečka i místnost vyletí, kompresor vypne a za chvíli zase startuje. Volba tohle cvakání nahradí několika dlouhými běhy za den.</p>
+    <p>Platí jen pod strategií <strong>Ekviterma</strong>; normální Ekviterma bez volby se nemění. S akumulační nádrží ji nezapínej — nádrž přebytek spolkne sama a chování by se nedalo předpovědět.</p>
+    <p>Co MaR dělá:</p>
+    <ul>
+      <li><strong>Start vždy z minima.</strong> Výkon řídí stropem otáček (slider v Nastavení) a přidává ho po malých krocích každých 10 minut — jen když nic nebrzdí.</li>
+      <li><strong>Brzdí</strong>, když zpátečka dosáhne křivky nebo místnost cíle (strop o dva kroky dolů), a <strong>drží</strong>, když místnost roste moc rychle. Dokud je v místnosti o víc než 0,3 °C chladněji, zpátečka nebrzdí — rozhoduje místnost (dotápění).</li>
+      <li><strong>Pauza:</strong> nad cílem + <em>Pauza nad</em> stáhne zpátečku, kompresor dojede a stojí. TČ zůstává v provozu, teplá voda i oběh jedou. Pod cílem − <em>Start pod</em> znovu nastartuje z minima. Výchozí pásmo je ±0,3 °C; širší pásmo = méně startů, víc houpání.</li>
+      <li><strong>Proti vypnutí na zpátečce</strong> drží požadovanou zpátečku vždy kousek pod skutečnou, takže Acond kompresor sám nevypne.</li>
+      <li><strong>Po ohřevu vody a odmrazování</strong> pokračuje z minima (v dotápění z posledního výkonu o krok níž), ať Acond nedohání zmeškané plným výkonem.</li>
+      <li><strong>Odchodem</strong> (vypnutí volby, jiná strategie, Bez MaR) vrátí slider otáček na tvou hodnotu. Když spadne Home Assistant, zůstane slider tam, kde ho MaR naposled nechal — po návratu si ho srovnej.</li>
+    </ul>
+    <p>Přednost má vždy Netopit, kameny, Zebra a Den/noc, ohřev vody i FVE topení; R-Ekviterma pak počká. Doporučujeme zapnout i <a href="#sekundar-plus1">Sekundární čerpadlo +1 °C</a>, jinak termostat Acondu vypne oběhové čerpadlo dřív, než MaR stihne udělat pauzu.</p>
+    <p>Pod volbou je <strong>R-diagnostika</strong>: stav, co právě brzdí, strop otáček, růst místnosti a kolikrát Acond kompresor vypnul sám (mělo by to být 0). Graf ukazuje místnost, zpátečku, zapsanou požadovanou, strop a otáčky za 24 hodin.</p>
     <p class="nahoru"><a href="#o-ekviterma">&#8593; Obsah kapitoly</a> &nbsp;·&nbsp; <a href="#obsah">&#8593; Celkový obsah</a></p>
   </section>
 </section>

@@ -1377,6 +1377,135 @@
         attribute: letni_rezim
         name: Letní režim (blokuje zápis)
   - type: grid
+    cards:
+    - type: heading
+      heading: Radiátory, silné čerpadlo
+    - type: entities
+      entities:
+      - entity: switch.mar_ekviterma_radiatory
+        name: Radiátory, silné čerpadlo — bez akumulační nádrže
+        icon: mdi:radiator
+    - type: conditional
+      conditions:
+      - condition: state
+        entity: switch.mar_ekviterma_radiatory
+        state: 'on'
+      card:
+        type: entities
+        entities:
+        - entity: number.mar_r_pauza_nad
+          name: Pauza nad cílem o (°C)
+        - entity: number.mar_r_start_pod
+          name: Start pod cílem o (°C)
+        - type: section
+          label: Co se děje
+        - type: attribute
+          entity: switch.mar_ekviterma_radiatory
+          attribute: stav
+          name: Stav
+        - type: attribute
+          entity: switch.mar_ekviterma_radiatory
+          attribute: brzda
+          name: Brzda
+        - type: attribute
+          entity: switch.mar_ekviterma_radiatory
+          attribute: strop
+          name: Strop otáček (40014)
+        - type: attribute
+          entity: switch.mar_ekviterma_radiatory
+          attribute: rust_mistnosti
+          name: Růst místnosti (K/h)
+          suffix: K/h
+        - type: attribute
+          entity: switch.mar_ekviterma_radiatory
+          attribute: acond_vypnul
+          name: Acond vypnul sám (mimo pauzu)
+    - type: markdown
+      content: <small>Jen pro přímou soustavu bez akumulační nádrže a jen pod strategií Ekviterma. MaR startuje z minima a přidává výkon stropem otáček, dokud nebrzdí zpátečka nebo místnost; nad cílem + Pauza nad udělá pauzu, pod cílem − Start pod znovu nastartuje. Normální Ekviterma se nemění.</small>
+  - type: grid
+    column_span: 2
+    cards:
+    - type: conditional
+      conditions:
+      - condition: state
+        entity: switch.mar_ekviterma_radiatory
+        state: 'on'
+      card:
+        type: custom:apexcharts-card
+        header:
+          show: true
+          title: R-diagnostika (−24 h)
+          show_states: false
+        graph_span: 24h
+        now:
+          show: true
+          label: teď
+          color: '#888888'
+        apex_config:
+          chart:
+            height: 380
+            toolbar:
+              show: false
+          legend:
+            position: bottom
+          tooltip:
+            x:
+              format: dd.MM. HH:mm
+        yaxis:
+        - id: t
+          decimals: 1
+          apex_config:
+            title:
+              text: °C
+        - id: rpm
+          opposite: true
+          decimals: 0
+          apex_config:
+            title:
+              text: otáčky
+        series:
+        - entity: sensor.acond_30002_t_act_indoor1
+          name: Místnost
+          yaxis_id: t
+          type: line
+          stroke_width: 2
+          color: '#e91e63'
+        - entity: number.mar_pozadovana_mistnost
+          name: Cíl místnosti
+          yaxis_id: t
+          type: line
+          curve: stepline
+          stroke_width: 1
+          color: '#2ca02c'
+        - entity: sensor.acond_30009_t_act_water_back
+          name: Zpátečka
+          yaxis_id: t
+          type: line
+          stroke_width: 2
+          color: '#1f77b4'
+        - entity: sensor.acond_30008_t_set_water_back
+          name: Zapsaná žádaná
+          yaxis_id: t
+          type: line
+          curve: stepline
+          stroke_width: 1
+          color: '#f1c40f'
+        - entity: switch.mar_ekviterma_radiatory
+          attribute: strop
+          name: Strop (40014)
+          yaxis_id: rpm
+          type: line
+          curve: stepline
+          stroke_width: 1
+          color: '#7f8c8d'
+        - entity: sensor.acond_30024_comp_rpm_actual
+          name: Otáčky
+          yaxis_id: rpm
+          type: area
+          opacity: 0.2
+          stroke_width: 1
+          color: '#ff7f0e'
+  - type: grid
     column_span: 2
     cards:
     - type: button

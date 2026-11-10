@@ -21,6 +21,7 @@ from .const import (
     FVE_MASTER_KEY,
     PROFIL_NACIST_FVE_KEY,
     PROFIL_ULOZIT_FVE_KEY,
+    R_SWITCH_KEY,
     SEKUNDAR_PLUS1_KEY,
     TOPENI_MASTER_KEY,
     TOPENI_BATT_DISPOS_KEY,
@@ -35,6 +36,7 @@ from .const import (
     signal_topeni_updated,
     signal_okna_updated,
     signal_profily_updated,
+    signal_r_updated,
     signal_vrstva_vykon,
     signal_zebra_updated,
 )
@@ -64,6 +66,7 @@ async def async_setup_entry(
                             "Profil nacist fve", data["profily"].set_nacist_fve),
             VrstvaVykonSwitch(hass, entry),
             SekundarPlus1Switch(data["pokojovka"], data["dovolena"], entry),
+            RadiatorySwitch(data["radiatory"], entry),
         ]
     )
 
@@ -355,6 +358,57 @@ class SekundarPlus1Switch(RestoreEntity, SwitchEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         await self._prepni(False)
+
+
+class RadiatorySwitch(RestoreEntity, SwitchEntity):
+    """Volba „Radiátory, silné čerpadlo — bez akumulační nádrže“ (R-Ekviterma).
+
+    Vrstva pod strategií Ekviterma: výkon řídí strop 40014 (rampa z minima),
+    pásmo Pauza nad / Start pod. Normální Ekviterma se nemění. Atributy nesou
+    diagnostiku (stav, brzda, strop, počítadlo vypnutí Acondem) pro graf.
+
+    -> switch.mar_ekviterma_radiatory"""
+
+    _attr_has_entity_name = True
+    _attr_name = "Ekviterma radiatory"
+    _attr_icon = "mdi:radiator"
+
+    def __init__(self, radiatory, entry: ConfigEntry) -> None:
+        self._r = radiatory
+        self._attr_unique_id = f"{entry.entry_id}_{R_SWITCH_KEY}"
+        self._attr_device_info = device_info(entry.entry_id)
+
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+        last = await self.async_get_last_state()
+        if last is not None:
+            # jen příznak; smyčku nasadí __init__ (radiatory.async_start)
+            self._r.enabled = last.state == "on"
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, signal_r_updated(self._r.entry.entry_id), self._refresh
+            )
+        )
+
+    @callback
+    def _refresh(self) -> None:
+        self.async_write_ha_state()
+
+    @property
+    def is_on(self) -> bool:
+        return self._r.enabled
+
+    @property
+    def extra_state_attributes(self) -> dict:
+        return self._r.as_attr()
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        await self._r.async_set_enabled(True)
+        self.async_write_ha_state()
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        await self._r.async_set_enabled(False)
+        self.async_write_ha_state()
 
 
 def _blok_dovolena(program: str) -> None:

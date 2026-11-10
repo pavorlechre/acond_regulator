@@ -18,6 +18,13 @@ from .const import (
     BUFFER_HOURS,
     POZADOVANA_MISTNOST_KEY,
     POZADOVANA_MISTNOST_STEP,
+    R_PASMO_MAX,
+    R_PASMO_MIN,
+    R_PASMO_STEP,
+    R_PAUZA_DEFAULT,
+    R_PAUZA_KEY,
+    R_START_DEFAULT,
+    R_START_KEY,
     ROOM_SET_MAX,
     ROOM_SET_MIN,
     CURVE_KEYS,
@@ -223,6 +230,14 @@ async def async_setup_entry(
         "min", "mdi:timer-alert-outline", topeni.set_cidlo_timeout))
     # -> number.mar_pozadovana_mistnost: SKUTEČNÁ požadovaná (40001 − posun +1 °C)
     entities.append(PozadovanaMistnostNumber(coordinator, data["pokojovka"], entry))
+    # -> number.mar_r_pauza_nad / number.mar_r_start_pod (pásmo R-Ekvitermy, °C od cíle)
+    radiatory = data["radiatory"]
+    entities.append(FveNumber(radiatory, entry, R_PAUZA_KEY, "R pauza nad",
+        R_PASMO_MIN, R_PASMO_MAX, R_PASMO_STEP, R_PAUZA_DEFAULT,
+        "\u00b0C", "mdi:arrow-collapse-up", radiatory.set_pauza))
+    entities.append(FveNumber(radiatory, entry, R_START_KEY, "R start pod",
+        R_PASMO_MIN, R_PASMO_MAX, R_PASMO_STEP, R_START_DEFAULT,
+        "\u00b0C", "mdi:arrow-collapse-down", radiatory.set_start))
     async_add_entities(entities)
 
 

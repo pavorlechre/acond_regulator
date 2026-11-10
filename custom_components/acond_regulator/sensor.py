@@ -57,6 +57,7 @@ from .const import (
     signal_run_updated,
     signal_seq_updated,
     signal_topeni_updated,
+    signal_r_updated,
     signal_zebra_updated,
 )
 from .coordinator import MarCoordinator
@@ -326,6 +327,12 @@ class StavSensor(SensorEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass, signal_topeni_updated(self._entry.entry_id), self.async_write_ha_state
+            )
+        )
+        # 3h) R-Ekviterma (stav, brzda, pauza) – ať se věta hne hned, ne za 10 min
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, signal_r_updated(self._entry.entry_id), self.async_write_ha_state
             )
         )
         # 4) živé změny gate bitů (VYP/TUV/odmraz/léto/typ regulace) – okamžité
@@ -642,6 +649,9 @@ class StavSensor(SensorEntity):
         base_veta = self._veta(t)
         veta = base_veta + (f" · {fve_clause}" if fve_clause else "")
         veta = veta + (f" · {topeni_clause}" if topeni_clause else "")
+        r_ctrl = getattr(self.coordinator, "r_ctrl", None)
+        r_clause = r_ctrl.veta() if r_ctrl is not None else None
+        veta = veta + (f" · {r_clause}" if r_clause else "")
         return {
             # dva klíčové booly
             "topi": t["topi"],
@@ -682,6 +692,9 @@ class StavSensor(SensorEntity):
             # Topení podle přebytků (osa A – SoC-řízený žrout přebytků): vlastní klíč + věta
             "topeni": t["topeni"],
             "topeni_veta": topeni_clause,
+            # R-Ekviterma (radiátory bez AKU): stav, brzda, strop, počítadlo vypnutí
+            "radiatory": r_ctrl.as_attr() if r_ctrl is not None else None,
+            "radiatory_veta": r_clause,
             # vlajka tvrdého stopu: drží se, dokud uživatel master zase nezapne.
             # Dashboard na ni věší podmínku „ukaž nastavení", jinak se karta se stropy
             # otevře a hned zavře (je podmíněná masterem, který si strop sám shodil).

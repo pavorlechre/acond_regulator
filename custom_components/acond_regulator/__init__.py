@@ -34,6 +34,7 @@ from .fve import FveController
 from .minimum import MinimumController
 from .okna_teploty import OknaTeplotyController
 from .pokojovka import PokojovkaOwner
+from .radiatory import RadiatoryController
 from .profily import ProfilyManager
 from .runstate import RunState
 from .sequences import SequenceRunner
@@ -200,6 +201,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # PŘES ENTITY (number.set_value), ne do controllerů. Drží coordinator kvůli
     # jednomu refreshi po dávce a topeni kvůli detekci větve (s/bez baterky).
     profily = ProfilyManager(hass, entry, coordinator, topeni)
+    # R-Ekviterma (radiátory bez AKU): vrstva pod Ekvitermou, drží 40014 + 40008.
+    # Coordinator ho drží jen kvůli přípone věty ve Stavu regulace (r_ctrl).
+    radiatory = RadiatoryController(hass, entry, coordinator, run)
+    coordinator.r_ctrl = radiatory
+    await radiatory.async_load()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         "coordinator": coordinator,
@@ -215,6 +221,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "fve": fve,
         "topeni": topeni,
         "profily": profily,
+        "radiatory": radiatory,
     }
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -241,6 +248,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # Store by se smazal/osiřel – slider 40014 by zůstal viset). U běžícího
         # systému jsou obě volání no-op.
         await topeni.async_restore_borrow()
+        await radiatory.async_release()               # vrať slider 40014 uživateli (no-op bez půjčky)
         await minimum.async_restore_originals()
         await minimum.async_deactivate()              # vrátí registry (no-op když nic nedrží)
         await zebra.async_disable(resume_heating=False)  # mimo Standard kámen nepouštět
@@ -294,6 +302,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # jestli půjčku držet dál, nebo vrátit uživatelův originál.
     await pokojovka.async_settle()
 
+    # R-Ekviterma až teď: posun +1 °C je srovnaný, strategie i vypínač obnovené.
+    await radiatory.async_start()
+
     # POJISTKA: 40008 platí jen v Typu regulace Standard. Jakmile Acond přepne
     # jinam, uděláme čistý stůl. (Vstup zpět do Standardu neděláme nic – čistý stůl.)
     async def _on_regtype_change(event) -> None:  # noqa: ANN001
@@ -332,6 +343,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 data["okna"].shutdown()
             if data.get("profily") is not None:
                 data["profily"].shutdown()
+            if data.get("radiatory") is not None:
+                data["radiatory"].shutdown()
             if data.get("pokojovka") is not None:
                 data["pokojovka"].shutdown()
             if data.get("dennoc") is not None:

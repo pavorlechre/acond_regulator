@@ -123,6 +123,11 @@ class MarCoordinator(DataUpdateCoordinator[RegulatorResult]):
         # Posun +1 °C na 40001 (volba „Sekundární čerpadlo +1 °C“). Drží ho správce
         # pokojovky; všude v MaR se počítá se SKUTEČNOU požadovanou = registr − posun.
         self.room_posun: float = 0.0
+        # R-Ekviterma (radiatory.py) drží 40008 i 40014 -> coordinator nezapisuje
+        # (kromě útlumu Netopit, ten platí vždy). r_target = co R drží (pro okno).
+        self.r_owns: bool = False
+        self.r_target: float | None = None
+        self.r_ctrl = None                                   # RadiatoryController (jen pro okno)
 
         # buffer minulé venkovní teploty (version-proof, přežije restart)
         self._buffer: list[list] = []
@@ -222,6 +227,8 @@ class MarCoordinator(DataUpdateCoordinator[RegulatorResult]):
         minimum = self.strategy == STRATEGY_MINIMUM
         if minimum:
             res.target = self.minimum_target
+        elif self.r_owns:
+            res.target = self.r_target
         else:
             res.target = self._clamp(res.return_final + offset)
 
@@ -243,6 +250,7 @@ class MarCoordinator(DataUpdateCoordinator[RegulatorResult]):
             self.write_enabled
             and not hands_off
             and (not minimum or utlum)
+            and (not self.r_owns or utlum)
             and not self.topeni_owns
             and not res.summer
             and not res.tuv

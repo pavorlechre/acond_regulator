@@ -58,7 +58,8 @@ async def async_setup_entry(
     data = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         [
-            StrategySelect(data["coordinator"], data["min"], data["zebra"], data["dennoc"], data["dovolena"], data["topeni"], entry),
+            StrategySelect(data["coordinator"], data["min"], data["zebra"], data["dennoc"], data["dovolena"], data["topeni"], entry,
+                           radiatory=data.get("radiatory")),
             OffModeSelect(data["coordinator"], data["seq"], data["dennoc"], entry),
             TcModeSelect(data["seq"], entry),
             ProfilSelect(data["profily"], entry),
@@ -75,8 +76,9 @@ class StrategySelect(RestoreEntity, SelectEntity):
     _attr_options = STRATEGY_OPTIONS
 
     def __init__(self, coordinator: MarCoordinator, minimum, zebra, dennoc, dovolena,
-                 topeni, entry: ConfigEntry) -> None:
+                 topeni, entry: ConfigEntry, radiatory=None) -> None:
         self.coordinator = coordinator
+        self.radiatory = radiatory
         self.minimum = minimum
         self.zebra = zebra
         self.dennoc = dennoc
@@ -120,6 +122,10 @@ class StrategySelect(RestoreEntity, SelectEntity):
         # půjčili. Master zůstane zapnutý; v Ekvitermě / Stálém převezme znovu sám.
         if option != prev:
             await self.topeni.async_yield_control()
+            # R-Ekviterma drží slider 40014 jen pod Ekvitermou -> vrať ho uživateli
+            # DŘÍV, než si Minimum/BOOST uloží „originál“ (jinak by uložily náš strop)
+            if prev == STRATEGY_EKVITERM and self.radiatory is not None:
+                await self.radiatory.async_release()
 
         slider_strats = (STRATEGY_MINIMUM, STRATEGY_BOOST)
         # odchod ze sliderové strategie (Minimum/BOOST) -> vrať původní registry

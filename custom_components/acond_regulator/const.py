@@ -1012,3 +1012,44 @@ def signal_profily_updated(entry_id: str) -> str:
     dokončení operace, aby se rozbalovátko, kolizní tlačítko i stavová řádka
     překreslily bez čekání na poll."""
     return f"{DOMAIN}_profily_updated_{entry_id}"
+
+
+# --- R-Ekviterma (radiátory, silné čerpadlo, BEZ akumulační nádrže) ---------
+# Vrstva pod strategií Ekviterma (zamčeno 9.–10. 11. 2026, simulace v projektu):
+# - výkon řídí STROP 40014 (zápis platí do minuty): start z minima, rampa nahoru
+#   +5 % rozsahu / 10 min, „když není brzda"; brzda = zpátečka dosáhla křivky
+#   (mimo dotápění) nebo místnost dosáhla cíle -> −10 % / 10 min; jen rychlý růst
+#   místnosti (> 0,4 K/h) -> strop DRŽ;
+# - dotápění: pod cílem − 0,3 zpátečka nebrzdí (rozhoduje místnost);
+# - pásmo: nad cíl + „Pauza nad" pauza (40008 stažena, kompresor dojede, TČ zůstává
+#   v provozu -> TUV i oběh jedou), pod cíl − „Start pod" start z minima;
+# - honička: 40008 nikdy pod skutečnou − 1,5 -> Acond na +2 °C sám nevypne;
+# - po TUV/odmrazu z minima, v dotápění z posledního stropu − krok; zapisuje se hned;
+# - odchodem z R se slider 40014 vrátí na uživatelovu hodnotu.
+R_SWITCH_KEY = "ekviterma_radiatory"          # -> switch.mar_ekviterma_radiatory
+R_PAUZA_KEY = "r_pauza_nad"                   # -> number.mar_r_pauza_nad
+R_START_KEY = "r_start_pod"                   # -> number.mar_r_start_pod
+R_PAUZA_DEFAULT = 0.3
+R_START_DEFAULT = 0.3
+R_PASMO_MIN = 0.1
+R_PASMO_MAX = 2.0
+R_PASMO_STEP = 0.1
+R_KROK_NAHORU = 0.05        # podíl rozsahu 40014 na krok nahoru
+R_KROK_DOLU = 0.10          # podíl rozsahu na krok dolů (2 kroky)
+R_PERIODA_S = 600           # krok rampy po 10 min
+R_DOTAP = 0.3               # dotápění pod cílem − tohle (zpátečka nebrzdí)
+R_RUST_BRZDA = 0.4          # K/h – rychlejší růst místnosti = drž strop
+R_RUST_OKNO_S = 3600        # růst místnosti se měří za poslední hodinu
+R_RUST_MIN_S = 600          # …a nejdřív po 10 min dat
+R_MIN_BEH_S = 600           # nejkratší běh před pauzou pásma
+R_MIN_PAUZA_S = 600         # nejkratší pauza pásma
+R_STOP_DIFF = 2.0           # Acond vypíná kompresor při zpátečce > žádaná + tohle
+R_HONICKA_REZERVA = 0.5     # honička drží žádanou na skutečná − (STOP_DIFF − tohle)
+R_NAVNADA = 1.0             # při rampě nahoru žádaná = skutečná + tohle (Acond tlačí do stropu)
+R_TIK_S = 30                # pojistný tik smyčky
+R_STORE_VERSION = 1
+
+
+def signal_r_updated(entry_id: str) -> str:
+    """Dispatcher signál R-Ekvitermy (RadiatoryController -> switch/number)."""
+    return f"{DOMAIN}_r_updated_{entry_id}"

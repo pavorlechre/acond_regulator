@@ -7,6 +7,8 @@ verze podle [sémantického verzování](https://semver.org/lang/cs/).
 ## [Nevydáno]
 
 ### Změněno
+- Minimum: užší pásmo zápisu ⟨−1,1 ; −0,5⟩ (cíl skutečná − 0,8). Staré pásmo ⟨−1,7 ; −0,7⟩ vypínalo čerpadla s vypínací hranicí +1,5 °C.
+- Odchod z Typu regulace Standard (čistý stůl) přepne strategii na **Bez MaR** (dřív zůstala viset Ekviterma se zápisem vypnutým).
 - FVE topení běží i nad strategií **Stálý výkon** (dřív jen Ekviterma). Uživatelův slider je přitom podlaha: program přidává nad něj, pod něj neubere; když přebytek nestačí, po prodlevě předá a slider vrátí. Předání vrací řízení aktivní strategii, ne natvrdo ekvitermě; hlídač restartu porovnává s cílem strategie.
 - Při jakékoli změně strategie FVE topení nejdřív vrátí slider a zpátečku (dřív jen při odchodu z Ekvitermy).
 - FVE topení běží i nad strategií **Minimum**. Po dobu převzetí smyčka Minima mlčí, po předání se slider vrátí na minimum a Minimum se hned chytí. Hlídač restartu se pod Minimem nenasazuje.
@@ -18,6 +20,8 @@ verze podle [sémantického verzování](https://semver.org/lang/cs/).
 - FVE topení bez baterie: bilance (palivo) se počítá ze samotného přetoku do sítě. Dřív vyžadovala i výkon baterie, takže bez baterie byla trvale N/A a topení se nikdy nerozjelo.
 
 ### Přidáno
+- Volba **Sekundární čerpadlo +1 °C** (Nastavení, `switch.mar_sekundar_plus1`): MaR zapíše do Acondu jednou o 1 °C vyšší požadovanou místnost, ať termostat Acondu nevypíná oběhové čerpadlo; v MaR se všude počítá a ukazuje skutečná hodnota. Mimo Bez MaR a Standard se posun vrátí, restart ho nezdvojí. Nová entita `number.mar_pozadovana_mistnost` (skutečná požadovaná; zápis přidá posun) nahradila 40001 v dlaždici Nastavení, schématu, grafech, řádku Zebry a v kartě Plánovač MaR.
+- **R-Ekviterma** – volba „Radiátory, silné čerpadlo — bez akumulační nádrže“ v okně Ekviterma (`switch.mar_ekviterma_radiatory`, `number.mar_r_pauza_nad`, `number.mar_r_start_pod`, výchozí pásmo ±0,3 °C). Pod Ekvitermou vede výkon stropem 40014: start z minima, +5 % rozsahu / 10 min, když nic nebrzdí; brzda zpátečka/místnost −10 %, rychlý růst místnosti strop drží; dotápění pod cílem − 0,3; pauza nad pásmem (kompresor dojede, TČ v provozu), start pod pásmem z minima; honička proti vypnutí na +2 °C; po TUV/odmrazu z minima. Odchod vrátí slider. R-diagnostika (atributy, graf) a příručka.
 - Okno **Plánovač** (změny nastavení podle času): karta Plánovač MaR (strategie, Zebra a její délky, Den/noc, Okna ±, Dovolená, FVE TUV, FVE topení, kameny, okruh 1, TUV, otáčky) a karta Plánovač Acond (vše zapisovatelné v čerpadle kromě Potvrzení poruchy a Resetu PLC). Každá karta drží své plány pod vlastním štítkem (`mar`, `acond`). Vstup tlačítkem v řádku Režimů a dole v Nastavení, šipka zpět vrací odkud uživatel přišel. Vyžaduje nepovinný doplněk Scheduler z HACS; bez něj okno ukáže, co chybí.
 - Okno Plánovač: třetí karta **Plánovač – vše ostatní** pro celý HA (všechny běžné domény včetně MaR a Acondu); plány z karet MaR a Acond v ní nejsou (`exclude_tags`).
 - Příručka: kapitola Plánování časem (instalace Scheduleru v pěti krocích, dvě karty, jak založit plán, příklady, na co dát pozor). README: Scheduler jako nepovinný doplněk.
