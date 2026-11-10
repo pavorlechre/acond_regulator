@@ -21,7 +21,9 @@ JAK (zamčeno 9.–10. 11. 2026, viz const.py „R-Ekviterma")
   Léto / Útlum – uživatel si tak volí i TUV a protáčení). Pod cíl − Start pod ->
   kámen Topit se stropem na minimu. Pauzu, kterou přebil jiný kámen (uživatel,
   Zebra, Den/noc), R nikdy sám neukončí.
-- Po TUV/odmrazu: z minima, v dotápění z posledního stropu − krok. Hned.
+- Po odmrazu dál stejně (3 min bez brzdy zpátečky – zbytkové teplo). Po TUV ze
+  stropu před TUV, v dotápění dvojnásobným krokem. Brzda zpátečky má hysterezi
+  a návnada se mění jen při kroku, ať požadovaná nekmitá s čidlem.
 - Odchod z R (vypínač, jiná strategie, Bez MaR, mimo Standard) vrátí slider.
 
 PŘEDNOSTI
@@ -68,6 +70,9 @@ from .const import (
     R_MIN_BEH_S,
     R_MIN_PAUZA_S,
     R_NAVNADA,
+    R_ODMRAZ_DOBEH_S,
+    R_TUV_BOOST,
+    R_ZP_HYST,
     R_PAUZA_DEFAULT,
     R_PERIODA_S,
     R_RUST_BRZDA,
@@ -118,7 +123,12 @@ class RadiatoryController:
         self._last_step = 0.0
         self._was_running: bool | None = None
         self._frozen = False               # běží TUV/odmraz
-        self._last_run_cap: float | None = None
+        self._frozen_tuv = False           # …a byl v tom ohřev TUV
+        self._tuv_boost = False            # po TUV v dotápění: dvojnásobný krok nahoru
+        self._odmraz_konec = -1e9          # kdy skončil odmraz (zbytkové teplo)
+        self._zp_brzda = False             # brzda „zpátečka na křivce" (s hysterezí)
+        self._navnada: float | None = None # návnada platná do dalšího kroku
+        self._honicka: float | None = None # honička platná do dalšího kroku
         self._room = deque()               # (monotonic, °C) za poslední hodinu
         self._busy = False
         self._unsubs: list = []
@@ -142,7 +152,8 @@ class RadiatoryController:
             "strop": self._num(ACOND_CAPACITY) if self._held else None,
             "cil_z_krivky": self.cil_krivka,
             "zapsana_zadana": self.zadana,
-            "rust_mistnosti": self.rust,
+            "rust_mistnosti": "—" if self.rust is None
+            else f"{self.rust:+.2f} K/h".replace(".", ","),
             "pauza_nad": self.pauza_nad,
             "start_pod": self.start_pod,
             "acond_vypnul": self.acond_vypnul,
@@ -340,18 +351,32 @@ class RadiatoryController:
         dot = room < cil - R_DOTAP
 
         # --- TUV / odmraz: rampa zmrazená, nic nepíšeme ---
-        if self._on(ACOND_BIT_TUV) or self._on(ACOND_BIT_DEFROST):
+        # Strop se během nich nemění (Acond ho při TUV i odmrazu stejně ignoruje a po
+        # nich ho zase poslechne – ověřeno 10. 11.: po TUV do 6 min zpět na stropu).
+        tuv = self._on(ACOND_BIT_TUV)
+        if tuv or self._on(ACOND_BIT_DEFROST):
             self._frozen = True
+            self._frozen_tuv = self._frozen_tuv or tuv
             self.stav = STAV_TUV
             return
         if self._frozen:
-            # KONEC TUV/odmrazu: hned z minima, v dotápění z posledního stropu − krok
             self._frozen = False
-            if dot and self._last_run_cap is not None:
-                await self._set_cap(max(lo, self._last_run_cap - krok_up))
+            if self._frozen_tuv:
+                # KONEC TUV: pokračuj ze stropu před TUV (Acond nedožene víc než to);
+                # po dlouhém koupání v dotápění přidávej dvojnásobným krokem
+                self._tuv_boost = dot
+                self._last_step = now
             else:
-                await self._set_cap(lo)
-            self._last_step = now
+                # KONEC ODMRAZU (do 5 min): pokračuj normálně, jen R_ODMRAZ_DOBEH_S
+                # neber vážně brzdu zpátečky – voda je ohřátá odmrazem, ne domem
+                self._odmraz_konec = now
+            self._frozen_tuv = False
+            self._navnada = None
+            self._honicka = None
+            await self._write_target(self._clamp(max(krivka, ret + R_NAVNADA)) if dot
+                                     else self._clamp(krivka))
+        if not dot:
+            self._tuv_boost = False
 
         bezi = self.run.kompresor_bezi is True
         if self._was_running is True and not bezi:
@@ -389,8 +414,17 @@ class RadiatoryController:
             return
 
         # --- běh: rampa stropu ---
+        # brzda zpátečky s hysterezí: sepne na křivce, pustí až R_ZP_HYST pod ní
+        # (čidlo kmitá o 0,1 – bez hystereze skákala požadovaná o celý stupeň)
+        po_odmrazu = now - self._odmraz_konec < R_ODMRAZ_DOBEH_S
+        if dot or po_odmrazu:
+            self._zp_brzda = False
+        elif ret >= krivka:
+            self._zp_brzda = True
+        elif ret <= krivka - R_ZP_HYST:
+            self._zp_brzda = False
         tvrda = []
-        if ret >= krivka and not dot:
+        if self._zp_brzda:
             tvrda.append("zpátečka na křivce")
         if ret >= MAX_RETURN - 1:
             tvrda.append("strop zpátečky")
@@ -401,18 +435,28 @@ class RadiatoryController:
         self.stav = STAV_DOTAP if dot else STAV_BEH
 
         cap = self._num(ACOND_CAPACITY)
-        if cap is not None and now - self._last_step >= R_PERIODA_S:
+        krok = now - self._last_step >= R_PERIODA_S
+        if cap is not None and krok:
             self._last_step = now
             if tvrda:
                 await self._set_cap(max(lo, cap - krok_dn))
             elif not mekka:
-                await self._set_cap(min(hi, cap + krok_up))
-        cap = self._num(ACOND_CAPACITY)
-        if cap is not None:
-            self._last_run_cap = cap
-
-        zadana = krivka if (tvrda or mekka) else max(krivka, ret + R_NAVNADA)
-        zadana = max(zadana, ret - R_STOP_DIFF + R_HONICKA_REZERVA)    # honička
+                nasobek = R_TUV_BOOST if self._tuv_boost else 1
+                await self._set_cap(min(hi, cap + krok_up * nasobek))
+        # Návnada / křivka se rozhoduje jen při kroku (ne každých 30 s), ať požadovaná
+        # nekmitá s čidlem. Okamžitě jen tvrdé brzdy (místnost, strop zpátečky).
+        if krok or self._navnada is None:
+            self._navnada = None if (tvrda or mekka) else round(ret + R_NAVNADA, 1)
+            self._honicka = None
+        if tvrda:
+            self._navnada = None
+        zadana = max(krivka, self._navnada) if self._navnada is not None else krivka
+        # honička: zasáhne, jen když zpátečce chybí do vypnutí méně než R_HONICKA_REZERVA,
+        # a pak drží s rezervou do dalšího kroku (žádné kopírování čidla)
+        if ret - zadana > R_STOP_DIFF - R_HONICKA_REZERVA:
+            self._honicka = round(ret - R_STOP_DIFF + 2 * R_HONICKA_REZERVA, 1)
+        if self._honicka is not None:
+            zadana = max(zadana, self._honicka)
         await self._write_target(self._clamp(zadana))
 
     # ------------------------------------------------------------------ #

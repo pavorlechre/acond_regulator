@@ -34,6 +34,7 @@ from .const import (
     ACOND_OUTLET,
     ACOND_OUTDOOR,
     ACOND_POWER,
+    ACOND_PUMP_BIT,
     ACOND_RETURN_ACT,
     ACOND_RETURN_READBACK,
     ACOND_ROOM_SET,
@@ -50,6 +51,8 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+ACOND_SEK_CERPADLO = "binary_sensor.acond_30007_tc_status_bit_4"   # čerpadlo okruh 1 (sekundár)
 
 
 # (sloupec, zdroj, převod) – zdroj = entity_id nebo ("mar", doména, klíč[, atribut])
@@ -68,6 +71,8 @@ _SLOUPCE = [
     ("vykon_W", ACOND_TEPELNY_VYKON, "num"),
     ("kompresor", ACOND_COMP_BIT, "bit"),
     ("tc_zapnuto", ACOND_HP_ON, "bit"),
+    ("sek_cerpadlo", ACOND_SEK_CERPADLO, "bit"),
+    ("prim_cerpadlo", ACOND_PUMP_BIT, "bit"),
     ("tuv", ACOND_BIT_TUV, "bit"),
     ("odmraz", ACOND_BIT_DEFROST, "bit"),
     ("strategie", ("mar", "select", "strategie"), "text"),

@@ -1414,8 +1414,7 @@
         - type: attribute
           entity: switch.mar_ekviterma_radiatory
           attribute: rust_mistnosti
-          name: Růst místnosti (K/h)
-          suffix: K/h
+          name: Růst místnosti
         - type: attribute
           entity: switch.mar_ekviterma_radiatory
           attribute: acond_vypnul
@@ -2012,7 +2011,7 @@
 
         '
     - type: button
-      name: Export snímku pro skupinu
+      name: Export snímku a dat
       icon: mdi:camera-outline
       tap_action:
         action: navigate

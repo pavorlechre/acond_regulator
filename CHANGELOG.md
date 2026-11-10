@@ -18,6 +18,16 @@ verze podle [sémantického verzování](https://semver.org/lang/cs/).
 - Stav MaR: když FVE topení čeká kvůli blokaci (strategie, Den/noc, pauza Zebry, útlum, TUV, odmraz, letní režim, strop místnosti, chybějící čidlo), věta píše skutečný důvod („FVE Topení: čekám – …“). Dřív vždy tvrdila „čekám na přebytek“, i když přebytek byl.
 - FVE topení bez baterie: bilance (palivo) se počítá ze samotného přetoku do sítě. Dřív vyžadovala i výkon baterie, takže bez baterie byla trvale N/A a topení se nikdy nerozjelo.
 
+### Opraveno (R-Ekviterma, první den na železe)
+- Požadovaná zpátečka už neskáče o celý stupeň s kmitáním čidla: brzda „zpátečka na křivce“ má hysterezi 0,3 °C, návnada se mění jen při kroku stropu (po 10 min) a honička zasáhne až těsně před vypnutím.
+- Po **odmrazování** výkon nepadá na minimum: pokračuje se dál, jen 3 min po odmrazu se nebrzdí zpátečkou (voda ohřátá odmrazem).
+- Po **ohřevu TUV** se pokračuje ze stropu před ohřevem (ne z minima); když místnost mezitím vychladla pod cíl − 0,3, přidává se dvojnásobným krokem.
+- „Růst místnosti“ ukazuje „—“ místo „NeznámýK/h“.
+
+### Změněno
+- Tlačítko v okně Statistika se jmenuje **Export snímku a dat**.
+- Export dat má navíc sloupce `sek_cerpadlo` a `prim_cerpadlo`.
+
 ### Přidáno
 - **Export dat po minutách** (Statistika → Export statistiky): výběr délky 1 / 3 / 7 / 10 dní (`select.mar_export_delka`), tlačítko `button.mar_export`, stav a odkaz ke stažení v `sensor.mar_export`. CSV pro Excel (středník, desetinná čárka) s teplotami, zpátečkou, otáčkami a stropem, příkonem, výkonem, TUV, odmrazem, strategií a stavem R-Ekvitermy; ukládá se do `config/www/mar_export/` (posledních pět souborů).
 - Volba **Sekundární čerpadlo +1 °C** (Nastavení, `switch.mar_sekundar_plus1`): MaR zapíše do Acondu jednou o 1 °C vyšší požadovanou místnost, ať termostat Acondu nevypíná oběhové čerpadlo; v MaR se všude počítá a ukazuje skutečná hodnota. Mimo Bez MaR a Standard se posun vrátí, restart ho nezdvojí. Nová entita `number.mar_pozadovana_mistnost` (skutečná požadovaná; zápis přidá posun) nahradila 40001 v dlaždici Nastavení, schématu, grafech, řádku Zebry a v kartě Plánovač MaR.

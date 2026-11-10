@@ -1023,7 +1023,8 @@ def signal_profily_updated(entry_id: str) -> str:
 #   Léto / Útlum – TUV a protáčení si volí uživatel), pod cíl − „Start pod" kámen
 #   Topit se stropem na minimu; pauzu přebitou jiným kamenem R sám neukončí;
 # - honička: 40008 nikdy pod skutečnou − 1,5 -> Acond na +2 °C sám nevypne;
-# - po TUV/odmrazu z minima, v dotápění z posledního stropu − krok; zapisuje se hned;
+# - po odmrazu pokračuje dál (3 min bez brzdy zpátečky), po TUV ze stropu před TUV,
+#   v dotápění dvojnásobným krokem (Pavle 10. 11.);
 # - odchodem z R se slider 40014 vrátí na uživatelovu hodnotu.
 R_SWITCH_KEY = "ekviterma_radiatory"          # -> switch.mar_ekviterma_radiatory
 R_PAUZA_KEY = "r_pauza_nad"                   # -> number.mar_r_pauza_nad
@@ -1046,6 +1047,9 @@ R_STOP_DIFF = 2.0           # Acond vypíná kompresor při zpátečce > žádan
 R_HONICKA_REZERVA = 0.5     # honička drží žádanou na skutečná − (STOP_DIFF − tohle)
 R_NAVNADA = 1.0             # při rampě nahoru žádaná = skutečná + tohle (Acond tlačí do stropu)
 R_TIK_S = 30                # pojistný tik smyčky
+R_ZP_HYST = 0.3             # brzda zpátečky pustí až 0,3 °C pod křivkou
+R_ODMRAZ_DOBEH_S = 180      # po odmrazu 3 min nebrzdit zpátečkou (zbytkové teplo, data 10. 11.)
+R_TUV_BOOST = 2             # po TUV v dotápění krok nahoru ×2 (dlouhé koupání v mrazu)
 R_STORE_VERSION = 1
 
 
