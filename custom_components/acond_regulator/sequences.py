@@ -82,6 +82,10 @@ class SequenceRunner:
         # veřejné čtení pro mar_stav
         self.active: str | None = None       # "start" / "stop" / None
         self.phase: str | None = None        # lidský text fáze
+        # Kdo pustil poslední kámen: None = uživatel / Zebra / Den/noc, "r" = pauza
+        # R-Ekvitermy. R podle toho pozná, že jeho pauzu přebil někdo jiný (Netopit,
+        # Topit, časový program) a nesmí ji pak sám ukončit.
+        self.last_origin: str | None = None
 
     @property
     def busy(self) -> bool:
@@ -91,10 +95,11 @@ class SequenceRunner:
     # ------------------------------------------------------------------ #
     # Spouštěče (z tlačítek) – nikdy neblokují stisk, jedou na pozadí
     # ------------------------------------------------------------------ #
-    def fire_start(self) -> None:
+    def fire_start(self, origin: str | None = None) -> None:
         if self._busy:
             _LOGGER.debug("Kámen už běží (%s), START ignoruji", self.active)
             return
+        self.last_origin = origin
         # SYNCHRONNĚ, ještě před vytvořením úlohy: zavře okno TOCTOU (dva spouštěče
         # ve stejné smyčce by jinak oba prošli kontrolou) i závod s frontou
         # ekvitermního zápisu (coordinator by mohl smazat boost).
@@ -104,10 +109,11 @@ class SequenceRunner:
             self.hass, self._guard(self._seq_start()), "mar_seq_start"
         )
 
-    def fire_stop(self) -> None:
+    def fire_stop(self, origin: str | None = None) -> None:
         if self._busy:
             _LOGGER.debug("Kámen už běží (%s), STOP ignoruji", self.active)
             return
+        self.last_origin = origin
         self._busy = True
         self.coordinator.suspend_write = True
         self.entry.async_create_background_task(

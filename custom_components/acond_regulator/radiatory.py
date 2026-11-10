@@ -17,8 +17,10 @@ JAK (zamčeno 9.–10. 11. 2026, viz const.py „R-Ekviterma")
 - 40008: při rampě nahoru návnada (skutečná + 1 -> Acond tlačí do stropu), při
   brzdě křivka. Vždy honička: nikdy pod skutečná − 1,5, takže Acond na +2 sám
   nevypne.
-- Pásmo: nad cíl + Pauza nad -> pauza (40008 stažena na HP_LIMIT, kompresor dojede,
-  TČ zůstává v provozu – TUV a oběh jedou). Pod cíl − Start pod -> start z minima.
+- Pásmo: nad cíl + Pauza nad -> pauza KAMENEM NETOPIT (podle Režimu vypínání: VYP /
+  Léto / Útlum – uživatel si tak volí i TUV a protáčení). Pod cíl − Start pod ->
+  kámen Topit se stropem na minimu. Pauzu, kterou přebil jiný kámen (uživatel,
+  Zebra, Den/noc), R nikdy sám neukončí.
 - Po TUV/odmrazu: z minima, v dotápění z posledního stropu − krok. Hned.
 - Odchod z R (vypínač, jiná strategie, Bez MaR, mimo Standard) vrátí slider.
 
@@ -49,6 +51,7 @@ from .const import (
     ACOND_BIT_TUV,
     ACOND_CAPACITY,
     ACOND_COMP_BIT,
+    ACOND_HP_ON,
     ACOND_INDOOR,
     ACOND_RETURN_ACT,
     ACOND_RETURN_READBACK,
@@ -57,7 +60,6 @@ from .const import (
     ACOND_TARGET,
     BOOST,
     DOMAIN,
-    HP_LIMIT,
     MAX_RETURN,
     R_DOTAP,
     R_HONICKA_REZERVA,
@@ -96,11 +98,12 @@ STAV_FVE = "vede FVE Topení"
 class RadiatoryController:
     """Smyčka R-Ekvitermy. Zapíná ji switch.mar_ekviterma_radiatory."""
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, coordinator, run) -> None:
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, coordinator, run, seq) -> None:
         self.hass = hass
         self.entry = entry
         self.coordinator = coordinator
         self.run = run
+        self.seq = seq
         self._store: Store = Store(hass, R_STORE_VERSION, f"{DOMAIN}_radiatory_{entry.entry_id}")
 
         self.enabled = False
@@ -286,30 +289,52 @@ class RadiatoryController:
                 self._room.popleft()
         self.rust = self._rust(now)
 
+        cil = c.room_set()
+        ret = self._num(ACOND_RETURN_ACT)
+        data = c.data
+        krivka = getattr(data, "return_final", None) if data else None
+        self.cil_krivka = krivka
+        lo, hi = self._rozsah()
+        if None in (cil, ret, room, krivka, lo, hi):
+            if not self._paused:
+                self.stav = STAV_CEKA
+            return
+
+        # --- vlastní pauza R (kámen Netopit podle Režimu vypínání) ---
+        if self._paused:
+            if self.seq.last_origin != "r":
+                # pauzu přebil jiný kámen (uživatel, Zebra, Den/noc) -> už není naše;
+                # R ji NIKDY sám neukončí, dál jedou běžné brány níž
+                self._paused = False
+            else:
+                self._was_running = None
+                self.duvod = None
+                if (
+                    not c.suspend_write and c.write_enabled
+                    and room <= cil - self.start_pod
+                    and now - self._pause_since >= R_MIN_PAUZA_S
+                ):
+                    await self._set_cap(lo)                   # start z minima
+                    self._paused = False
+                    self._last_step = now
+                    self.seq.fire_start(origin="r")           # kámen Topit
+                    self.stav = STAV_START
+                    return
+                self.stav = STAV_PAUZA
+                return
+
         # R mlčí (nezapisuje), ale drží půjčku
         if (
             not c.write_enabled
             or c.suspend_write
             or c.utlum_pz is not None
             or self._on(ACOND_SUMMER)
+            or self._off(ACOND_HP_ON)          # TČ na VYP (Netopit, Den/noc, Zebra)
         ):
             self.stav = STAV_CEKA
             self._was_running = None
             return
 
-        cil = c.room_set()
-        ret = self._num(ACOND_RETURN_ACT)
-        data = c.data
-        krivka = getattr(data, "return_final", None) if data else None
-        self.cil_krivka = krivka
-        if cil is None or ret is None or room is None or krivka is None:
-            self.stav = STAV_CEKA
-            return
-
-        lo, hi = self._rozsah()
-        if lo is None or hi is None:
-            self.stav = STAV_CEKA
-            return
         krok_up = (hi - lo) * R_KROK_NAHORU
         krok_dn = (hi - lo) * R_KROK_DOLU
         dot = room < cil - R_DOTAP
@@ -329,7 +354,7 @@ class RadiatoryController:
             self._last_step = now
 
         bezi = self.run.kompresor_bezi is True
-        if self._was_running is True and not bezi and not self._paused:
+        if self._was_running is True and not bezi:
             self.acond_vypnul += 1          # vypnul sám (ne pauza, ne kámen, ne TUV)
             await self._save()
         if bezi and self._was_running is not True:
@@ -337,25 +362,23 @@ class RadiatoryController:
             self._last_step = now
         self._was_running = bezi
 
-        # --- pásmo: pauza ---
-        if self._paused:
-            if room <= cil - self.start_pod and now - self._pause_since >= R_MIN_PAUZA_S:
-                self._paused = False
-                await self._set_cap(lo)                       # start z minima
-                self._last_step = now
-            else:
+        # --- pásmo: nad cíl + Pauza nad -> kámen Netopit ---
+        if room >= cil + self.pauza_nad:
+            if bezi and now - self._run_since >= R_MIN_BEH_S and not self.seq.busy:
+                self._paused = True
+                self._pause_since = now
+                self._was_running = None
                 self.stav = STAV_PAUZA
                 self.duvod = None
-                await self._write_target(max(HP_LIMIT, self._attr(ACOND_TARGET, "min") or HP_LIMIT))
+                await self._set_cap(lo)                       # připrav start z minima
+                self.seq.fire_stop(origin="r")
                 return
-        elif room >= cil + self.pauza_nad and (not bezi or now - self._run_since >= R_MIN_BEH_S):
-            self._paused = True
-            self._pause_since = now
-            self.stav = STAV_PAUZA
-            self.duvod = None
-            await self._write_target(max(HP_LIMIT, self._attr(ACOND_TARGET, "min") or HP_LIMIT))
-            await self._set_cap(lo)                           # připrav start z minima
-            return
+            if not bezi:
+                # teplo a stojí (Acond sám, cizí kámen): nelákej start, jen drž křivku
+                self.stav = STAV_CEKA
+                self.duvod = "místnost nad pásmem"
+                await self._write_target(self._clamp(krivka))
+                return
 
         # --- kompresor stojí (po pauze, kámen, Acond sám): start z minima ---
         if not bezi:
@@ -447,6 +470,10 @@ class RadiatoryController:
 
     def _notify(self) -> None:
         async_dispatcher_send(self.hass, signal_r_updated(self.entry.entry_id))
+
+    def _off(self, entity_id: str) -> bool:
+        st = self.hass.states.get(entity_id)
+        return st is not None and st.state == "off"
 
     def _on(self, entity_id: str) -> bool:
         st = self.hass.states.get(entity_id)

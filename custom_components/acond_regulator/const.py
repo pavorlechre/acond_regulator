@@ -1019,8 +1019,9 @@ def signal_profily_updated(entry_id: str) -> str:
 #   (mimo dotápění) nebo místnost dosáhla cíle -> −10 % / 10 min; jen rychlý růst
 #   místnosti (> 0,4 K/h) -> strop DRŽ;
 # - dotápění: pod cílem − 0,3 zpátečka nebrzdí (rozhoduje místnost);
-# - pásmo: nad cíl + „Pauza nad" pauza (40008 stažena, kompresor dojede, TČ zůstává
-#   v provozu -> TUV i oběh jedou), pod cíl − „Start pod" start z minima;
+# - pásmo: nad cíl + „Pauza nad" pauza kamenem Netopit podle Režimu vypínání (VYP /
+#   Léto / Útlum – TUV a protáčení si volí uživatel), pod cíl − „Start pod" kámen
+#   Topit se stropem na minimu; pauzu přebitou jiným kamenem R sám neukončí;
 # - honička: 40008 nikdy pod skutečnou − 1,5 -> Acond na +2 °C sám nevypne;
 # - po TUV/odmrazu z minima, v dotápění z posledního stropu − krok; zapisuje se hned;
 # - odchodem z R se slider 40014 vrátí na uživatelovu hodnotu.

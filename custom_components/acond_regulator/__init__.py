@@ -203,7 +203,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     profily = ProfilyManager(hass, entry, coordinator, topeni)
     # R-Ekviterma (radiátory bez AKU): vrstva pod Ekvitermou, drží 40014 + 40008.
     # Coordinator ho drží jen kvůli přípone věty ve Stavu regulace (r_ctrl).
-    radiatory = RadiatoryController(hass, entry, coordinator, run)
+    radiatory = RadiatoryController(hass, entry, coordinator, run, seq)
     coordinator.r_ctrl = radiatory
     await radiatory.async_load()
 
