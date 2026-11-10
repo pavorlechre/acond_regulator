@@ -23,8 +23,8 @@ from .const import (
     MANUAL_URL,
     PLATFORMS,
     REG_TYPE_STANDARD,
+    STRATEGY_BEZ_MAR,
     STRATEGY_BOOST,
-    STRATEGY_EKVITERM,
     STRATEGY_MINIMUM,
 )
 from .coordinator import MarCoordinator
@@ -249,7 +249,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await dovolena.async_set_enabled(False)       # vrať půjčku 40001+40005, master zhasni (interval zůstane)
         await fve.async_set_enabled(False)            # vrať půjčku 40005, master zhasni (prahy/zdroje zůstanou)
         await topeni.async_set_enabled(False)         # vrať půjčku 40014, uvolni 40008, master zhasni (parametry zůstanou)
-        coordinator.set_strategy(STRATEGY_EKVITERM)   # neutrální základ
+        # Strategie na Bez MaR (dřív zůstala viset Ekviterma a schéma pak ukazovalo
+        # matoucí „Ekviterma — Zápis vypnutý“). Select se překreslí přes listener
+        # coordinatoru a RestoreEntity si Bez MaR uloží. Po návratu do Standardu
+        # uživatel zmáčkne strategii — ta zápis zase zapne.
+        coordinator.set_strategy(STRATEGY_BEZ_MAR)
         await coordinator.async_request_refresh()
 
     # Správce pokojovky: JEN načti originál ze Store (+ jednorázová migrace ze Store
