@@ -6,7 +6,7 @@ zpátečky – proto vlastní smyčka na state-change, ne desetiminutový coordi
 (na tom by to „chcíplo").
 
 Zápisy šetří pásmem: přepíše 40008 = skutečná + MIN_TARGET_DIFF jen když se rozdíl
-(cíl − skutečná) vychýlí z pásma ⟨−1,1 ; −0,5⟩, a ne častěji než MIN_WRITE_BRAKE_S.
+(cíl − skutečná) vychýlí z pásma ⟨−1,7 ; −0,7⟩, a ne častěji než MIN_WRITE_BRAKE_S.
 BEZ stropu na ekvitermě – uživatel chce topit trvale na minimum (třeba přebytky FVE),
 níž si přidá Zebrou.
 

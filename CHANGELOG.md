@@ -7,7 +7,6 @@ verze podle [sémantického verzování](https://semver.org/lang/cs/).
 ## [Nevydáno]
 
 ### Změněno
-- Minimum: užší pásmo zápisu ⟨−1,1 ; −0,5⟩ (cíl skutečná − 0,8). Staré pásmo ⟨−1,7 ; −0,7⟩ vypínalo čerpadla s vypínací hranicí +1,5 °C.
 - Odchod z Typu regulace Standard (čistý stůl) přepne strategii na **Bez MaR** (dřív zůstala viset Ekviterma se zápisem vypnutým).
 - FVE topení běží i nad strategií **Stálý výkon** (dřív jen Ekviterma). Uživatelův slider je přitom podlaha: program přidává nad něj, pod něj neubere; když přebytek nestačí, po prodlevě předá a slider vrátí. Předání vrací řízení aktivní strategii, ne natvrdo ekvitermě; hlídač restartu porovnává s cílem strategie.
 - Při jakékoli změně strategie FVE topení nejdřív vrátí slider a zpátečku (dřív jen při odchodu z Ekvitermy).

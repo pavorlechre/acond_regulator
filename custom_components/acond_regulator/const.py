@@ -77,10 +77,8 @@ TUV_STABLE_S = 30         # TUV i odmraz musí být off aspoň tolik s (proti cu
 
 # --- Strategie Minimum (event-driven smyčka, ne coordinator) ----------------
 ACOND_CAPACITY = "number.acond_40014_comp_capacity_max_set"  # slider Max otáček (40014)
-MIN_TARGET_DIFF = -0.8    # cíl = skutečná zpátečka + tohle (kousek pod -> TČ jede na min)
-# Pásmo ⟨-1,1 ; -0,5⟩ = -0,8 ± 0,3. Užší než dřív (⟨-1,7 ; -0,7⟩), protože TČ s vypínací
-# hranicí +1,5 °C (místo +2) to staré pásmo vypínalo (tester, 11/2026).
-MIN_BAND = 0.3            # přepiš, až rozdíl vyjede z pásma
+MIN_TARGET_DIFF = -1.2    # cíl = skutečná zpátečka + tohle (kousek pod -> TČ jede na min)
+MIN_BAND = 0.5            # přepiš, až rozdíl vyjede z pásma ⟨-1,7 ; -0,7⟩ = -1,2 ± 0,5
 MIN_WRITE_BRAKE_S = 15.0  # min. odstup mezi zápisy (proti cukání čidla); mini brzdí 90s sám
 MIN_SAFETY_TICK_S = 120   # pomalý pojistný tik Minima: tracuje, i když skutečná zrovna stojí
                           # (zabíjí „dead-man's-switch" – bez něj Minimum zamrzne, když
