@@ -1382,8 +1382,11 @@
       heading: Radiátory, silné čerpadlo
     - type: entities
       entities:
+      - entity: switch.mar_sekundar_plus1
+        name: Sekundární čerpadlo +1 °C
+        icon: mdi:pump
       - entity: switch.mar_ekviterma_radiatory
-        name: Radiátory, silné čerpadlo — bez akumulační nádrže
+        name: Radiátory, silné čerpadlo
         icon: mdi:radiator
     - type: conditional
       conditions:
@@ -1420,7 +1423,7 @@
           attribute: acond_vypnul
           name: Acond vypnul sám (mimo pauzu)
     - type: markdown
-      content: <small>Jen pro přímou soustavu bez akumulační nádrže a jen pod strategií Ekviterma. MaR startuje z minima a přidává výkon stropem otáček, dokud nebrzdí zpátečka nebo místnost; nad cílem + Pauza nad udělá pauzu, pod cílem − Start pod znovu nastartuje. Normální Ekviterma se nemění.</small>
+      content: <small>Pro radiátory a silné čerpadlo, i s malou taktovací nádrží; jen pod strategií Ekviterma. Sekundární čerpadlo +1 °C drží oběh v chodu, ať pauzu řídí MaR, ne termostat Acondu (platí pro všechny strategie, je i v Nastavení). MaR startuje z minima a přidává výkon stropem otáček, dokud nebrzdí zpátečka nebo místnost; nad cílem + Pauza nad udělá pauzu, pod cílem − Start pod znovu nastartuje. Normální Ekviterma se nemění.</small>
   - type: grid
     column_span: 2
     cards:

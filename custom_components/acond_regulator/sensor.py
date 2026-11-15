@@ -694,7 +694,7 @@ class StavSensor(SensorEntity):
             # Topení podle přebytků (osa A – SoC-řízený žrout přebytků): vlastní klíč + věta
             "topeni": t["topeni"],
             "topeni_veta": topeni_clause,
-            # R-Ekviterma (radiátory bez AKU): stav, brzda, strop, počítadlo vypnutí
+            # R-Ekviterma (radiátory, silné čerpadlo): stav, brzda, strop, počítadlo vypnutí
             "radiatory": r_ctrl.as_attr() if r_ctrl is not None else None,
             "radiatory_veta": r_clause,
             # vlajka tvrdého stopu: drží se, dokud uživatel master zase nezapne.

@@ -7,6 +7,9 @@ verze podle [sémantického verzování](https://semver.org/lang/cs/).
 ## [Nevydáno]
 
 ### Změněno
+- **Řada PRO – ohřev TUV na plný výkon.** Acond PRO drží strop 40014 i při ohřevu TUV, takže s nízkým stropem (Minimum, R-Ekviterma, stažený slider) se bojler hřál 1,5–2 h a dům mezitím netopil. MaR teď na PRO po dobu TUV strop uvolní na maximum a hned po konci TUV (odmraz uprostřed se počítá do TUV) vrátí strop před ohřevem; když slider během TUV změní někdo jiný, nechá ho. Odchod z MaR (Bez MaR, čistý stůl) na PRO nastaví slider na maximum. Grandis/Economis beze změny (strop při TUV ignoruje sám). Nový `tuv_strop.py`.
+- **R-Ekviterma bez podmínky „bez akumulační nádrže“.** Malá taktovací nádrž (200–300 l) nevadí; volba se jmenuje jen „Radiátory, silné čerpadlo“, příručka zmiňuje, že u velké nádrže nic nepřinese.
+- Volba **Sekundární čerpadlo +1 °C** je nově i v okně Ekviterma nad volbou Radiátory (v Nastavení zůstává).
 - Odchod z Typu regulace Standard (čistý stůl) přepne strategii na **Bez MaR** (dřív zůstala viset Ekviterma se zápisem vypnutým).
 - FVE topení běží i nad strategií **Stálý výkon** (dřív jen Ekviterma). Uživatelův slider je přitom podlaha: program přidává nad něj, pod něj neubere; když přebytek nestačí, po prodlevě předá a slider vrátí. Předání vrací řízení aktivní strategii, ne natvrdo ekvitermě; hlídač restartu porovnává s cílem strategie.
 - Při jakékoli změně strategie FVE topení nejdřív vrátí slider a zpátečku (dřív jen při odchodu z Ekvitermy).

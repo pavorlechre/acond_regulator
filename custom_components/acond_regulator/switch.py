@@ -361,7 +361,7 @@ class SekundarPlus1Switch(RestoreEntity, SwitchEntity):
 
 
 class RadiatorySwitch(RestoreEntity, SwitchEntity):
-    """Volba „Radiátory, silné čerpadlo — bez akumulační nádrže“ (R-Ekviterma).
+    """Volba „Radiátory, silné čerpadlo“ (R-Ekviterma).
 
     Vrstva pod strategií Ekviterma: výkon řídí strop 40014 (rampa z minima),
     pásmo Pauza nad / Start pod. Normální Ekviterma se nemění. Atributy nesou
