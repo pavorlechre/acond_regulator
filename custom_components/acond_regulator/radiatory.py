@@ -1,4 +1,7 @@
-"""R-Ekviterma – vrstva pod Ekvitermou pro radiátory se silným čerpadlem BEZ AKU.
+"""R-Ekviterma – vrstva pod Ekvitermou pro radiátory se silným čerpadlem.
+
+(Původně jen bez AKU; 15. 11. 2026 Pavle podmínku zrušil – malá taktovací nádrž
+kolem 200–300 l chování nemění, u Romana s 200 l R běží.)
 
 PROČ
 ----
@@ -351,8 +354,9 @@ class RadiatoryController:
         dot = room < cil - R_DOTAP
 
         # --- TUV / odmraz: rampa zmrazená, nic nepíšeme ---
-        # Strop se během nich nemění (Acond ho při TUV i odmrazu stejně ignoruje a po
-        # nich ho zase poslechne – ověřeno 10. 11.: po TUV do 6 min zpět na stropu).
+        # Strop R během nich nemění. Odmraz ho ignorují všechny řady; při TUV ho
+        # Grandis ignoruje sám a řadě PRO ho na dobu TUV uvolní tuv_strop.py
+        # (maximum, po TUV zpět na strop před TUV – odtud R pokračuje).
         tuv = self._on(ACOND_BIT_TUV)
         if tuv or self._on(ACOND_BIT_DEFROST):
             self._frozen = True

@@ -36,6 +36,7 @@ from .minimum import MinimumController
 from .okna_teploty import OknaTeplotyController
 from .pokojovka import PokojovkaOwner
 from .radiatory import RadiatoryController
+from .tuv_strop import TuvStropController
 from .profily import ProfilyManager
 from .runstate import RunState
 from .sequences import SequenceRunner
@@ -202,11 +203,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # PŘES ENTITY (number.set_value), ne do controllerů. Drží coordinator kvůli
     # jednomu refreshi po dávce a topeni kvůli detekci větve (s/bez baterky).
     profily = ProfilyManager(hass, entry, coordinator, topeni)
-    # R-Ekviterma (radiátory bez AKU): vrstva pod Ekvitermou, drží 40014 + 40008.
+    # R-Ekviterma (radiátory, silné čerpadlo): vrstva pod Ekvitermou, drží 40014 + 40008.
     # Coordinator ho drží jen kvůli přípone věty ve Stavu regulace (r_ctrl).
     radiatory = RadiatoryController(hass, entry, coordinator, run, seq)
     coordinator.r_ctrl = radiatory
     await radiatory.async_load()
+    # Řada PRO drží strop 40014 i při TUV -> po dobu TUV ho uvolníme na maximum,
+    # odchodem z MaR taky maximum (Pavle 15. 11. 2026). Grandis: nic nedělá.
+    tuv_strop = TuvStropController(hass, entry, coordinator)
+    await tuv_strop.async_load()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         "coordinator": coordinator,
@@ -223,6 +228,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "topeni": topeni,
         "profily": profily,
         "radiatory": radiatory,
+        "tuv_strop": tuv_strop,
         # Export dat po minutách (okno Statistika) – jen na stisk, žádný tik
         "export": ExportManager(hass, entry),
     }
@@ -245,6 +251,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         zhasnou. Volá se při odchodu z Typu regulace = Standard (a při startu,
         když Standard není). Návrat do Standardu NIC nenaskočí sám – uživatel
         si vše nastaví znovu, smysluplně se stavem domu."""
+        byla_mar = coordinator.strategy != STRATEGY_BEZ_MAR
         coordinator.set_write_enabled(False)
         # NEJDŘÍV obnov případné nevrácené půjčky ze Store (restart mimo Standard:
         # clean slate běží dřív než resume, takže by jinak nebylo co vracet a
@@ -260,6 +267,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await dovolena.async_set_enabled(False)       # vrať půjčku 40001+40005, master zhasni (interval zůstane)
         await fve.async_set_enabled(False)            # vrať půjčku 40005, master zhasni (prahy/zdroje zůstanou)
         await topeni.async_set_enabled(False)         # vrať půjčku 40014, uvolni 40008, master zhasni (parametry zůstanou)
+        # PRO: odchod z MaR = slider na maximum (TUV i topení jako bez MaR). Jen při
+        # skutečném odchodu – start HA mimo Standard pod Bez MaR slider nechá.
+        if byla_mar:
+            await tuv_strop.async_odchod()
         # Strategie na Bez MaR (dřív zůstala viset Ekviterma a schéma pak ukazovalo
         # matoucí „Ekviterma — Zápis vypnutý“). Select se překreslí přes listener
         # coordinatoru a RestoreEntity si Bez MaR uloží. Po návratu do Standardu
@@ -307,6 +318,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # R-Ekviterma až teď: posun +1 °C je srovnaný, strategie i vypínač obnovené.
     await radiatory.async_start()
+    await tuv_strop.async_start()
 
     # POJISTKA: 40008 platí jen v Typu regulace Standard. Jakmile Acond přepne
     # jinam, uděláme čistý stůl. (Vstup zpět do Standardu neděláme nic – čistý stůl.)
@@ -348,6 +360,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 data["profily"].shutdown()
             if data.get("radiatory") is not None:
                 data["radiatory"].shutdown()
+            if data.get("tuv_strop") is not None:
+                data["tuv_strop"].shutdown()
             if data.get("pokojovka") is not None:
                 data["pokojovka"].shutdown()
             if data.get("dennoc") is not None:

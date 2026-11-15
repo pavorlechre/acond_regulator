@@ -1012,7 +1012,7 @@ def signal_profily_updated(entry_id: str) -> str:
     return f"{DOMAIN}_profily_updated_{entry_id}"
 
 
-# --- R-Ekviterma (radiátory, silné čerpadlo, BEZ akumulační nádrže) ---------
+# --- R-Ekviterma (radiátory, silné čerpadlo; podmínka „bez AKU“ zrušena 15. 11.) ---
 # Vrstva pod strategií Ekviterma (zamčeno 9.–10. 11. 2026, simulace v projektu):
 # - výkon řídí STROP 40014 (zápis platí do minuty): start z minima, rampa nahoru
 #   +5 % rozsahu / 10 min, „když není brzda"; brzda = zpátečka dosáhla křivky
@@ -1025,7 +1025,8 @@ def signal_profily_updated(entry_id: str) -> str:
 # - honička: 40008 nikdy pod skutečnou − 1,5 -> Acond na +2 °C sám nevypne;
 # - po odmrazu pokračuje dál (3 min bez brzdy zpátečky), po TUV ze stropu před TUV,
 #   v dotápění dvojnásobným krokem (Pavle 10. 11.);
-# - odchodem z R se slider 40014 vrátí na uživatelovu hodnotu.
+# - odchodem z R se slider 40014 vrátí na uživatelovu hodnotu (na řadě PRO pak
+#   odchod z MaR zapíše maximum – tuv_strop.py).
 R_SWITCH_KEY = "ekviterma_radiatory"          # -> switch.mar_ekviterma_radiatory
 R_PAUZA_KEY = "r_pauza_nad"                   # -> number.mar_r_pauza_nad
 R_START_KEY = "r_start_pod"                   # -> number.mar_r_start_pod

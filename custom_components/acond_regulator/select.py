@@ -62,7 +62,7 @@ async def async_setup_entry(
     async_add_entities(
         [
             StrategySelect(data["coordinator"], data["min"], data["zebra"], data["dennoc"], data["dovolena"], data["topeni"], entry,
-                           radiatory=data.get("radiatory")),
+                           radiatory=data.get("radiatory"), tuv_strop=data.get("tuv_strop")),
             OffModeSelect(data["coordinator"], data["seq"], data["dennoc"], entry),
             TcModeSelect(data["seq"], entry),
             ProfilSelect(data["profily"], entry),
@@ -107,9 +107,10 @@ class StrategySelect(RestoreEntity, SelectEntity):
     _attr_options = STRATEGY_OPTIONS
 
     def __init__(self, coordinator: MarCoordinator, minimum, zebra, dennoc, dovolena,
-                 topeni, entry: ConfigEntry, radiatory=None) -> None:
+                 topeni, entry: ConfigEntry, radiatory=None, tuv_strop=None) -> None:
         self.coordinator = coordinator
         self.radiatory = radiatory
+        self.tuv_strop = tuv_strop
         self.minimum = minimum
         self.zebra = zebra
         self.dennoc = dennoc
@@ -162,6 +163,11 @@ class StrategySelect(RestoreEntity, SelectEntity):
         # odchod ze sliderové strategie (Minimum/BOOST) -> vrať původní registry
         if prev in slider_strats and option != prev:
             await self.minimum.async_deactivate()
+
+        # PRO: odchod z MaR -> slider na maximum (až po vrácení všech půjček, ať je
+        # zápis poslední). Bez MaR pak ohřev TUV i topení jedou jako bez Modbusu.
+        if option == STRATEGY_BEZ_MAR and prev != STRATEGY_BEZ_MAR and self.tuv_strop is not None:
+            await self.tuv_strop.async_odchod()
 
         # BOOST/Bez MaR nedávají s časovými plány smysl -> zhasni je.
         # Lidské potvrzení „Vypínám časové plány, pokračovat?" žije na kartě;
