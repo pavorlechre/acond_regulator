@@ -34,7 +34,7 @@ JAK (zamčeno 9.–10. 11. 2026, viz const.py „R-Ekviterma")
 - HODINOVÝ POSUN KŘIVKY (I složka, 16. 11. 2026): koeficient korekce (P) sám vždy
   nechá místnost kousek pod cílem (u Romana trvale −0,3). Každou celou hodinu, kdy
   R celou dobu vedla bez TUV a bez pauzy:
-      posun += 0,5 × k × (cíl − (průměr místnosti + trend za hodinu))
+      posun += k × (cíl − (průměr místnosti + trend za hodinu))   (zisk R_POSUN_ZISK = 1,0)
   když je průměr dál od cíle než 0,1 °C. k = 1 + (střední voda − místnost) /
   (1,3 × (místnost − venku)) z měření (radiátory ~1,6, podlaha ~1,2), 1,1–2,0.
   Dolů neučí, když vyrábí FVE (přetopení je slunce). 3 h po změně cíle neučí.

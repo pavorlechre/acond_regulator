@@ -1058,7 +1058,7 @@ R_PO_TUV_OKNO_S = 900       # stop kompresoru do 15 min po TUV = prodleva, ne no
 # Hodinový posun křivky (I složka, Pavle 16. 11. 2026). Každou celou hodinu:
 #   posun += ZISK × k × (cíl − (průměr místnosti + trend za hodinu))
 #   k = 1 + (střední voda − místnost) / (EXP × (místnost − venku)), počítáno z měření
-R_POSUN_ZISK = 0.5          # tlumení – polovina výpočtu (simulace: bez překmitu)
+R_POSUN_ZISK = 1.0          # celý výpočet (Pavle 16. 11.; simulace bez překmitu, 0,5 bylo pomalé)
 R_POSUN_PASMO = 0.1         # průměr místnosti blíž cíli než tohle -> nic
 R_POSUN_MAX = 5.0           # posun ±5 °C
 R_POSUN_K_DEFAULT = 1.6
