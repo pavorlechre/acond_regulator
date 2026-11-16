@@ -1051,6 +1051,24 @@ R_TIK_S = 30                # pojistný tik smyčky
 R_ZP_HYST = 0.3             # brzda zpátečky pustí až 0,3 °C pod křivkou
 R_ODMRAZ_DOBEH_S = 180      # po odmrazu 3 min nebrzdit zpátečkou (zbytkové teplo, data 10. 11.)
 R_TUV_BOOST = 2             # po TUV v dotápění krok nahoru ×2 (dlouhé koupání v mrazu)
+# Konec TUV (Roman 15. 11. 2026): po TUV teče zpátečkou zbytek z bojleru (~52 °C).
+# Žádaná = křivka by Acond ve Standardu hned vypnul (zpátečka ≥ žádaná + 2).
+R_PO_TUV_DRZ_S = 180        # po TUV 3 min žádaná na MAX_RETURN, pak honička dolů
+R_PO_TUV_OKNO_S = 900       # stop kompresoru do 15 min po TUV = prodleva, ne nový start
+# Hodinový posun křivky (I složka, Pavle 16. 11. 2026). Každou celou hodinu:
+#   posun += ZISK × k × (cíl − (průměr místnosti + trend za hodinu))
+#   k = 1 + (střední voda − místnost) / (EXP × (místnost − venku)), počítáno z měření
+R_POSUN_ZISK = 0.5          # tlumení – polovina výpočtu (simulace: bez překmitu)
+R_POSUN_PASMO = 0.1         # průměr místnosti blíž cíli než tohle -> nic
+R_POSUN_MAX = 5.0           # posun ±5 °C
+R_POSUN_K_DEFAULT = 1.6
+R_POSUN_K_MIN = 1.1
+R_POSUN_K_MAX = 2.0
+R_POSUN_EXP = 1.3           # exponent radiátorů
+R_POSUN_K_DT_MIN = 5.0      # k počítat jen při místnost − venku ≥ 5 °C
+R_POSUN_POKRYTI_S = 3000    # hodina platí, když R vedla aspoň 50 min
+R_POSUN_CIL_ZMRAZ_S = 3 * 3600  # po změně cíle místnosti 3 h neučit (útlum si uživatel přeje)
+R_POSUN_FVE_W = 300.0       # vyrábí FVE -> přetopení je slunce, dolů neučit
 R_STORE_VERSION = 1
 
 

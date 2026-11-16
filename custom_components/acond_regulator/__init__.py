@@ -205,7 +205,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     profily = ProfilyManager(hass, entry, coordinator, topeni)
     # R-Ekviterma (radiátory, silné čerpadlo): vrstva pod Ekvitermou, drží 40014 + 40008.
     # Coordinator ho drží jen kvůli přípone věty ve Stavu regulace (r_ctrl).
-    radiatory = RadiatoryController(hass, entry, coordinator, run, seq)
+    radiatory = RadiatoryController(hass, entry, coordinator, run, seq, fve)
     coordinator.r_ctrl = radiatory
     await radiatory.async_load()
     # Řada PRO drží strop 40014 i při TUV -> po dobu TUV ho uvolníme na maximum,

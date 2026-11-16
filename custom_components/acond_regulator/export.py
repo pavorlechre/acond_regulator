@@ -79,6 +79,7 @@ _SLOUPCE = [
     ("r_zapnuto", ("mar", "switch", R_SWITCH_KEY), "bit"),
     ("r_stav", ("mar", "switch", R_SWITCH_KEY, "stav"), "text"),
     ("r_brzda", ("mar", "switch", R_SWITCH_KEY, "brzda"), "text"),
+    ("r_posun", ("mar", "switch", R_SWITCH_KEY, "posun"), "num"),
 ]
 
 

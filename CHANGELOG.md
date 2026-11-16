@@ -6,6 +6,12 @@ verze podle [sémantického verzování](https://semver.org/lang/cs/).
 
 ## [Nevydáno]
 
+### Přidáno (R-Ekviterma, Roman 15.–16. 11.)
+- **Doučení křivky (hodinový posun).** Korekce na místnost (koeficient) sama vždy nechá dům kousek pod cílem – u Romana celé noci na cíl − 0,3 °C, kde ho brzda „zpátečka na křivce" nepustila výš. R teď každou celou hodinu, kdy celou dobu vedla bez TUV a bez pauzy, porovná průměr místnosti s cílem: je-li odchylka větší než 0,1 °C a místnost se sama nevrací, posune křivku o 0,5 × k × (cíl − (průměr + trend za hodinu)). k = 1 + (střední voda − místnost) / (1,3 × (místnost − venku)) se počítá z měření (radiátory ~1,6, podlaha ~1,2; omezení 1,1–2,0), nic se nenastavuje. Dolů se neučí, když vyrábí FVE (přetopení je slunce); 3 h po změně cíle místnosti se neučí. Posun ±5 °C, přežije restart, vypnutí volby Radiátory ho vynuluje. Ve Stavu regulace „křivka +0,8 °C (doučeno)", atributy `posun`, `posun_k`, `posun_info`, sloupec `r_posun` v exportu dat.
+
+### Opraveno (R-Ekviterma)
+- **Konec TUV vypínal kompresor.** Po ohřevu teče zpátečkou zbytek z bojleru (~52 °C) a když byla voda v domě teplá, R zapsala požadovanou = křivka a Acond ve Standardu kompresor hned vypnul (zpátečka ≥ požadovaná + 2). R pak brala zastavení jako nový start a srazila strop na minimum – celou noc topila minimem (Roman 15. 11. 23:49). Teď na konci TUV 3 min požadovaná na maximu, pak honička dolů za vodou. Zastavení kompresoru do 15 min po TUV je prodleva: strop zůstane z doby před TUV a nepočítá se do „Acond vypnul sám".
+
 ### Změněno
 - **Řada PRO – ohřev TUV na plný výkon.** Acond PRO drží strop 40014 i při ohřevu TUV, takže s nízkým stropem (Minimum, R-Ekviterma, stažený slider) se bojler hřál 1,5–2 h a dům mezitím netopil. MaR teď na PRO po dobu TUV strop uvolní na maximum a hned po konci TUV (odmraz uprostřed se počítá do TUV) vrátí strop před ohřevem; když slider během TUV změní někdo jiný, nechá ho. Odchod z MaR (Bez MaR, čistý stůl) na PRO nastaví slider na maximum. Grandis/Economis beze změny (strop při TUV ignoruje sám). Nový `tuv_strop.py`.
 - **R-Ekviterma bez podmínky „bez akumulační nádrže“.** Malá taktovací nádrž (200–300 l) nevadí; volba se jmenuje jen „Radiátory, silné čerpadlo“, příručka zmiňuje, že u velké nádrže nic nepřinese.
