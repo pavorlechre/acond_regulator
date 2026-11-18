@@ -670,6 +670,7 @@ BAND_INDOOR = (5.0, 40.0)
 # osvěžuje první sloupec tabulky a řeší mrznoucí motohodiny (F3). Stav entity
 # se přepisuje jen při skutečné změně čísla, jinak by to zaplavilo recorder.
 STATS_TICK = 30
+STATS_MAX_MEZERA_S = 300   # Riemann: delší úsek (výpadek) se nepřipíše
 
 # --- Režim přetokových programů ------------------------------------------- #
 # Tříbarevný pruh do historie + zdroj pro překryvné kbelíky statistiky.
@@ -1067,6 +1068,7 @@ R_POSUN_K_MAX = 2.0
 R_POSUN_EXP = 1.3           # exponent radiátorů
 R_POSUN_K_DT_MIN = 5.0      # k počítat jen při místnost − venku ≥ 5 °C
 R_POSUN_POKRYTI_S = 3000    # hodina platí, když R vedla aspoň 50 min
+R_POSUN_SOUVISLE_S = 2 * 3600 - 120  # učit jen po 2 h souvislého běhu kompresoru (b28)
 R_POSUN_CIL_ZMRAZ_S = 3 * 3600  # po změně cíle místnosti 3 h neučit (útlum si uživatel přeje)
 R_POSUN_FVE_W = 300.0       # vyrábí FVE -> přetopení je slunce, dolů neučit
 R_STORE_VERSION = 1

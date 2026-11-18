@@ -36,7 +36,7 @@ COL_W_DAY = 88     # denní rozpad: osm sloupců, užší
 ROW_H = 21
 GROUP_H = 27
 HEAD_H = 76
-FOOT_H = 62
+FOOT_H = 62 + 11  # +1 řádek: kontrolka čítačů Acondu
 
 # --- barvy ----------------------------------------------------------------- #
 C_BG = (255, 255, 255)
@@ -306,6 +306,18 @@ def _render(columns: list[dict], meta: dict, groups, W: int, COL_W: int,
         fill=C_MUTED,
     )
     y += 11
+    # Kontrolka 2: denní čítače Acondu proti integraci (včera = celý den).
+    # U řady PRO se liší výrazně (čítače chybné), jinde mají sedět.
+    vcera = (columns[1].get("data") or {}) if len(columns) > 1 else {}
+    if vcera.get("citac_el") is not None or vcera.get("citac_tep") is not None:
+        d.text(
+            (PAD * S, y * S),
+            f"čítače Acondu včera: el. {_fmt(vcera.get('citac_el'), 2)} · "
+            f"teplo {_fmt(vcera.get('citac_tep'), 2)} kWh (jen kontrola)",
+            font=f_foot,
+            fill=C_MUTED,
+        )
+        y += 11
     d.text(
         (PAD * S, y * S),
         f"Pořízeno: {meta.get('generated', '')}  ·  MaR · acond_regulator",

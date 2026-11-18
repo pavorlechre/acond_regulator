@@ -6,6 +6,10 @@ verze podle [sémantického verzování](https://semver.org/lang/cs/).
 
 ## [Nevydáno]
 
+### Změněno (0.18.0b28)
+- **Statistika počítá energii z okamžitých hodnot (Riemannův součet), ne z denních čítačů Acondu.** Okamžitý příkon (30027) a výkon (30028) × čas se připisují režimu, ve kterém stroj právě je – při každé změně hodnoty a každých 30 s, úsek delší než 5 min (výpadek) se nepočítá. Důvod: řada PRO má denní čítače `eed`/`ted` chybné (teplo až +65 %, COP 8,7), okamžité hodnoty dobré. Ověřeno na EVI 9.–17. 11. 2026 proti čítačům: teplo topení ±0,15 kWh, elektřina celkem ±0,1 kWh za den, motohodiny na minutu. Teplo během odmrazování = 0 (výkon tam hlásí kladné teplo, čítač ne). Chlazení beze změny (vlastní čítače). Čítače `eed`/`ted` zůstávají jako kontrolka – v patičce tabulky řádek „čítače Acondu včera". Dny spočítané dřív zůstávají; den instalace je kombinace.
+- **R-Ekviterma: posun křivky se učí jen po 2 h souvislého běhu kompresoru.** Při cyklování se místnost houpe kvůli pauzám a chybu křivky z ní určit nelze (Roman 16. 11. 04:00 se naučil +0,3 °C z hodiny po pauze). Ověřeno přehráním Romanových dat: starý kód +0,31, nový 0; studená noc se souvislým chodem se dál doučí stejně (do cíle za ~10 h).
+
 ### Přidáno (R-Ekviterma, Roman 15.–16. 11.)
 - **Doučení křivky (hodinový posun).** Korekce na místnost (koeficient) sama vždy nechá dům kousek pod cílem – u Romana celé noci na cíl − 0,3 °C, kde ho brzda „zpátečka na křivce" nepustila výš. R teď každou celou hodinu, kdy celou dobu vedla bez TUV a bez pauzy, porovná průměr místnosti s cílem: je-li odchylka větší než 0,1 °C a místnost se sama nevrací, posune křivku o k × (cíl − (průměr + trend za hodinu)). k = 1 + (střední voda − místnost) / (1,3 × (místnost − venku)) se počítá z měření (radiátory ~1,6, podlaha ~1,2; omezení 1,1–2,0), nic se nenastavuje. Dolů se neučí, když vyrábí FVE (přetopení je slunce); 3 h po změně cíle místnosti se neučí. Posun ±5 °C, přežije restart, vypnutí volby Radiátory ho vynuluje. Ve Stavu regulace „křivka +0,8 °C (doučeno)", atributy `posun`, `posun_k`, `posun_info`, sloupec `r_posun` v exportu dat.
 

@@ -38,6 +38,9 @@ JAK (zamčeno 9.–10. 11. 2026, viz const.py „R-Ekviterma")
   když je průměr dál od cíle než 0,1 °C. k = 1 + (střední voda − místnost) /
   (1,3 × (místnost − venku)) z měření (radiátory ~1,6, podlaha ~1,2), 1,1–2,0.
   Dolů neučí, když vyrábí FVE (přetopení je slunce). 3 h po změně cíle neučí.
+  Učí se JEN když kompresor běžel souvisle celou hodinu i hodinu předtím
+  (0.18.0b28): při cyklování se místnost houpe kvůli pauzám a chybu křivky
+  z ní určit nelze (Roman 16. 11. 04:00: +0,3 z hodiny po pauze).
   Posun ±5 °C, přežije restart, vypnutí volby Radiátory ho vynuluje.
 
 PŘEDNOSTI
@@ -104,6 +107,7 @@ from .const import (
     R_POSUN_MAX,
     R_POSUN_PASMO,
     R_POSUN_POKRYTI_S,
+    R_POSUN_SOUVISLE_S,
     R_POSUN_ZISK,
     R_RUST_BRZDA,
     R_RUST_MIN_S,
@@ -171,6 +175,7 @@ class RadiatoryController:
         self._cil_zmena = -1e9             # kdy se naposled změnil cíl místnosti
         self._posun_cil: float | None = None
         self._h_key = None                 # celá hodina, která se sbírá
+        self._beh_od: float | None = None  # od kdy kompresor běží souvisle
         self._h_reset()
         self._busy = False
         self._unsubs: list = []
@@ -630,6 +635,11 @@ class RadiatoryController:
             self._cil_zmena = now
         self._posun_cil = cil
         self._h_room.append((now, room))
+        if self.run.kompresor_bezi is True:
+            if self._beh_od is None:
+                self._beh_od = now
+        else:
+            self._beh_od = None
         if self.run.kompresor_bezi is True and not self._on(ACOND_BIT_DEFROST):
             sup = self._num(ACOND_OUTLET)
             te = self._num(ACOND_OUTDOOR)
@@ -656,6 +666,9 @@ class RadiatoryController:
             return
         if self._h_pauza:
             self.posun_info = f"{hod}: pauza – neučím"
+            return
+        if self._beh_od is None or s[-1][0] - self._beh_od < R_POSUN_SOUVISLE_S:
+            self.posun_info = f"{hod}: kompresor neběžel souvisle 2 h – neučím"
             return
         if s[-1][0] - self._cil_zmena < R_POSUN_CIL_ZMRAZ_S:
             self.posun_info = f"{hod}: změna cíle – neučím"

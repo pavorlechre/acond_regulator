@@ -11,9 +11,19 @@ Princip
 * **Klasifikace režimu** (exkluzivní, s prioritou):
   bit_8 -> odmraz | bit_3 -> TUV | bit_12 -> chlazení | náběh TUV (rozdíl
   setpointů) | bit_1 -> topení | jinak ostatní.
-* **Energie = delta-crediting** z denních čítačů `eed`/`ted`: při každém
-  přírůstku spočítej deltu vs. minulé čtení a připiš ji režimu. Nic se
-  nedopočítává na konci dne.
+* **Energie = Riemannův součet okamžitého příkonu a výkonu** (30027 `aep`,
+  30028 `ahp`) od 0.18.0b28: při každé změně hodnoty a každém tiku se připíše
+  `poslední hodnota × uplynulý čas` aktuálnímu režimu (držení hodnoty, jako
+  pomocník Integrace v HA). Důvod: řada PRO má denní čítače `eed`/`ted` chybné
+  (teplo až +65 %, COP 8,7), okamžité hodnoty správné. Ověřeno na Pavlově EVI
+  9.–17. 11. 2026: integrace = čítače na 0,1 kWh, motohodiny na minutu.
+  Úsek delší než 5 min (výpadek, nedostupná hodnota) se nepřipíše. **Teplo
+  během odmrazu = 0** – okamžitý výkon tam hlásí kladné teplo, čítač Acondu ne
+  a fyzikálně se při odmrazu teplo z vody bere. Při chlazení se neintegruje
+  (chlazení dál z vlastních čítačů).
+* **Denní čítače `eed`/`ted` zůstávají jako kontrolka** (`ctl`): delta-crediting
+  jako dřív, ale do samostatného součtu, ne do režimů. V patičce tabulky je
+  vidět rozdíl proti integraci (u PRO velký, jinde ~0).
 * **Chlazení má vlastní čítače** `ced`/`eecd` (30073/30074) a připisuje se
   natvrdo do kbelíku `chlazeni` – ověřeno na železe 30.07.2026, že `eed`/`ted`
   při chlazení stojí. Do řádků „Celkem" chlazení NEPATŘÍ: ty zůstávají topná
@@ -99,11 +109,13 @@ from ..const import (
     ACOND_EL_DNES,
     ACOND_INDOOR,
     ACOND_OUTDOOR,
+    ACOND_POWER,
     ACOND_RETURN_READBACK,
     ACOND_RPM,
     ACOND_TARGET,
     ACOND_TEP_CHLAD_DNES,
     ACOND_TEP_DNES,
+    ACOND_TEPELNY_VYKON,
     BAND_INDOOR,
     BAND_OUTDOOR,
     CLOSED_DAYS,
@@ -131,6 +143,7 @@ from ..const import (
     START_DEFROST,
     START_KEYS,
     START_TUV,
+    STATS_MAX_MEZERA_S,
     STATS_SAVE_DELAY,
     TUV_START_ABS,
     TUV_START_DELTA_K,
@@ -169,6 +182,11 @@ _KIND_BUCKET = {
 # Jinam tikat nemůžou – ověřeno na železe – takže klasifikaci na ně netřeba
 # pouštět a nemůže se stát, že by je špatně přečtený bit poslal do topení.
 _KIND_FORCE_MODE = {_KIND_EL_COOL: MODE_COOL, _KIND_TEP_COOL: MODE_COOL}
+
+# Okamžité hodnoty pro Riemannův součet (W, u kW se přepočte).
+_POWER_SOURCE = {_KIND_EL: ACOND_POWER, _KIND_TEP: ACOND_TEPELNY_VYKON}
+# Denní čítače, které od 0.18.0b28 jdou jen do kontrolky, ne do režimů.
+_CTL_KINDS = (_KIND_EL, _KIND_TEP)
 
 _OUT = "out"
 _IN = "in"
@@ -215,7 +233,7 @@ def _fmt_hours(seconds: float | None) -> str | None:
 class _Bucket:
     """Jeden záznam – denní (date) nebo celoživotní (date=None)."""
 
-    __slots__ = ("date", "el", "tep", "hours", "starts", "t_sum", "t_sec", "over")
+    __slots__ = ("date", "el", "tep", "hours", "starts", "t_sum", "t_sec", "over", "ctl")
 
     def __init__(self, date: dt.date | None = None) -> None:
         self.date = date
@@ -227,6 +245,8 @@ class _Bucket:
         self.t_sec: dict[str, float] = {_OUT: 0.0, _IN: 0.0}
         # překryv: TEPLO vyrobené, když přetokový program držel kormidlo
         self.over: dict[str, float] = {o: 0.0 for o in OVERLAYS}
+        # kontrolka: co by ukázaly denní čítače Acondu (eed/ted)
+        self.ctl: dict[str, float] = {k: 0.0 for k in _CTL_KINDS}
 
     def bucket(self, kind: str) -> dict[str, float]:
         return self.el if _KIND_BUCKET[kind] == _KIND_EL else self.tep
@@ -241,6 +261,7 @@ class _Bucket:
             "t_sum": self.t_sum,
             "t_sec": self.t_sec,
             "over": self.over,
+            "ctl": self.ctl,
         }
 
     @classmethod
@@ -262,6 +283,8 @@ class _Bucket:
             )
         src = data.get("over") or {}
         b.over.update({o: float(v) for o, v in src.items() if o in OVERLAYS})
+        src = data.get("ctl") or {}
+        b.ctl.update({k: float(v) for k, v in src.items() if k in _CTL_KINDS})
         return b
 
 
@@ -295,6 +318,9 @@ class StatisticsAccumulator:
         self._temp: dict[str, float | None] = {_OUT: None, _IN: None}
         self._temp_since: dict[str, dt.datetime | None] = {_OUT: None, _IN: None}
         self._over_on: dict[str, bool] = {o: False for o in OVERLAYS}
+        # Riemann: poslední okamžitá hodnota (W) a od kdy platí
+        self._pw: dict[str, float | None] = {k: None for k in _POWER_SOURCE}
+        self._pw_since: dt.datetime | None = None
 
         # Čekající start kompresoru: drží REFERENCI na kbelík dne, ve kterém
         # start proběhl (ne index!), aby se doúčtování přes půlnoc trefilo do
@@ -396,6 +422,10 @@ class StatisticsAccumulator:
             self._temp[which] = self._band(which, self._live_float(entity_id))
             self._temp_since[which] = now
 
+        for kind, entity_id in _POWER_SOURCE.items():
+            self._pw[kind] = self._power_w(self.hass.states.get(entity_id))
+        self._pw_since = now
+
         for overlay, (entity_id, _mode) in _OVERLAY_SOURCE.items():
             state = self.hass.states.get(entity_id)
             self._over_on[overlay] = state is not None and state.state == REZIM_ON
@@ -417,6 +447,11 @@ class StatisticsAccumulator:
         )
         self._unsubs.append(
             async_track_state_change_event(self.hass, [ACOND_RPM], self._handle_rpm)
+        )
+        self._unsubs.append(
+            async_track_state_change_event(
+                self.hass, list(_POWER_SOURCE.values()), self._handle_power
+            )
         )
         self._unsubs.append(
             async_track_state_change_event(
@@ -466,6 +501,20 @@ class StatisticsAccumulator:
         now = dt_util.now()
         self._sync(now)
         self._credit(kind, value)
+        self._notify()
+
+    @callback
+    def _handle_power(self, event: Event) -> None:
+        """Okamžitý příkon/výkon se změnil: uzavři úsek STAROU hodnotou."""
+        new: State | None = event.data.get("new_state")
+        if new is None:
+            return
+        kind = next((k for k, e in _POWER_SOURCE.items() if e == new.entity_id), None)
+        if kind is None:
+            return
+        now = dt_util.now()
+        self._sync(now)                 # naběhlý úsek patří ještě staré hodnotě
+        self._pw[kind] = self._power_w(new)
         self._notify()
 
     @callback
@@ -695,6 +744,8 @@ class StatisticsAccumulator:
                 self._life.hours[mode] += sec
             self._mode_since = ts
 
+        self._integrate(day, ts)
+
         for which in (_OUT, _IN):
             value = self._temp[which]
             since = self._temp_since[which]
@@ -709,8 +760,45 @@ class StatisticsAccumulator:
                 self._life.t_sec[which] += sec
             self._temp_since[which] = ts
 
+    def _integrate(self, day: "_Bucket", ts: dt.datetime) -> None:
+        """Riemann: připiš `poslední hodnota × čas` do režimu podle `_mode`.
+
+        Úsek delší než `STATS_MAX_MEZERA_S` (výpadek) se nepřipíše – raději
+        díra než vymyšlená energie. Teplo při odmrazu se nepočítá, chlazení
+        jde z vlastních čítačů.
+        """
+        since = self._pw_since
+        self._pw_since = ts
+        if since is None:
+            return
+        sec = (ts - since).total_seconds()
+        if sec <= 0 or sec > STATS_MAX_MEZERA_S:
+            return
+        mode = self._mode
+        if mode == MODE_COOL:
+            return
+        changed = False
+        for kind in _POWER_SOURCE:
+            p = self._pw[kind]
+            if p is None or p <= 0:
+                continue
+            if kind == _KIND_TEP and mode == MODE_DEFROST:
+                continue
+            kwh = p * sec / 3_600_000.0
+            day.bucket(kind)[mode] += kwh
+            self._life.bucket(kind)[mode] += kwh
+            changed = True
+            if kind == _KIND_TEP:
+                for overlay, (_entity, need_mode) in _OVERLAY_SOURCE.items():
+                    if self._over_on[overlay] and mode == need_mode:
+                        day.over[overlay] += kwh
+                        self._life.over[overlay] += kwh
+        if changed:
+            self._schedule_save()
+
     def _credit(self, kind: str, value: float) -> None:
-        """Delta-crediting. Připisuje se do režimu podle cached `_mode`.
+        """Delta-crediting čítačů. Od 0.18.0b28 topné čítače (eed/ted) jen do
+        kontrolky `ctl`; chladicí dál do kbelíku `chlazeni`.
 
         Cached (ne live `_classify()`) je záměr: delta se nasčítala během
         intervalu, který právě skončil, tedy převážně pod STARÝM režimem.
@@ -746,19 +834,16 @@ class StatisticsAccumulator:
                 return
             self._base[kind] = value
 
+        if kind in _CTL_KINDS:
+            # kontrolka: co ukazují čítače Acondu (u PRO chybně)
+            self._ring[-1].ctl[kind] += delta
+            self._life.ctl[kind] += delta
+            self._schedule_save()
+            return
+
         mode = _KIND_FORCE_MODE.get(kind, self._mode)
         self._ring[-1].bucket(kind)[mode] += delta
         self._life.bucket(kind)[mode] += delta
-
-        # Překryv: jen teplo a jen když sedí i režim -> skutečná podmnožina.
-        # Bez kontroly režimu by přetokové topení běžící během ohřevu vody
-        # nasálo cizí teplo do svého kbelíku.
-        if kind == _KIND_TEP:
-            for overlay, (_entity, need_mode) in _OVERLAY_SOURCE.items():
-                if self._over_on[overlay] and self._mode == need_mode:
-                    self._ring[-1].over[overlay] += delta
-                    self._life.over[overlay] += delta
-
         self._schedule_save()
 
     def _classify(self) -> str:
@@ -1052,7 +1137,17 @@ class StatisticsAccumulator:
             # kontrolky (energie 'ostatni' MÁ být ~0; růst = rozchod s bity)
             "el_ostatni": e(_KIND_EL, MODE_IDLE),
             "tep_ostatni": e(_KIND_TEP, MODE_IDLE),
+            # kontrolka: denní čítače Acondu (eed/ted) za stejné období
+            "citac_el": _r2(self.ctl(_KIND_EL, period)),
+            "citac_tep": _r2(self.ctl(_KIND_TEP, period)),
         }
+
+    def ctl(self, kind: str, period: str) -> float | None:
+        """Součet čítačů Acondu (kontrolka) za období."""
+        recs = self._records(period)
+        if recs is None:
+            return None
+        return sum(r.ctl[kind] for r in recs)
 
     def _sec(self, mode: str, period: str) -> float | None:
         recs = self._records(period)
@@ -1108,8 +1203,10 @@ class StatisticsAccumulator:
     def _display_fingerprint(self) -> tuple:
         day = self._ring[-1] if self._ring else _Bucket()
         return (
-            tuple(round(day.el[m], 2) for m in MODES),
-            tuple(round(day.tep[m], 2) for m in MODES),
+            # 0,1 kWh jako dřív čítač: Riemann přibývá každý tik, recorder
+            # nemá dostávat řádek každých 30 s
+            tuple(round(day.el[m], 1) for m in MODES),
+            tuple(round(day.tep[m], 1) for m in MODES),
             tuple(int(day.hours[m] // 60) for m in MODES),
             tuple(day.starts[k] for k in START_KEYS),
             self.avg_temp(_OUT, PERIOD_TODAY),
@@ -1136,6 +1233,15 @@ class StatisticsAccumulator:
         if state is None or state.state in ("unknown", "unavailable", "", None):
             return None
         return state.state == "on"
+
+    @classmethod
+    def _power_w(cls, state: State | None) -> float | None:
+        """Okamžitá hodnota ve W (u jednotky kW přepočet)."""
+        v = cls._as_float(state)
+        if v is None:
+            return None
+        unit = str(state.attributes.get("unit_of_measurement") or "").strip().lower()
+        return v * 1000.0 if unit == "kw" else v
 
     def _live_float(self, entity_id: str) -> float | None:
         return self._as_float(self.hass.states.get(entity_id))
