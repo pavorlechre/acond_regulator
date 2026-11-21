@@ -45,6 +45,7 @@ from .const import (
     EXPORT_DELKY,
     EXPORT_KEEP,
     EXPORT_SUBDIR,
+    FVE_MIRROR_PV_KEY,
     POZADOVANA_MISTNOST_KEY,
     R_SWITCH_KEY,
     signal_export_updated,
@@ -80,6 +81,9 @@ _SLOUPCE = [
     ("r_stav", ("mar", "switch", R_SWITCH_KEY, "stav"), "text"),
     ("r_brzda", ("mar", "switch", R_SWITCH_KEY, "brzda"), "text"),
     ("r_posun", ("mar", "switch", R_SWITCH_KEY, "posun"), "num"),
+    # 0.18.0b29 – na konec, ať nerozbijí čtení podle pořadí sloupců
+    ("t_ekv", ("mar", "sensor", "ekvitermni_teplota"), "num"),   # ekvitermní (modelová) teplota
+    ("fve_W", ("mar", "sensor", FVE_MIRROR_PV_KEY), "num"),      # výroba FVE (prázdné bez FVE)
 ]
 
 
