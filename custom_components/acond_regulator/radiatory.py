@@ -44,6 +44,9 @@ JAK (zamčeno 9.–10. 11. 2026, viz const.py „R-Ekviterma")
   takže v místnosti se neukáže. 3 h po změně cíle se neučí. k = 1 + (střední voda −
   místnost) / (1,3 × (místnost − venku)) z měření, 1,1–2,0. Posun ±5 °C, přežije
   restart, vypnutí volby Radiátory ho vynuluje; b29 jednou vynuluje posun ze starého pravidla.
+- TUV V PAUZE (0.18.0b29): kompresor už běží na bojler -> když je místnost do 0,1 °C
+  nad startem, R ukončí pauzu kamenem Topit ještě při TUV (strop nemění) a po TUV se
+  topí dál jako po TUV za běhu – bez stopu a nového startu (tester 21. 11. 10:24).
 
 PŘEDNOSTI
 ---------
@@ -94,6 +97,7 @@ from .const import (
     R_NAVNADA,
     R_ODMRAZ_DOBEH_S,
     R_TUV_BOOST,
+    R_TUV_NAVAZ,
     R_ZP_HYST,
     R_PAUZA_DEFAULT,
     R_PERIODA_S,
@@ -407,16 +411,25 @@ class RadiatoryController:
             else:
                 self._was_running = None
                 self.duvod = None
+                # TUV v pauze: kompresor už běží na bojler -> když je místnost do
+                # R_TUV_NAVAZ nad startem, ukonči pauzu hned při TUV a po TUV se
+                # plynule topí dál (jako TUV za běhu) místo stopu a nového startu
+                tuv_v_pauze = self._on(ACOND_BIT_TUV)
+                prah = cil - self.start_pod + (R_TUV_NAVAZ if tuv_v_pauze else 0.0)
                 if (
                     not c.suspend_write and c.write_enabled
-                    and room <= cil - self.start_pod
+                    and room <= prah
                     and now - self._pause_since >= R_MIN_PAUZA_S
                 ):
-                    await self._set_cap(lo)                   # start z minima
+                    if not tuv_v_pauze:
+                        await self._set_cap(lo)               # start z minima
+                    # při TUV strop nesahat: řada PRO ho má na ohřev uvolněný a po TUV
+                    # vrátí strop před TUV (minimum z pauzy) – topení naváže z minima
                     self._paused = False
                     self._last_step = now
-                    self.seq.fire_start(origin="r")           # kámen Topit
+                    self.seq.fire_start(origin="r")           # kámen Topit (při TUV jen zruší útlum)
                     self.stav = STAV_START
+                    self.duvod = "TUV v pauze – navazuji topením" if tuv_v_pauze else None
                     return
                 self.stav = STAV_PAUZA
                 return

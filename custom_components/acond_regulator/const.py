@@ -1082,6 +1082,7 @@ R_POSUN_PRED_PAUZOU_S = 3600
 R_POSUN_CIL_ZMRAZ_S = 3 * 3600  # po změně cíle místnosti 3 h neučit (útlum si uživatel přeje)
 R_POSUN_FVE_W = 300.0       # vyrábí FVE -> přetopení je slunce, dolů neučit
 R_POSUN_VERZE = 2           # jiná uložená verze -> posun jednorázově vynulovat (b29: staré učení se mýlilo)
+R_TUV_NAVAZ = 0.1           # TUV v pauze R: místnost ≤ start + tohle -> pauzu ukončit už při TUV
 R_STORE_VERSION = 1
 
 
