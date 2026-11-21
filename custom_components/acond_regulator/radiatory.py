@@ -31,17 +31,19 @@ JAK (zamčeno 9.–10. 11. 2026, viz const.py „R-Ekviterma")
 - Konec TUV (16. 11. 2026): zpátečkou teče zbytek z bojleru, žádaná = křivka by
   Acond ve Standardu vypnul. 3 min žádaná na maximum, pak honička dolů za vodou;
   stop kompresoru do 15 min po TUV je prodleva Acondu, ne nový start z minima.
-- HODINOVÝ POSUN KŘIVKY (I složka, 16. 11. 2026): koeficient korekce (P) sám vždy
-  nechá místnost kousek pod cílem (u Romana trvale −0,3). Každou celou hodinu, kdy
-  R celou dobu vedla bez TUV a bez pauzy:
-      posun += k × (cíl − (průměr místnosti + trend za hodinu))   (zisk R_POSUN_ZISK = 1,0)
-  když je průměr dál od cíle než 0,1 °C. k = 1 + (střední voda − místnost) /
-  (1,3 × (místnost − venku)) z měření (radiátory ~1,6, podlaha ~1,2), 1,1–2,0.
-  Dolů neučí, když vyrábí FVE (přetopení je slunce). 3 h po změně cíle neučí.
-  Učí se JEN když kompresor běžel souvisle celou hodinu i hodinu předtím
-  (0.18.0b28): při cyklování se místnost houpe kvůli pauzám a chybu křivky
-  z ní určit nelze (Roman 16. 11. 04:00: +0,3 z hodiny po pauze).
-  Posun ±5 °C, přežije restart, vypnutí volby Radiátory ho vynuluje.
+- POSUN KŘIVKY (I složka; 16. 11. 2026, pravidlo C od 0.18.0b29): koeficient korekce
+  (P) sám nechá místnost kousek pod cílem (u testera celé noci −0,3).
+  NAHORU: každou celou hodinu okno posledních 3 h (minuty TUV se nepočítají) – nebyla
+  pauza R ani stop kompresoru (mimo TUV a 15 min po ní), místnost ANI JEDNOU nedosáhla
+  cíle a průměr je pod cílem − 0,1 -> posun += k × (cíl − průměr), pak čekat celé
+  nové okno. Propad (větrání, TUV, výpadek) sníží průměr, ale ne maximum.
+  DOLŮ z hystereze: pauza pásma po hodině, kdy R jela aspoň polovinu běhu nad minimem
+  stropu -> posun −= k × 0,2 (křivka dala víc, než dům chtěl). Pauza po běhu na minimu
+  = minimum je na dům moc, křivka za to nemůže. Ne, když vyráběla FVE.
+  Z místnosti se dolů neučí: vysokou křivku zastaví brzda místnosti, pak hystereze,
+  takže v místnosti se neukáže. 3 h po změně cíle se neučí. k = 1 + (střední voda −
+  místnost) / (1,3 × (místnost − venku)) z měření, 1,1–2,0. Posun ±5 °C, přežije
+  restart, vypnutí volby Radiátory ho vynuluje; b29 jednou vynuluje posun ze starého pravidla.
 
 PŘEDNOSTI
 ---------
@@ -98,6 +100,7 @@ from .const import (
     R_PO_TUV_DRZ_S,
     R_PO_TUV_OKNO_S,
     R_POSUN_CIL_ZMRAZ_S,
+    R_POSUN_DOLU,
     R_POSUN_EXP,
     R_POSUN_FVE_W,
     R_POSUN_K_DEFAULT,
@@ -105,9 +108,12 @@ from .const import (
     R_POSUN_K_MAX,
     R_POSUN_K_MIN,
     R_POSUN_MAX,
+    R_POSUN_NAD_MIN,
+    R_POSUN_OKNO_S,
     R_POSUN_PASMO,
-    R_POSUN_POKRYTI_S,
-    R_POSUN_SOUVISLE_S,
+    R_POSUN_PRED_PAUZOU_S,
+    R_POSUN_VERZE,
+    R_POSUN_VZOREK_S,
     R_POSUN_ZISK,
     R_RUST_BRZDA,
     R_RUST_MIN_S,
@@ -168,15 +174,18 @@ class RadiatoryController:
         self._room = deque()               # (monotonic, °C) za poslední hodinu
         self._tuv_konec = -1e9             # kdy skončil ohřev TUV
 
-        # hodinový posun křivky (I složka)
+        # posun křivky (I složka, pravidlo C)
         self.posun = 0.0
         self.posun_k = R_POSUN_K_DEFAULT
         self.posun_info: str | None = None
         self._cil_zmena = -1e9             # kdy se naposled změnil cíl místnosti
         self._posun_cil: float | None = None
-        self._h_key = None                 # celá hodina, která se sbírá
-        self._beh_od: float | None = None  # od kdy kompresor běží souvisle
-        self._h_reset()
+        self._p_key = None                 # celá hodina, na jejímž konci se vyhodnocuje
+        # vzorky do okna: (monotonic, místnost, TUV, topí dům, nad minimem, FVE, (voda − m, m − venku))
+        self._p_vzorky: deque = deque()
+        self._p_mimo = time.monotonic()    # kdy naposled R nevedla (jiná strategie, mlčí, data…)
+        self._p_stop = time.monotonic()    # kdy naposled pauza R / stál kompresor mimo TUV
+        self._p_krok = -1e9                # kdy byl poslední krok nahoru
         self._busy = False
         self._unsubs: list = []
 
@@ -261,6 +270,13 @@ class RadiatoryController:
                 self.posun_k = float(data.get("posun_k") or R_POSUN_K_DEFAULT)
             except (TypeError, ValueError):
                 self.posun, self.posun_k = 0.0, R_POSUN_K_DEFAULT
+            if data.get("posun_v") != R_POSUN_VERZE:
+                # posun naučený starým pravidlem (hodinovým) se v cyklování mýlil -> jednou zahodit
+                if self.posun:
+                    _LOGGER.info("R-Ekviterma: nové pravidlo posunu, posun %.2f vynulován", self.posun)
+                    self.posun_info = "vynulováno (nové pravidlo učení)"
+                self.posun = 0.0
+                await self._save()
 
     async def async_start(self) -> None:
         """Po startu HA (po platformách a pokojovce): nasaď smyčku."""
@@ -330,7 +346,7 @@ class RadiatoryController:
 
     async def _krok(self) -> None:
         if not self._drzi():
-            self._h_mimo = True
+            self._p_mimo = time.monotonic()
             if self._held or self.coordinator.r_owns:
                 await self.async_release()
             else:
@@ -342,7 +358,7 @@ class RadiatoryController:
             # FVE Topení drží 40008 i 40014 -> uhni; po předání pokračuj z jeho stropu
             c.r_owns = False
             self.stav = STAV_FVE
-            self._h_mimo = True
+            self._p_mimo = time.monotonic()
             return
 
         if not self._held:
@@ -373,12 +389,12 @@ class RadiatoryController:
         krivka = getattr(data, "return_final", None) if data else None
         lo, hi = self._rozsah()
         if None in (cil, ret, room, krivka, lo, hi):
-            self._h_mimo = True
+            self._p_mimo = time.monotonic()
             if not self._paused:
                 self.stav = STAV_CEKA
             return
-        # hodinový posun: vzorek této minuty, na přelomu hodiny vyhodnocení
-        await self._posun_tik(now, room, cil, ret)
+        # posun: vzorek do okna, na přelomu hodiny vyhodnocení (pravidlo C)
+        await self._posun_tik(now, room, cil, ret, lo)
         krivka = krivka + self.posun
         self.cil_krivka = round(krivka, 1)
 
@@ -391,7 +407,6 @@ class RadiatoryController:
             else:
                 self._was_running = None
                 self.duvod = None
-                self._h_pauza = True
                 if (
                     not c.suspend_write and c.write_enabled
                     and room <= cil - self.start_pod
@@ -416,7 +431,7 @@ class RadiatoryController:
         ):
             self.stav = STAV_CEKA
             self._was_running = None
-            self._h_mimo = True
+            self._p_mimo = time.monotonic()
             return
 
         krok_up = (hi - lo) * R_KROK_NAHORU
@@ -431,7 +446,6 @@ class RadiatoryController:
         if tuv or self._on(ACOND_BIT_DEFROST):
             self._frozen = True
             self._frozen_tuv = self._frozen_tuv or tuv
-            self._h_tuv = self._h_tuv or tuv
             self.stav = STAV_TUV
             return
         if self._frozen:
@@ -461,8 +475,6 @@ class RadiatoryController:
 
         bezi = self.run.kompresor_bezi is True
         po_tuv = now - self._tuv_konec < R_PO_TUV_OKNO_S
-        if not bezi:
-            self._h_pauza = True            # hodina se stojícím kompresorem se neučí
         if self._was_running is True and not bezi and not po_tuv:
             self.acond_vypnul += 1          # vypnul sám (ne pauza, ne kámen, ne TUV)
             await self._save()
@@ -474,6 +486,7 @@ class RadiatoryController:
         # --- pásmo: nad cíl + Pauza nad -> kámen Netopit ---
         if room >= cil + self.pauza_nad:
             if bezi and now - self._run_since >= R_MIN_BEH_S and not self.seq.busy:
+                await self._posun_pauza(now, cil)             # hystereze -> případně dolů
                 self._paused = True
                 self._pause_since = now
                 self._was_running = None
@@ -608,100 +621,130 @@ class RadiatoryController:
         await self._store.async_save({
             "held": self._held, "orig": self._orig_cap, "acond_vypnul": self.acond_vypnul,
             "posun": round(self.posun, 2), "posun_k": round(self.posun_k, 3),
+            "posun_v": R_POSUN_VERZE,
         })
 
     # ------------------------------------------------------------------ #
-    # Hodinový posun křivky (I složka)
+    # Posun křivky (I složka) – pravidlo C (0.18.0b29)
     # ------------------------------------------------------------------ #
-    def _h_reset(self) -> None:
-        self._h_room: list[tuple[float, float]] = []   # (monotonic, místnost)
-        self._h_k: list[tuple[float, float]] = []      # (voda − místnost, místnost − venku)
-        self._h_mimo = False       # R nevedla (jiná strategie, mlčí, FVE topení, chybí data)
-        self._h_pauza = False      # pauza / stojící kompresor
-        self._h_tuv = False        # ohřev TUV
-        self._h_fve = False        # vyráběla FVE
-
-    async def _posun_tik(self, now: float, room: float, cil: float, ret: float) -> None:
+    async def _posun_tik(self, now: float, room: float, cil: float, ret: float,
+                         lo: float) -> None:
+        """Vzorek do okna; na přelomu celé hodiny vyhodnoť okno (učení nahoru)."""
         key = dt_util.now().replace(minute=0, second=0, microsecond=0)
-        if self._h_key is None:
-            self._h_key = key
-            self._h_mimo = True          # první (neúplná) hodina po startu se nepočítá
-        elif key != self._h_key:
-            await self._posun_vyhodnot(cil)
-            self._h_key = key
-            self._h_reset()
+        if self._p_key is None:
+            self._p_key = key
+        elif key != self._p_key:
+            self._p_key = key
+            await self._posun_vyhodnot(now, cil)
         # změna cíle (Den/noc, Okna ±, ruční) -> 3 h neučit
         if self._posun_cil is not None and abs(cil - self._posun_cil) >= 0.05:
             self._cil_zmena = now
         self._posun_cil = cil
-        self._h_room.append((now, room))
-        if self.run.kompresor_bezi is True:
-            if self._beh_od is None:
-                self._beh_od = now
-        else:
-            self._beh_od = None
-        if self.run.kompresor_bezi is True and not self._on(ACOND_BIT_DEFROST):
+        tuv = self._on(ACOND_BIT_TUV)
+        bezi = self.run.kompresor_bezi is True
+        # pauza R nebo stojící kompresor mimo TUV a prodlevu po ní = okno se nahoru neučí
+        if self._paused or (not bezi and not tuv and now - self._tuv_konec >= R_PO_TUV_OKNO_S):
+            self._p_stop = now
+        if self._p_vzorky and now - self._p_vzorky[-1][0] < R_POSUN_VZOREK_S:
+            return
+        topi = bezi and not tuv and not self._paused
+        cap = self._num(ACOND_CAPACITY)
+        nad_min = (cap is not None and cap > lo + 1) if topi else None
+        k_vz = None
+        if topi and not self._on(ACOND_BIT_DEFROST):
             sup = self._num(ACOND_OUTLET)
             te = self._num(ACOND_OUTDOOR)
             if sup is not None and te is not None:
-                self._h_k.append(((sup + ret) / 2 - room, room - te))
+                k_vz = ((sup + ret) / 2 - room, room - te)
         pv = None
         if self.fve is not None:
             try:
                 pv = self.fve.pv_value()
             except Exception:  # noqa: BLE001
                 pv = None
-        if pv is not None and pv > R_POSUN_FVE_W:
-            self._h_fve = True
+        fve = pv is not None and pv > R_POSUN_FVE_W
+        self._p_vzorky.append((now, room, tuv, topi, nad_min, fve, k_vz))
+        while self._p_vzorky and now - self._p_vzorky[0][0] > R_POSUN_OKNO_S:
+            self._p_vzorky.popleft()
 
-    async def _posun_vyhodnot(self, cil: float) -> None:
-        """Konec celé hodiny: posuň křivku o polovinu spočtené chyby."""
-        hod = self._h_key.strftime("%H:00") if self._h_key else "?"
-        s = self._h_room
-        if self._h_mimo or len(s) < 2 or s[-1][0] - s[0][0] < R_POSUN_POKRYTI_S:
-            self.posun_info = f"{hod}: R nevedla celou hodinu"
+    def _posun_k(self, vzorky) -> None:
+        """k z měření v okně (radiátory ~1,6, podlaha ~1,2)."""
+        kv = [v[6] for v in vzorky if v[6] is not None]
+        if not kv:
             return
-        if self._h_tuv:
-            self.posun_info = f"{hod}: TUV – neučím"
+        voda = sum(a for a, _b in kv) / len(kv)
+        dt = sum(b for _a, b in kv) / len(kv)
+        if dt >= R_POSUN_K_DT_MIN and voda > 0:
+            k = 1 + voda / (R_POSUN_EXP * dt)
+            self.posun_k = min(R_POSUN_K_MAX, max(R_POSUN_K_MIN, k))
+
+    async def _posun_vyhodnot(self, now: float, cil: float) -> None:
+        """Konec celé hodiny: NAHORU, když místnost celé 3 h bez pauzy nedosáhla cíle."""
+        hod = dt_util.now().strftime("%H:00")
+        cz = lambda v: f"{round(v, 2) + 0.0:+.2f}".replace(".", ",")  # noqa: E731
+        okno = R_POSUN_OKNO_S
+        s = self._p_vzorky
+        if (now - self._p_mimo < okno or not s or s[0][0] > now - okno + 300
+                or len(s) < 0.8 * okno / 60):
+            self.posun_info = f"{hod}: R nevedla celé 3 h"
             return
-        if self._h_pauza:
-            self.posun_info = f"{hod}: pauza – neučím"
-            return
-        if self._beh_od is None or s[-1][0] - self._beh_od < R_POSUN_SOUVISLE_S:
-            self.posun_info = f"{hod}: kompresor neběžel souvisle 2 h – neučím"
-            return
-        if s[-1][0] - self._cil_zmena < R_POSUN_CIL_ZMRAZ_S:
+        if now - self._cil_zmena < R_POSUN_CIL_ZMRAZ_S:
             self.posun_info = f"{hod}: změna cíle – neučím"
             return
-        prumer = sum(r for _t, r in s) / len(s)
-        trend = s[-1][1] - s[0][1]
-        # k z měření této hodiny (radiátory ~1,6, podlaha ~1,2)
-        if self._h_k:
-            voda = sum(a for a, _b in self._h_k) / len(self._h_k)
-            dt = sum(b for _a, b in self._h_k) / len(self._h_k)
-            if dt >= R_POSUN_K_DT_MIN and voda > 0:
-                k = 1 + voda / (R_POSUN_EXP * dt)
-                self.posun_k = min(R_POSUN_K_MAX, max(R_POSUN_K_MIN, k))
+        if now - self._p_krok < okno - 60:
+            self.posun_info = f"{hod}: po kroku čekám na celé nové okno"
+            return
+        mist = [v[1] for v in s if not v[2]]          # bez minut TUV
+        if not mist:
+            return
+        prumer = sum(mist) / len(mist)
+        mx = max(mist)
         odch = cil - prumer
-        cz = lambda v: f"{v:+.2f}".replace(".", ",")  # noqa: E731
-        if abs(odch) <= R_POSUN_PASMO + 1e-6:
-            self.posun_info = f"{hod}: v cíli ({cz(-odch)})"
+        if odch <= R_POSUN_PASMO + 1e-6:
+            self.posun_info = f"{hod}: místnost Ø {cz(-odch)} – v pořádku"
             return
-        e = cil - (prumer + trend)
-        if e * odch <= 0:
-            self.posun_info = f"{hod}: {cz(-odch)}, místnost už se vrací – čekám"
+        if mx >= cil - 1e-6:
+            self.posun_info = f"{hod}: Ø {cz(-odch)}, ale místnost cíle dosáhla – neučím"
             return
-        if e < 0 and self._h_fve:
-            self.posun_info = f"{hod}: {cz(-odch)}, svítí FVE – dolů neučím"
+        if now - self._p_stop < okno:
+            self.posun_info = f"{hod}: Ø {cz(-odch)}, v okně byla pauza – neučím"
             return
-        krok = R_POSUN_ZISK * self.posun_k * e
+        self._posun_k(s)
+        krok = R_POSUN_ZISK * self.posun_k * odch
         novy = max(-R_POSUN_MAX, min(R_POSUN_MAX, round(self.posun + krok, 2)))
         _LOGGER.debug(
-            "R-Ekviterma posun %s: místnost Ø %.2f, trend %+.2f, k %.2f -> posun %.2f -> %.2f",
-            hod, prumer, trend, self.posun_k, self.posun, novy,
+            "R-Ekviterma posun %s nahoru: 3 h Ø %.2f, max %.1f, k %.2f -> posun %.2f -> %.2f",
+            hod, prumer, mx, self.posun_k, self.posun, novy,
         )
-        self.posun_info = (f"{hod}: místnost {cz(-odch)}, trend {cz(trend)} → posun "
-                           f"{cz(novy - self.posun)}")
+        self.posun_info = (f"{hod}: 3 h pod cílem (Ø {cz(-odch)}) → posun {cz(novy - self.posun)}")
+        self.posun = novy
+        self._p_krok = now
+        await self._save()
+
+    async def _posun_pauza(self, now: float, cil: float) -> None:
+        """Pauza pásma (hystereze): když R hodinu před ní jela převážně nad minimem,
+        křivka dala víc, než dům chtěl -> DOLŮ o k × R_POSUN_DOLU."""
+        cz = lambda v: f"{round(v, 2) + 0.0:+.2f}".replace(".", ",")  # noqa: E731
+        cas = dt_util.now().strftime("%H:%M")
+        hod = [v for v in self._p_vzorky if now - v[0] <= R_POSUN_PRED_PAUZOU_S]
+        beh = [v[4] for v in hod if v[4] is not None]     # jen minuty, kdy kompresor topil dům
+        # (kámen Topit na začátku běhu R na chvíli „umlčí" – proto ne podmínka celé hodiny R)
+        if len(beh) < R_MIN_BEH_S / 60 or now - self._cil_zmena < R_POSUN_CIL_ZMRAZ_S:
+            return
+        podil = sum(1 for b in beh if b) / len(beh)
+        if podil < R_POSUN_NAD_MIN:
+            self.posun_info = f"{cas}: pauza po běhu na minimu – křivka nevadí"
+            return
+        if any(v[5] for v in hod):
+            self.posun_info = f"{cas}: pauza po běhu nad minimem, ale svítí FVE – neučím"
+            return
+        self._posun_k(self._p_vzorky)
+        novy = max(-R_POSUN_MAX, min(R_POSUN_MAX,
+                                     round(self.posun - self.posun_k * R_POSUN_DOLU, 2)))
+        _LOGGER.debug("R-Ekviterma posun %s dolů: pauza po %.0f %% běhu nad minimem -> %.2f -> %.2f",
+                      cas, podil * 100, self.posun, novy)
+        self.posun_info = (f"{cas}: pauza po běhu nad minimem ({podil:.0%}) → posun "
+                           f"{cz(novy - self.posun)}").replace("%", " %")
         self.posun = novy
         await self._save()
 

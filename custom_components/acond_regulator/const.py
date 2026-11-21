@@ -1056,21 +1056,32 @@ R_TUV_BOOST = 2             # po TUV v dotápění krok nahoru ×2 (dlouhé koup
 # Žádaná = křivka by Acond ve Standardu hned vypnul (zpátečka ≥ žádaná + 2).
 R_PO_TUV_DRZ_S = 180        # po TUV 3 min žádaná na MAX_RETURN, pak honička dolů
 R_PO_TUV_OKNO_S = 900       # stop kompresoru do 15 min po TUV = prodleva, ne nový start
-# Hodinový posun křivky (I složka, Pavle 16. 11. 2026). Každou celou hodinu:
-#   posun += ZISK × k × (cíl − (průměr místnosti + trend za hodinu))
+# Posun křivky (I složka). Pravidlo C (Pavle 21. 11. 2026, 0.18.0b29):
+#   NAHORU – každou celou hodinu okno posledních 3 h (minuty TUV se nepočítají): v okně
+#     nebyla pauza R ani stop kompresoru (mimo TUV a prodlevu po ní), místnost ANI JEDNOU
+#     nedosáhla cíle a průměr je pod cílem − PASMO -> posun += ZISK × k × (cíl − průměr),
+#     pak čekat celé nové okno (tatáž chyba se nezapočítá dvakrát).
+#   DOLŮ – z hystereze: pauza pásma po hodině, kdy R jela aspoň polovinu běhu nad minimem
+#     stropu -> křivka dala víc, než dům chtěl: posun −= k × POSUN_DOLU. Ne, když vyráběla FVE.
+#   Proč ne z průměru: brzda místnosti drží místnost na cíli a propady po TUV táhnou průměr
+#   dolů; vysoká křivka se v místnosti neukáže (zastaví ji brzda, pak hystereze).
 #   k = 1 + (střední voda − místnost) / (EXP × (místnost − venku)), počítáno z měření
-R_POSUN_ZISK = 1.0          # celý výpočet (Pavle 16. 11.; simulace bez překmitu, 0,5 bylo pomalé)
-R_POSUN_PASMO = 0.1         # průměr místnosti blíž cíli než tohle -> nic
+R_POSUN_ZISK = 1.0          # celý výpočet (Pavle 16. 11.)
+R_POSUN_PASMO = 0.1         # průměr místnosti blíž cíli než tohle -> nahoru nic
 R_POSUN_MAX = 5.0           # posun ±5 °C
 R_POSUN_K_DEFAULT = 1.6
 R_POSUN_K_MIN = 1.1
 R_POSUN_K_MAX = 2.0
 R_POSUN_EXP = 1.3           # exponent radiátorů
 R_POSUN_K_DT_MIN = 5.0      # k počítat jen při místnost − venku ≥ 5 °C
-R_POSUN_POKRYTI_S = 3000    # hodina platí, když R vedla aspoň 50 min
-R_POSUN_SOUVISLE_S = 2 * 3600 - 120  # učit jen po 2 h souvislého běhu kompresoru (b28)
+R_POSUN_OKNO_S = 3 * 3600   # okno učení nahoru (a čekání po kroku)
+R_POSUN_VZOREK_S = 55       # vzorek místnosti do okna nejvýš jednou za minutu
+R_POSUN_DOLU = 0.2          # krok dolů z pauzy = k × tohle (°C místnosti navíc)
+R_POSUN_NAD_MIN = 0.5       # pauza učí dolů, když R v hodině před ní jela nad minimem aspoň tolik běhu
+R_POSUN_PRED_PAUZOU_S = 3600
 R_POSUN_CIL_ZMRAZ_S = 3 * 3600  # po změně cíle místnosti 3 h neučit (útlum si uživatel přeje)
 R_POSUN_FVE_W = 300.0       # vyrábí FVE -> přetopení je slunce, dolů neučit
+R_POSUN_VERZE = 2           # jiná uložená verze -> posun jednorázově vynulovat (b29: staré učení se mýlilo)
 R_STORE_VERSION = 1
 
 
