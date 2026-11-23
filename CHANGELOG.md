@@ -6,6 +6,13 @@ verze podle [sémantického verzování](https://semver.org/lang/cs/).
 
 ## [Nevydáno]
 
+### Přidáno (0.18.0b31)
+- **Prohlížeč dat v repozitáři** (`prirucka/prohlizec.html`): stránka pro export dat po minutách — souhrn, průběhy se společnou časovou osou a tabulka po dnech. HA ji servíruje na `/mar-prirucka/prohlizec.html`, web příručky na `…/acond_regulator/prohlizec.html`. V okně exportu odkaz **Otevřít v prohlížeči dat** rovnou načte poslední export (`?csv=/local/mar_export/…`). V souhrnu nově **průměrný příkon a výkon** za období exportu.
+
+### Změněno (0.18.0b31)
+- **Výkon 24 h:** nula na pásku venkovní teploty tučně.
+- **Statistika — texty:** okno Statistika i příručka ještě tvrdily, že součty jsou z denních čítačů jednotky. Opraveno: energie se od 0.18.0b28 počítá z okamžitého příkonu a výkonu; u řady PRO se proto liší od appky Acondac.
+
 ### Přidáno (0.18.0b30)
 - **Ouško Výkon 24 h** — velký graf výkonu za 24 h přes celé schéma (`image.mar_vykon_24_h`, volba „Výkon 24 h“ v `select.mar_vrstva`), hned vedle ouška Výkon. Nahoře souhrn: teplo a elektřina za 24 h integrované z okamžitých hodnot (platí i pro řadu PRO; teplo z odmrazu a 3 min po něm se nepočítá), COP z nich, počet startů kompresoru, odmrazů a ohřevů TUV. Výkon, příkon a COP na společné mřížce, horní okraj = nejvyšší hodnota + 10 %. Pod grafem pásek venkovní teploty a T ekv. Svislé čáry po 3 h, půlnoc plnou čarou. Klepnutí vrátí schéma, po 5 min se vrátí samo. Ouško Stroj (prázdné) vypadlo, zůstává jedno připravené (Ekviterma).
 

@@ -2070,8 +2070,8 @@ views:
 
         '
     - type: markdown
-      content: 'Stejné členění jako appka Acondac, ale všechny tři sloupce naráz. Součty vycházejí z denních čítačů jednotky, takže **Celkem sedí na appku**; rozdělení topení/TUV je naše aproximace podle
-        stavových bitů a nejmenší přiřaditelná dávka je jeden krok čítače (0,1 kWh). Statistika běží **od nasazení MaR**, ne od narození jednotky.
+      content: 'Stejné členění jako appka Acondac, ale všechny tři sloupce naráz. Energii MaR **počítá sám z okamžitého příkonu a výkonu** (× čas), ne z čítačů jednotky – u řady PRO čítače
+        nesedí. U ostatních strojů vychází Celkem stejně jako v appce. Rozdělení topení/TUV podle stavových bitů, teplo při odmrazování se nepočítá. Statistika běží **od nasazení MaR**, ne od narození jednotky.
 
         '
     - type: button
@@ -2533,7 +2533,8 @@ views:
         == ''probíhá'' %}Export běží…{% elif u %}<a href="{{ u }}" target="_blank" rel="noreferrer">Stáhnout
         CSV</a> · {{ state_attr(''sensor.mar_export'',''delka'') }}, {{ state_attr(''sensor.mar_export'',''radku'')
         }} řádků{% elif state_attr(''sensor.mar_export'',''chyba'') %}Export selhal: {{ state_attr(''sensor.mar_export'',''chyba'')
-        }}{% else %}Zatím žádný export.{% endif %}'
+        }}{% else %}Zatím žádný export.{% endif %}<br><a href="/mar-prirucka/prohlizec.html{% if u %}?csv={{ u | urlencode }}{% endif %}"
+        target="_blank" rel="noreferrer">Otevřít v prohlížeči dat</a> – průběhy, souhrn a tabulka po dnech'
   - type: grid
     column_span: 2
     cards:

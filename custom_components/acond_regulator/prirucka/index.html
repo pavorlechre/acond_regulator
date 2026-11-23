@@ -1168,7 +1168,7 @@
   <section id="statistika-radky">
     <h3>Co znamenají řádky</h3>
     <ul>
-      <li><strong>Vyrobená energie</strong> — teplo, které čerpadlo dodalo, v kWh. <strong>Celkem</strong> sedí s aplikací Acondac; rozdělení na topení, TUV a odmrazování viz níž.</li>
+      <li><strong>Vyrobená energie</strong> — teplo, které čerpadlo dodalo, v kWh. MaR ho počítá sám z okamžitého výkonu (viz níž <em>Odkud se energie bere</em>). U většiny strojů <strong>Celkem</strong> sedí s aplikací Acondac, u řady PRO se liší — aplikace tam bere chybné čítače stroje. Rozdělení na topení, TUV a odmrazování viz níž.</li>
       <li><strong>Spotřebovaná energie</strong> — elektřina, kterou si na to čerpadlo vzalo.</li>
       <li><strong>COP</strong> — kolikrát víc tepla stroj vyrobil, než spotřeboval elektřiny (vyrobená děleno spotřebovaná). Topení mívá COP vyšší než TUV a je to v pořádku: teplá voda potřebuje vyšší teplotu. Odmrazování COP nemá, teplo při něm naopak ubývá.</li>
       <li><strong>Průměrná teplota</strong> — venku a v místnosti. Průměruje se jen skutečně změřený čas, takže výpadek HA průměr nezkreslí.</li>
@@ -1184,7 +1184,7 @@
 
   <section id="statistika-deleni">
     <h3>Jak se dělí topení, TUV a zbytek</h3>
-    <p>Součty vycházejí z denních čítačů v jednotce, takže <strong>Celkem sedí na aplikaci</strong> Acondac. Rozdělení na topení a teplou vodu je naše aproximace podle stavových bitů čerpadla a nejmenší přiřaditelná dávka je jeden krok čítače, tedy 0,1 kWh.</p>
+    <p>Energii MaR počítá sám z okamžitého příkonu a výkonu čerpadla (viz níž <em>Odkud se energie bere</em>), ne z čítačů v jednotce. Každý kousek energie připíše režimu, ve kterém stroj právě je — rozdělení na topení a teplou vodu se tak řídí stavovými bity čerpadla.</p>
     <p>Program přiřazuje energii v pevném pořadí: <strong>odmrazování</strong>, pak <strong>ohřev vody</strong>, pak <strong>chlazení</strong>, pak <strong>topení</strong>. Když tedy čerpadlo odmrazuje uprostřed ohřevu vody, spadne ta energie do odmrazování.</p>
     <p>Úplně dole je řádek <strong>kontrola (má být 0,00)</strong>. Ukazuje elektřinu a teplo, které se nepodařilo přiřadit žádnému režimu. Má tam být nula. Když roste, rozchází se čtení MaR se strojem — to je důvod dát vědět.</p>
     <p><strong>Odkud se energie bere.</strong> MaR ji počítá sám z okamžitého příkonu a výkonu čerpadla: každou chvíli přičte „kolik teď bere × jak dlouho“ k režimu, ve kterém stroj právě je (stejně jako pomocník Integrace v Home Assistantu). Denní čítače energie v Acondu se nepoužívají, protože u řady PRO ukazují nesmysly (teplo o desítky procent víc a COP přes 8). U ostatních strojů dává výpočet stejná čísla jako čítače — ověřeno týden po týdnu na desetinu kWh. Teplo během odmrazování se nepočítá: odmraz si teplo z vody bere, nevyrábí ho. Když HA delší dobu neběží (restart, výpadek), ten úsek v tabulce chybí — radši díra než vymyšlená čísla.</p>
@@ -1215,6 +1215,9 @@
     <h4 id="export-dat">Data po minutách (CSV)</h4>
     <p>Pod snímky (Statistika → tlačítko <strong>Export snímku a dat</strong>) je <strong>export dat po minutách</strong> pro ladění regulace: venkovní a pokojová teplota, cíl místnosti, zpátečka a zapsaná požadovaná, zpátečka z ekvitermy, topná voda, otáčky a jejich strop, příkon, výkon, chod kompresoru, sekundární a primární čerpadlo, TUV, odmrazování, strategie, stav R-Ekvitermy a její doučený posun křivky, ekvitermní (modelová) teplota a výroba fotovoltaiky (bez FVE prázdné). Vyber délku (1, 3, 7 nebo 10 dní), stiskni <strong>Export</strong> a soubor stáhni odkazem — otevře se rovnou v Excelu (středník, desetinná čárka). Tester ho tak jednoduše pošle tomu, kdo mu regulaci ladí.</p>
     <p>Home Assistant drží historii standardně jen <strong>10 dní</strong>; starší data v exportu nejsou. Soubory leží v <code>config/www/mar_export/</code>, MaR si nechává posledních pět. Jméno obsahuje náhodný kousek, protože složka <code>www</code> je dostupná bez přihlášení.</p>
+    <h4 id="prohlizec-dat">Prohlížeč dat</h4>
+    <p>Pod odkazem na stažení je <strong>Otevřít v prohlížeči dat</strong>. Otevře se nová stránka a rovnou v ní je poslední export: nahoře souhrn za celé období (průměrná teplota venku a v místnosti, kolik procent času byla místnost v cíli ±0,15 °C, starty za den, odmrazování, ohřev TUV, elektřina, teplo, COP a <strong>průměrný příkon a výkon</strong>), pod ním průběhy se společnou časovou osou (místnost, voda, venku, výkon, stavy, posun křivky) a dole tabulka po dnech. Najetím myší vidíš hodnoty ve všech grafech najednou, tažením přiblížíš, dvojklikem vrátíš.</p>
+    <p>Soubor se zpracuje jen v prohlížeči a nikam se neposílá. Prohlížeč je i na webu příručky: <a href="prohlizec.html">prohlizec.html</a> — tam do něj přetáhneš CSV, které ti někdo poslal (funguje i po uložení v Excelu jako .xlsx). Grafy potřebují připojení k internetu (knihovna se načítá z webu).</p>
     <p class="nahoru"><a href="#o-statistika">&#8593; Obsah kapitoly</a> &nbsp;·&nbsp; <a href="#obsah">&#8593; Celkový obsah</a></p>
   </section>
 </section>
