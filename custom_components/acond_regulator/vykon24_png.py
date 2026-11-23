@@ -161,8 +161,10 @@ def vykresli(d: Vykon24Data) -> bytes:
     t = math.ceil(lo2 / krok2) * krok2
     while t <= hi2:
         y = Y2(t)
-        g.line([(L * S, y), (R * S, y)], fill=(0, 0, 0, 40) if t == 0 else GRID, width=S)
-        text(L - 10, y / S, f"{t}".replace("-", "−"), MUT, 13, anchor="rm")
+        nula = t == 0                    # nula tučně (Pavle 23. 11.): mráz na první pohled
+        g.line([(L * S, y), (R * S, y)], fill=(0, 0, 0, 120) if nula else GRID,
+               width=2 * S if nula else S)
+        text(L - 10, y / S, f"{t}".replace("-", "−"), INK if nula else MUT, 13, nula, anchor="rm")
         t += krok2
     text(L - 10, P2[0] - 14, "°C", MUT, 13, anchor="rm")
 
