@@ -548,14 +548,15 @@ OUSKA = [
      "M3 17l5-6 4 3 7-8M3 21h18"),
     ("vykon",     "Výkon",     "Výkon",
      "M3 20h18M5 20V12M10 20V6M15 20V10M20 20V4"),
+    ("vykon24",   "Výkon 24 h", "Výkon 24 h",
+     "M3 20h18M4 16l4-6 4 3 4-7 4 4"),
     ("pocasi",    "Počasí",    "Počasí",
      "M9 5.5a3.5 3.5 0 1 0 0 7M7 19h10a3.5 3.5 0 0 0 0-7 5 5 0 0 0-9.4 1.6A3 3 0 0 0 7 19z"),
     ("ekviterma", "Ekviterma", "Ekviterma",
      "M3 5c5 3 11 8 18 14M10 11a2 2 0 1 0 4 0a2 2 0 1 0-4 0"),
-    ("stroj",     "Stroj",     "Stroj",
-     "M12 9a3 3 0 1 0 0 6a3 3 0 1 0 0-6M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2"),
 ]
-PRIPRAVUJE_SE = {"ekviterma", "stroj"}
+# Stroj vypadl (23. 11.): místo dostal Výkon 24 h, hned vedle Výkonu (Pavle).
+PRIPRAVUJE_SE = {"ekviterma"}
 # Výkon není vrstva přes celé schéma, ale vložený graf zapínaný přepínačem
 # (switch.mar_vrstva_vykon); jeho plocha v souřadnicích schématu:
 VYKON_VLOZKA = (776, 319, 1180, 567)    # x0, y0, x1, y1 — shodně s vykon_png.VLOZKA

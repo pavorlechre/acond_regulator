@@ -50,7 +50,9 @@ v samostatné kartě těsně pod schématem. Díky tomu se kvůli nim nemusely
 přepočítat souřadnice vrstev schématu. Graf ouška (např. Teploty) kreslí
 integrace v Pillow (`teploty_png.py`) a dashboard ho zobrazí jako poslední
 vrstvu schématu, takže schéma celé překryje. Hotová ouška: Teploty
-(`teploty_png.py`) a Počasí (`pocasi_png.py`).
+(`teploty_png.py`), Výkon 24 h (`vykon24_png.py`) a Počasí (`pocasi_png.py`).
+Barvy pásů ve všech grafech: TUV žlutě (`PAS_TUV`), odmrazování šedě
+(`teploty_png.py`).
 
 **Výkon** je výjimka: není to vrstva přes celé schéma, ale malý graf
 (`vykon_png.py`) vložený do plochy `VYKON_VLOZKA` (od svislé trubky z AKU po

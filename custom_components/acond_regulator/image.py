@@ -72,6 +72,10 @@ from .const import (
     VRSTVA_VYKON_KEY,
     VYKON_HODIN,
     VYKON_KEY,
+    VYKON24_HODIN,
+    VYKON24_KEY,
+    VRSTVA_VYKON24,
+    ODMRAZ_DOBEH_MIN,
     VRSTVA_TEPLOTY,
     PERIOD_DAY_PREFIX,
     RING_DAYS,
@@ -93,6 +97,7 @@ from .stav_png import sestav_radky, vykresli
 from .pocasi_png import PocasiData, vykresli as vykresli_pocasi, vyhled_tekv
 from .teploty_png import TeplotyData, vykresli as vykresli_teploty
 from .vykon_png import VykonData, vykresli as vykresli_vykon
+from .vykon24_png import Vykon24Data, vykresli as vykresli_vykon24
 from .mini_teploty_png import MiniTeplotyData, vykresli as vykresli_mini_teploty
 from .statistics.accumulator import StatisticsAccumulator
 from .statistics.table_png import render_days, render_table
@@ -325,6 +330,7 @@ async def async_setup_entry(
             TeplotyImage(hass, coordinator, entry),
             PocasiImage(hass, coordinator, entry),
             VykonImage(hass, coordinator, entry),
+            Vykon24Image(hass, coordinator, entry),
             MiniTeplotyImage(hass, coordinator, entry),
         ]
     )
@@ -1046,6 +1052,120 @@ class VykonImage(_VrstvaImage):
         )
 
 
+def _intervaly(stavy: list, start: dt.datetime, konec: dt.datetime, test,
+               dobeh: dt.timedelta = dt.timedelta(0)) -> list[tuple[dt.datetime, dt.datetime]]:
+    """Intervaly, kdy stav splňoval `test`, oříznuté na okno a prodloužené o `dobeh`."""
+    out, od = [], None
+    for st in sorted(stavy, key=lambda st: st.last_changed):
+        t = max(st.last_changed, start)
+        if test(st.state):
+            if od is None:
+                od = t
+        elif od is not None:
+            out.append((od, min(t + dobeh, konec)))
+            od = None
+    if od is not None:
+        out.append((od, konec))
+    return out
+
+
+def _integral_kwh(stavy: list, start: dt.datetime, konec: dt.datetime, prevod,
+                  vyjmout: list | None = None) -> float | None:
+    """Energie (kWh) z okamžitého výkonu (kW): hodnota platí do další změny.
+
+    Riemann z okamžitých hodnot — platí i pro řadu PRO, kde jsou čítače energie
+    chybné. Intervaly ve `vyjmout` se nepočítají (výkon v odmrazu je nesmysl).
+    """
+    stavy = sorted(stavy, key=lambda st: st.last_changed)
+    if not stavy:
+        return None
+    vyjmout = vyjmout or []
+    celkem, mame = 0.0, False
+    for i, st in enumerate(stavy):
+        a = max(st.last_changed, start)
+        b = min(stavy[i + 1].last_changed if i + 1 < len(stavy) else konec, konec)
+        v = prevod(st.state)
+        if v is None or b <= a:
+            continue
+        mame = True
+        dt_s = (b - a).total_seconds()
+        for x0, x1 in vyjmout:
+            prekryv = (min(b, x1) - max(a, x0)).total_seconds()
+            if prekryv > 0:
+                dt_s -= prekryv
+        celkem += max(v, 0.0) * max(dt_s, 0.0) / 3600
+    return celkem if mame else None
+
+
+def _pocet_zapnuti(stavy: list, start: dt.datetime) -> int | None:
+    """Kolikrát se binární senzor v okně přepnul z „off“ na „on“.
+
+    Jen skutečné off → on (ne unavailable → on po restartu HA).
+    """
+    if not stavy:
+        return None
+    pocet, predtim = 0, None
+    for st in sorted(stavy, key=lambda st: st.last_changed):
+        if st.state == "on" and predtim == "off" and st.last_changed > start:
+            pocet += 1
+        if st.state in ("on", "off"):
+            predtim = st.state
+    return pocet
+
+
+class Vykon24Image(_VrstvaImage):
+    """image.mar_vykon_24_h — ouško Výkon 24 h: velký graf přes celé schéma.
+
+    Zapíná ho select.mar_vrstva (jako Teploty a Počasí). Výkon, příkon a COP,
+    TUV a odmrazování, pod tím venkovní teplota a T ekv; nahoře souhrn za 24 h
+    (teplo a elektřina integrované z okamžitých hodnot, starty, odmrazy, TUV).
+    """
+
+    _attr_name = "Výkon 24 h"         # entity_id: image.mar_vykon_24_h
+    VRSTVA = VRSTVA_VYKON24
+    KLIC = VYKON24_KEY
+
+    async def _vyrob(self) -> bytes:
+        data = await self._data()
+        return await self.hass.async_add_executor_job(vykresli_vykon24, data)
+
+    _na_kw = VykonImage._na_kw
+
+    async def _data(self) -> Vykon24Data:
+        konec = dt_util.utcnow().replace(second=0, microsecond=0)
+        konec -= dt.timedelta(minutes=konec.minute % TEPLOTY_KROK_MIN)
+        start = konec - dt.timedelta(hours=VYKON24_HODIN)
+        kroku = VYKON24_HODIN * 60 // TEPLOTY_KROK_MIN
+        casy = [start + dt.timedelta(minutes=TEPLOTY_KROK_MIN * i) for i in range(kroku + 1)]
+        tekv_id = self._mar_id("ekvitermni_teplota")
+        ids = [ACOND_POWER, ACOND_TEPELNY_VYKON, ACOND_COP, ACOND_BIT_TUV, ACOND_BIT_DEFROST,
+               ACOND_COMP_BIT, ACOND_OUTDOOR] + ([tekv_id] if tekv_id else [])
+        historie = await _historie(self.hass, start - dt.timedelta(hours=1), ids)
+        h = lambda eid: historie.get(eid, [])
+        zap = lambda s: s == "on"
+        na_kw_p, na_kw_v = self._na_kw(ACOND_POWER), self._na_kw(ACOND_TEPELNY_VYKON)
+        prikon = _prevzorkuj(h(ACOND_POWER), casy, na_kw_p)
+        vykon = _prevzorkuj(h(ACOND_TEPELNY_VYKON), casy, na_kw_v)
+        cop = _prevzorkuj(h(ACOND_COP), casy, _cislo)
+        cop = [c if (c is not None and 0 < c < 15 and p is not None and p > 0.1) else None
+               for c, p in zip(cop, prikon)]
+        odmrazy = _intervaly(h(ACOND_BIT_DEFROST), start, konec, zap,
+                             dt.timedelta(minutes=ODMRAZ_DOBEH_MIN))
+        return Vykon24Data(
+            casy=[dt_util.as_local(c) for c in casy],
+            prikon_kw=prikon, vykon_kw=vykon, cop=cop,
+            tuv=_prevzorkuj_kdykoli(h(ACOND_BIT_TUV), casy, zap),
+            odmraz=_prevzorkuj_kdykoli(h(ACOND_BIT_DEFROST), casy, zap),
+            venku=_prevzorkuj(h(ACOND_OUTDOOR), casy, _cislo),
+            t_ekv=_prevzorkuj(h(tekv_id), casy, _cislo) if tekv_id else [],
+            teplo_kwh=_integral_kwh(h(ACOND_TEPELNY_VYKON), start, konec, na_kw_v, odmrazy),
+            elektro_kwh=_integral_kwh(h(ACOND_POWER), start, konec, na_kw_p),
+            starty=_pocet_zapnuti(h(ACOND_COMP_BIT), start),
+            odmrazu=_pocet_zapnuti(h(ACOND_BIT_DEFROST), start),
+            tuv_pocet=_pocet_zapnuti(h(ACOND_BIT_TUV), start),
+        )
+
+
 class MiniTeplotyImage(_VrstvaImage):
     """image.mar_teploty_mini — malé teploty v „okně ve zdi“ schématu (6 h).
 
@@ -1130,4 +1250,5 @@ class MiniTeplotyImage(_VrstvaImage):
             pozadovana=rada("pozadovana"),
             skutecna=rada("skutecna"),
             pas=[bool(a) or bool(b) for a, b in zip(tuv, odmraz)],
+            odmraz=odmraz,
         )

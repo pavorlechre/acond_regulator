@@ -3555,7 +3555,7 @@
           state: 'on'
         elements:
         - type: image
-          image: /mar-schema/o-vykon-nacitam.svg?v=0191
+          image: /mar-schema/o-vykon-nacitam.svg?v=0192
           style:
             top: 63.286%
             left: 81.500%
@@ -3563,7 +3563,7 @@
             pointer-events: none
         - type: image
           entity: switch.mar_vrstva_vykon
-          image: /mar-schema/o-vykon-nacitam.svg?v=0191
+          image: /mar-schema/o-vykon-nacitam.svg?v=0192
           image_entity: image.mar_vykon
           tap_action:
             action: perform-action
@@ -3581,7 +3581,7 @@
           state: Teploty
         elements:
         - type: image
-          image: /mar-schema/o-nacitam.svg?v=0191
+          image: /mar-schema/o-nacitam.svg?v=0192
           style:
             top: 50%
             left: 50%
@@ -3606,10 +3606,38 @@
         conditions:
         - condition: state
           entity: select.mar_vrstva
+          state: Výkon 24 h
+        elements:
+        - type: image
+          image: /mar-schema/o-nacitam.svg?v=0192
+          style:
+            top: 50%
+            left: 50%
+            width: 100%
+            pointer-events: none
+        - type: image
+          entity: select.mar_vrstva
+          image: /mar-schema/v-prazdno.svg?v=0172
+          image_entity: image.mar_vykon_24_h
+          tap_action:
+            action: perform-action
+            perform_action: select.select_option
+            target:
+              entity_id: select.mar_vrstva
+            data:
+              option: Schéma
+          style:
+            top: 50%
+            left: 50%
+            width: 100%
+      - type: conditional
+        conditions:
+        - condition: state
+          entity: select.mar_vrstva
           state: Počasí
         elements:
         - type: image
-          image: /mar-schema/o-nacitam.svg?v=0191
+          image: /mar-schema/o-nacitam.svg?v=0192
           style:
             top: 50%
             left: 50%
@@ -3631,7 +3659,7 @@
             left: 50%
             width: 100%
     - type: picture-elements
-      image: /mar-schema/o-podklad.svg?v=0191
+      image: /mar-schema/o-podklad.svg?v=0192
       elements:
       - type: conditional
         conditions:
@@ -3640,7 +3668,7 @@
           state: Schéma
         elements:
         - type: image
-          image: /mar-schema/o-schema-on.svg?v=0191
+          image: /mar-schema/o-schema-on.svg?v=0192
           style:
             top: 50%
             left: 50%
@@ -3653,7 +3681,7 @@
           state: 'on'
         elements:
         - type: image
-          image: /mar-schema/o-vykon-on.svg?v=0191
+          image: /mar-schema/o-vykon-on.svg?v=0192
           style:
             top: 50%
             left: 50%
@@ -3666,7 +3694,20 @@
           state: Teploty
         elements:
         - type: image
-          image: /mar-schema/o-teploty-on.svg?v=0191
+          image: /mar-schema/o-teploty-on.svg?v=0192
+          style:
+            top: 50%
+            left: 50%
+            width: 100%
+            pointer-events: none
+      - type: conditional
+        conditions:
+        - condition: state
+          entity: select.mar_vrstva
+          state: Výkon 24 h
+        elements:
+        - type: image
+          image: /mar-schema/o-vykon24-on.svg?v=0192
           style:
             top: 50%
             left: 50%
@@ -3679,14 +3720,14 @@
           state: Počasí
         elements:
         - type: image
-          image: /mar-schema/o-pocasi-on.svg?v=0191
+          image: /mar-schema/o-pocasi-on.svg?v=0192
           style:
             top: 50%
             left: 50%
             width: 100%
             pointer-events: none
       - type: image
-        image: /mar-schema/o-klik.svg?v=0191
+        image: /mar-schema/o-klik.svg?v=0192
         tap_action:
           action: perform-action
           perform_action: select.select_option
@@ -3700,7 +3741,7 @@
           width: 15.000%
           cursor: pointer
       - type: image
-        image: /mar-schema/o-klik.svg?v=0191
+        image: /mar-schema/o-klik.svg?v=0192
         tap_action:
           action: perform-action
           perform_action: select.select_option
@@ -3714,7 +3755,7 @@
           width: 15.000%
           cursor: pointer
       - type: image
-        image: /mar-schema/o-klik.svg?v=0191
+        image: /mar-schema/o-klik.svg?v=0192
         tap_action:
           action: perform-action
           perform_action: switch.toggle
@@ -3726,7 +3767,21 @@
           width: 15.000%
           cursor: pointer
       - type: image
-        image: /mar-schema/o-klik.svg?v=0191
+        image: /mar-schema/o-klik.svg?v=0192
+        tap_action:
+          action: perform-action
+          perform_action: select.select_option
+          target:
+            entity_id: select.mar_vrstva
+          data:
+            option: Výkon 24 h
+        style:
+          top: 50%
+          left: 57.000%
+          width: 15.000%
+          cursor: pointer
+      - type: image
+        image: /mar-schema/o-klik.svg?v=0192
         tap_action:
           action: perform-action
           perform_action: select.select_option
@@ -3736,7 +3791,7 @@
             option: Počasí
         style:
           top: 50%
-          left: 57.000%
+          left: 73.000%
           width: 15.000%
           cursor: pointer
     - type: button

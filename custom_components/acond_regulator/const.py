@@ -758,15 +758,16 @@ SEKUNDAR_OPTIONS = [SEKUNDAR_CERPADLO, SEKUNDAR_STALE, SEKUNDAR_PRIMAR]
 SEKUNDAR_DEFAULT = SEKUNDAR_CERPADLO
 
 # ── ouška pod schématem (select.mar_vrstva) ──
-# Volby jsou jen ouška, která mají obsah. Další ouška (Energie, Ekviterma,
-# Počasí, Stroj) jsou v obrázku ztlumená a přibudou sem, až dostanou obsah.
+# Volby jsou jen ouška, která mají obsah. Další ouško (Ekviterma) je v obrázku
+# ztlumené a přibude sem, až dostane obsah.
 # Select je společný pro všechna zařízení, proto se po VRSTVA_NAVRAT_S sám
 # vrátí na Schéma — tablet na zdi nezůstane viset v grafu.
 VRSTVA_KEY = "vrstva"                         # select.mar_vrstva
 VRSTVA_SCHEMA = "Schéma"
 VRSTVA_TEPLOTY = "Teploty"
 VRSTVA_POCASI = "Počasí"
-VRSTVA_OPTIONS = [VRSTVA_SCHEMA, VRSTVA_TEPLOTY, VRSTVA_POCASI]
+VRSTVA_VYKON24 = "Výkon 24 h"
+VRSTVA_OPTIONS = [VRSTVA_SCHEMA, VRSTVA_TEPLOTY, VRSTVA_VYKON24, VRSTVA_POCASI]
 VRSTVA_NAVRAT_S = 300
 TEPLOTY_KEY = "teploty_png"                   # image.mar_teploty
 TEPLOTY_HODIN = 12                            # kolik hodin graf ukazuje
@@ -778,6 +779,10 @@ POCASI_KEY = "pocasi_png"                     # image.mar_pocasi
 VRSTVA_VYKON_KEY = "vrstva_vykon"             # switch.mar_vrstva_vykon
 VYKON_KEY = "vykon_png"                       # image.mar_vykon
 VYKON_HODIN = 12
+# Ouško Výkon 24 h: velký graf přes celé schéma (select.mar_vrstva), 24 h
+VYKON24_KEY = "vykon24_png"                   # image.mar_vykon_24_h
+VYKON24_HODIN = 24
+ODMRAZ_DOBEH_MIN = 3                          # po odmrazu ještě doznívá nesmyslný výkon
 ACOND_TEPELNY_VYKON = "sensor.acond_30028_ahp"   # tepelný výkon
 ACOND_COP = "sensor.acond_30029_cop"
 POCASI_HODIN = 24                             # ouško Počasí: hodin zpět i dopředu
