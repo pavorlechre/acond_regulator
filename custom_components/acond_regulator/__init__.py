@@ -78,6 +78,9 @@ async def _async_serve_manual(hass: HomeAssistant) -> None:
                 # hned ukázat příručku k nainstalované verzi (jako u schématu).
                 StaticPathConfig(MANUAL_URL, index, False),
                 StaticPathConfig(f"{MANUAL_URL}/index.html", index, False),
+                # Prohlížeč exportu dat (0.18.0b31), odkaz z okna exportu
+                StaticPathConfig(f"{MANUAL_URL}/prohlizec.html",
+                                 os.path.join(directory, "prohlizec.html"), False),
             ]
         )
         hass.data.setdefault(DOMAIN, {})["_manual_served"] = True

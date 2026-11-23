@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prohlížeč dat MaR</title>
+<!-- Prohlížeč exportu dat MaR (Statistika → Export snímku a dat → Data po minutách).
+     Jediný zdroj: custom_components/acond_regulator/prirucka/prohlizec.html.
+     HA ho servíruje na /mar-prirucka/prohlizec.html (odkaz z okna exportu s ?csv=… =
+     rovnou načte poslední export), GitHub Pages na …/acond_regulator/prohlizec.html.
+     Soubor se zpracuje jen v prohlížeči a nikam se neposílá. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:light dark;
+ --bg:light-dark(#ffffff,#0a0d18);--ink:light-dark(#0b0b0b,#eef0f6);--muted:light-dark(#52514e,#a9adbd);
+ --zone:light-dark(#eef2ff,#131a30);--line:light-dark(#d6dcf0,#26304f);--strip:#1240e0;--strip-ink:#fff;
+ --s1:light-dark(#2a78d6,#3987e5);--s2:light-dark(#eb6834,#d95926);--s3:light-dark(#1baf7a,#199e70);
+ --s4:light-dark(#eda100,#c98500);--s5:light-dark(#e87ba4,#d55181);--s7:light-dark(#6250d6,#9085e9);--s8:light-dark(#e34948,#e66767)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 Inter,system-ui,sans-serif;overflow-x:clip}
+h1,h2{font-family:"Space Grotesk",Inter,sans-serif;margin:0;line-height:1.05;text-wrap:balance}
+.strip{background:var(--strip);color:var(--strip-ink);padding:18px max(4vw,16px);display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center;justify-content:space-between}
+.strip h1{font-size:clamp(26px,3.4vw,38px)}
+.strip p{margin:4px 0 0;font-size:14px;opacity:.85}
+.btn{font:600 15px Inter,sans-serif;min-height:44px;padding:0 18px;border-radius:8px;border:2px solid #fff;background:#fff;color:#1240e0;cursor:pointer}
+.btn.ghost{background:transparent;color:#fff}
+.btn:focus-visible,.rng button:focus-visible{outline:3px solid #ffd54a;outline-offset:2px}
+.drop{border:2px dashed var(--line);border-radius:10px;margin:16px max(4vw,16px) 0;padding:14px 16px;color:var(--muted);font-size:14px;text-align:center}
+.drop.on{border-color:var(--strip);background:var(--zone);color:var(--ink)}
+.wrap{padding:0 max(4vw,16px) 40px;max-width:1400px;margin:0 auto}
+.meta{font-size:13px;color:var(--muted);margin:14px 0 4px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin:6px 0 18px}
+.tile{background:var(--zone);padding:12px 14px}
+.tile b{display:block;font:700 clamp(22px,2.4vw,28px)/1.1 "Space Grotesk",sans-serif;white-space:nowrap}
+.tile span{font-size:13px;color:var(--muted)}
+.rng{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:4px 0 10px;font-size:14px;color:var(--muted)}
+.rng button{font:600 14px Inter,sans-serif;min-height:40px;padding:0 14px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer}
+.rng button[aria-pressed=true]{background:var(--strip);color:#fff;border-color:var(--strip)}
+.panel{border-top:1px solid var(--line);padding:12px 0 4px}
+.panel h2{font-size:17px;margin-bottom:2px}
+.panel .sub{font-size:13px;color:var(--muted);margin:0 0 4px}
+.ch{width:100%}
+table{border-collapse:collapse;width:100%;font-size:14px;margin-top:8px}
+th,td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{font-weight:600;color:var(--muted);font-size:13px}
+.scroll{overflow-x:auto}
+.note{font-size:13px;color:var(--muted);margin-top:10px;max-width:70ch}
+.err{color:var(--s8);font-weight:600}
+/* uPlot – nutné styly (cizí CSS se nesmí načítat) */
+.uplot{font-family:Inter,sans-serif;line-height:1.5;width:100%}.u-wrap{position:relative;user-select:none}
+.u-over,.u-under{position:absolute}.u-under{overflow:hidden}.uplot canvas{display:block;position:relative;width:100%;height:100%}
+.u-axis{position:absolute}.u-legend{font-size:13px;margin:4px 0 0;text-align:left;color:var(--ink)}
+.u-inline{display:block}.u-inline *{display:inline-block}.u-inline tr{margin-right:14px}
+.u-legend th{font-weight:400;color:var(--ink)}.u-legend th>*{vertical-align:middle;display:inline-block}
+.u-legend .u-marker{width:14px;height:4px;margin-right:6px;border-radius:2px;background-clip:padding-box!important}
+.u-inline.u-live th::after{content:":";vertical-align:middle}.u-inline:not(.u-live) .u-value{display:none}
+.u-legend .u-value{font-variant-numeric:tabular-nums;color:var(--muted);min-width:4.5em}
+.u-series>*{padding:2px}.u-series th{cursor:pointer}.u-legend .u-off>*{opacity:.35}
+.u-select{background:rgba(18,64,224,.12);position:absolute;pointer-events:none}
+.u-cursor-x,.u-cursor-y{position:absolute;left:0;top:0;pointer-events:none;will-change:transform}
+.u-hz .u-cursor-x{height:100%;border-right:1px dashed var(--muted)}.u-hz .u-cursor-y{width:100%;border-bottom:1px dashed transparent}
+.u-cursor-pt{position:absolute;top:0;left:0;border-radius:50%;border:0 solid;pointer-events:none;will-change:transform;background-clip:padding-box!important}
+.u-axis.u-off,.u-select.u-off,.u-cursor-x.u-off,.u-cursor-y.u-off,.u-cursor-pt.u-off{display:none}
+.u-legend .u-series:first-child th::after{content:""}
+@media(max-width:600px){.strip{padding:14px 16px}table{font-size:13px}.tile b{font-size:22px}}
+</style>
+</head>
+<body>
+<header class="strip">
+ <div><h1>Prohlížeč dat MaR</h1><p>Export dat po minutách ze Statistiky → průběhy, souhrn a tabulka po dnech. Soubor zůstává v tvém počítači.</p></div>
+ <div style="display:flex;gap:10px;flex-wrap:wrap">
+  <button class="btn" id="open">Otevřít soubor</button>
+  <button class="btn ghost" id="demo">Ukázková data</button>
+  <input type="file" id="file" hidden>
+ </div>
+</header>
+<div class="drop" id="drop">Sem přetáhni soubor <b>mar_…csv</b> z exportu (Statistika → Export snímku a dat → Data po minutách), nebo ho otevři tlačítkem. Funguje i stejný soubor uložený v Excelu jako .xlsx.</div>
+<main class="wrap">
+ <p class="meta" id="meta"></p>
+ <div class="tiles" id="tiles"></div>
+ <div class="rng" id="rng">Rozsah:
+  <button data-h="0" aria-pressed="true">Vše</button><button data-h="72">3 dny</button><button data-h="24">24 h</button><button data-h="6">6 h</button>
+  <span>· tažením v grafu přiblížíš, dvojklikem vrátíš</span></div>
+ <section id="charts"></section>
+ <section class="panel"><h2>Po dnech</h2>
+  <div class="scroll"><table id="days"></table></div>
+  <p class="note">Energie je spočítaná stejně jako ve Statistice MaR: okamžitý příkon a výkon × čas (lichoběžník po minutách), úsek delší než 5 minut se nepočítá, teplo během odmrazování se nepočítá. Průměrný příkon a výkon = energie děleno započítaným časem (i se stáním kompresoru). „V cíli“ = místnost do ±0,15 °C od cíle. Starty = rozběhy kompresoru.</p>
+ </section>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/uplot@1.6.30/dist/uPlot.iife.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+{
+const $=s=>document.querySelector(s);
+const cz=(v,d=1)=>v==null||!isFinite(v)?'–':v.toLocaleString('cs-CZ',{minimumFractionDigits:d,maximumFractionDigits:d});
+const probe=document.createElement('i');probe.style.display='none';document.body.appendChild(probe);
+const css=n=>{probe.style.color=`var(${n})`;return getComputedStyle(probe).color};   // light-dark() -> rgb pro canvas
+const pad=x=>String(x).padStart(2,'0');
+const tfmt=(_,sp)=>sp.map(s=>{const d=new Date(s*1000);return d.getHours()===0&&d.getMinutes()===0?`${d.getDate()}. ${d.getMonth()+1}.`:`${d.getHours()}:${pad(d.getMinutes())}`});
+const tval=(_,s)=>{if(s==null)return '–';const d=new Date(s*1000);return `${d.getDate()}. ${d.getMonth()+1}. ${d.getHours()}:${pad(d.getMinutes())}`};
+let D=null,plots=[],sync=uPlot.sync('mar'),range=0,label='';
+
+/* ---------- načtení: CSV (oddělovač ;, desetinná čárka) nebo XLSX z Excelu ---------- */
+function fromRows(rows){
+  const head=(rows[0]||[]).map(h=>String(h??'').trim());
+  if(!head.includes('cas'))throw new Error('V souboru chybí sloupec „cas“ – je to export dat MaR?');
+  const cols={};head.forEach(h=>cols[h]=[]);
+  for(let i=1;i<rows.length;i++){
+    const c=rows[i];if(!c||!c.length)continue;
+    head.forEach((h,j)=>{const v=c[j];
+      if(h==='cas'){let t=null;
+        if(v instanceof Date)t=v.getTime()/1000;
+        else if(typeof v==='number'){const ms=(v-25569)*864e5;t=Math.round((ms+new Date(ms).getTimezoneOffset()*6e4)/1000)}  // sériové datum Excelu
+        else if(v){const d=new Date(String(v).trim().replace(' ','T'));if(!isNaN(d))t=d.getTime()/1000}
+        cols[h].push(t);}
+      else if(typeof v==='number')cols[h].push(v);
+      else{const s=String(v??'').trim(),n=parseFloat(s.replace(',','.'));cols[h].push(s===''?null:(isNaN(n)?s:n));}});
+  }
+  const ok=cols.cas.map((x,i)=>x!=null?i:-1).filter(i=>i>=0);   // řádky bez času pryč
+  if(!ok.length)throw new Error('Soubor neobsahuje žádná data.');
+  for(const h in cols)cols[h]=ok.map(i=>cols[h][i]);
+  return cols;
+}
+function parse(text){
+  const lines=text.replace(/^﻿/,'').split(/\r?\n/).filter(l=>l.trim());
+  const sep=lines[0].includes(';')?';':',';
+  return fromRows(lines.map(l=>l.split(sep)));
+}
+async function readFile(f){
+  const buf=await f.arrayBuffer(),b=new Uint8Array(buf.slice(0,4));
+  if(b[0]===0x50&&b[1]===0x4b){                       // ZIP = xlsx
+    if(!window.XLSX)throw new Error('Knihovnu pro .xlsx se nepodařilo načíst – použij .csv.');
+    const wb=XLSX.read(buf,{type:'array',cellDates:true});
+    return fromRows(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,raw:true}));
+  }
+  return parse(new TextDecoder('utf-8').decode(buf));
+}
+
+const num=(a,i)=>typeof a?.[i]==='number'?a[i]:null;
+const on=(a,i)=>num(a,i)===1;
+
+/* ---------- výpočty ---------- */
+function compute(c){
+  const t=c.cas,n=t.length,days={};
+  const day=s=>{const d=new Date(s*1000);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+  const nove=()=>({el:0,tep:0,hEl:0,hTep:0,starts:0,odm:0,tuv:0,inT:0,nT:0,ven:0,nV:0,mis:0,nM:0});
+  const tot=nove();
+  for(let i=0;i<n;i++){
+    const k=day(t[i]);const d=days[k]??=nove();
+    const v=num(c.venku,i),m=num(c.mistnost,i),cil=num(c.cil_mistnosti,i);
+    for(const o of [d,tot]){if(v!=null){o.ven+=v;o.nV++}if(m!=null){o.mis+=m;o.nM++;if(cil!=null){o.nT++;if(Math.abs(m-cil)<=0.15+1e-9)o.inT++}}}
+    if(i>0){
+      if(on(c.kompresor,i)&&num(c.kompresor,i-1)===0){d.starts++;tot.starts++}
+      if(on(c.odmraz,i)&&!on(c.odmraz,i-1)){d.odm++;tot.odm++}
+    }
+    if(on(c.tuv,i)){d.tuv++;tot.tuv++}
+    if(i<n-1){const dt=t[i+1]-t[i];
+      if(dt>0&&dt<=300){
+        const p1=num(c.prikon_W,i),p2=num(c.prikon_W,i+1),q1=num(c.vykon_W,i),q2=num(c.vykon_W,i+1);
+        if(p1!=null&&p2!=null){const e=(p1+p2)/2*dt/3.6e6;d.el+=e;tot.el+=e;d.hEl+=dt/3600;tot.hEl+=dt/3600}
+        if(q1!=null&&q2!=null){                       // čas se počítá i v odmrazu (teplo tam 0)
+          d.hTep+=dt/3600;tot.hTep+=dt/3600;
+          if(!on(c.odmraz,i)){const e=(q1+q2)/2*dt/3.6e6;d.tep+=e;tot.tep+=e}}
+      }}
+  }
+  return {days,tot};
+}
+
+/* ---------- grafy ---------- */
+const PANELS=[
+ {id:'m',title:'Místnost',sub:'teplota v místnosti a cíl, °C',h:200,unit:'°C',s:[['mistnost','místnost','--s1'],['cil_mistnosti','cíl','--s8',1]]},
+ {id:'w',title:'Voda',sub:'topná voda, zpátečka, požadovaná a ekvitermní křivka, °C',h:230,unit:'°C',s:[['topna_voda','topná voda','--s2'],['zpatecka','zpátečka','--s1'],['zadana_zpatecka','požadovaná zpátečka','--s7',1],['zpatecka_z_ekvitermy','křivka','--s3',1]]},
+ {id:'v',title:'Venku',sub:'venkovní teplota, °C',h:150,unit:'°C',s:[['venku','venku','--s1']]},
+ {id:'p',title:'Výkon',sub:'tepelný výkon, elektrický příkon a strop 40014, kW',h:200,unit:'kW',k:1000,s:[['vykon_W','výkon','--s2'],['prikon_W','příkon','--s1'],['strop_40014','strop 40014','--s7',1]]},
+ {id:'s',title:'Stavy',sub:'kdy co běželo',h:150,lanes:[['kompresor','kompresor','--s1'],['tuv','TUV','--s4'],['odmraz','odmraz','--s3'],['_pauza','pauza R','--s5'],['sek_cerpadlo','sek. čerpadlo','--s7']]},
+ {id:'r',title:'Posun křivky',sub:'doučený posun R-Ekvitermy, °C',h:140,unit:'°C',s:[['r_posun','posun','--s7',1]]},
+];
+function build(){
+  plots.forEach(p=>p.destroy());plots=[];
+  const c=D.cols,t=c.cas,box=$('#charts');box.innerHTML='';
+  const mut=css('--muted'),grid=css('--line');
+  const axis=u=>({stroke:mut,grid:{stroke:grid,width:1},ticks:{stroke:grid,width:1},font:'12px Inter',values:u?(_,v)=>v.map(x=>cz(x,Math.abs(v[1]-v[0])<1?1:0)):undefined});
+  for(const P of PANELS){
+    let series=[{label:'čas',value:tval}],data=[t];
+    if(P.lanes){
+      const L=P.lanes.filter(([k])=>k==='_pauza'?c.r_stav:c[k]);if(!L.length)continue;
+      L.forEach(([k,name,col],j)=>{const base=L.length-1-j;
+        const src=k==='_pauza'?c.r_stav.map(x=>x==='pauza'?1:0):c[k];
+        data.push(src.map(x=>x===1?base+0.8:(x===0?base:null)));
+        series.push({label:name,stroke:css(col),width:2,paths:uPlot.paths.stepped({align:1}),value:(u,v)=>v==null?'–':(v%1>0.5?'běží':'—')});
+      });
+      P.yr=[-0.2,L.length];
+    }else{
+      const S=P.s.filter(([k])=>c[k]&&c[k].some(x=>typeof x==='number'));if(!S.length)continue;
+      S.forEach(([k,name,col,dash])=>{data.push(c[k].map(x=>typeof x==='number'?(P.k?x/P.k:x):null));
+        series.push({label:name,stroke:css(col),width:dash?1.5:2,dash:dash?[5,4]:undefined,spanGaps:false,value:(u,v)=>v==null?'–':cz(v,P.k?2:1)+' '+P.unit});});
+    }
+    const sec=document.createElement('div');sec.className='panel';
+    sec.innerHTML=`<h2>${P.title}</h2><p class="sub">${P.sub}</p><div class="ch"></div>`;box.appendChild(sec);
+    const el=sec.querySelector('.ch');
+    const opts={width:el.clientWidth||800,height:P.h,series,
+      cursor:{sync:{key:sync.key,setSeries:false},drag:{x:true,y:false}},
+      scales:{x:{time:true},y:P.yr?{range:()=>P.yr}:{}},
+      axes:[{...axis(),space:70,values:tfmt},P.lanes?{show:false}:{...axis(P.unit),size:52}],
+      legend:{live:true},
+      hooks:{setScale:[(u,k)=>{if(k==='x'&&!u._syncing){const{min,max}=u.scales.x;plots.forEach(o=>{if(o!==u){o._syncing=1;o.setScale('x',{min,max});o._syncing=0}})}}]}};
+    const u=new uPlot(opts,data,el);plots.push(u);
+  }
+  const ro=new ResizeObserver(()=>plots.forEach(p=>p.setSize({width:p.root.parentElement.clientWidth,height:p.height})));
+  ro.observe(box);setRange(range);
+}
+function setRange(h){
+  range=h;document.querySelectorAll('#rng button').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.h===h));
+  if(!D||!plots.length)return;const t=D.cols.cas,max=t[t.length-1],min=h?Math.max(t[0],max-h*3600):t[0];
+  plots.forEach(p=>{p._syncing=1;p.setScale('x',{min,max});p._syncing=0});
+}
+
+/* ---------- souhrn a tabulka ---------- */
+function render(){
+  const {days,tot}=D.calc,c=D.cols,t=c.cas;
+  const f=s=>new Date(s*1000).toLocaleString('cs-CZ',{day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit'});
+  const hrs=(t[t.length-1]-t[0])/3600;
+  $('#meta').textContent=`${label} · ${f(t[0])} – ${f(t[t.length-1])} · ${cz(hrs,0)} h · ${t.length} řádků`;
+  const cop=tot.el>0.05?tot.tep/tot.el:null;
+  const T=[[cz(tot.ven/tot.nV),'venku Ø, °C'],[cz(tot.mis/tot.nM,2),'místnost Ø, °C'],[tot.nT?cz(tot.inT/tot.nT*100,0)+' %':'–','v cíli ±0,15 °C'],
+    [cz(tot.starts/hrs*24,1),'startů za den'],[cz(tot.odm,0),'odmrazování'],[cz(tot.tuv/60,1)+' h','ohřev TUV'],
+    [cz(tot.el,1),'elektřina, kWh'],[cz(tot.tep,1),'teplo, kWh'],[cz(cop,2),'COP'],
+    [tot.hEl?cz(tot.el/tot.hEl,2):'–','příkon Ø, kW'],[tot.hTep?cz(tot.tep/tot.hTep,2):'–','výkon Ø, kW']];
+  $('#tiles').innerHTML=T.map(([v,s])=>`<div class="tile"><b>${v}</b><span>${s}</span></div>`).join('');
+  const rows=Object.entries(days);
+  $('#days').innerHTML=`<thead><tr><th>Den</th><th>Venku °C</th><th>Místnost °C</th><th>V cíli</th><th>Starty</th><th>Odmraz</th><th>TUV min</th><th>El. kWh</th><th>Teplo kWh</th><th>COP</th></tr></thead><tbody>`+
+    rows.map(([k,d])=>{const [y,m,dd]=k.split('-');return `<tr><td>${+dd}. ${+m}.</td><td>${cz(d.ven/d.nV)}</td><td>${cz(d.mis/d.nM,2)}</td><td>${d.nT?cz(d.inT/d.nT*100,0)+' %':'–'}</td><td>${d.starts}</td><td>${d.odm}</td><td>${d.tuv}</td><td>${cz(d.el,2)}</td><td>${cz(d.tep,2)}</td><td>${d.el>0.05?cz(d.tep/d.el,2):'–'}</td></tr>`}).join('')+'</tbody>';
+}
+function load(src,name){
+  try{const cols=typeof src==='string'?parse(src):src;D={cols,calc:compute(cols)};label=name;render();build();$('#drop').innerHTML=`Načteno: <b>${name}</b>. Další soubor sem můžeš přetáhnout kdykoli.`;}
+  catch(e){$('#drop').innerHTML=`<span class="err">${e.message}</span>`}
+}
+
+/* ---------- ukázková data (vymyšlená, 2 dny po minutách) ---------- */
+function demo(){
+  const rows=['cas;venku;mistnost;cil_mistnosti;zpatecka;zadana_zpatecka;zpatecka_z_ekvitermy;topna_voda;strop_40014;prikon_W;vykon_W;kompresor;tuv;odmraz;r_stav;sek_cerpadlo;r_posun'];
+  const t0=new Date();t0.setHours(0,0,0,0);t0.setDate(t0.getDate()-2);
+  let room=21.4,ret=33,run=1,posun=0;
+  for(let i=0;i<2*1440;i++){
+    const d=new Date(t0.getTime()+i*60000),h=d.getHours()+d.getMinutes()/60;
+    const ven=3+4*Math.sin((h-9)/24*2*Math.PI);
+    const tuv=(h>=20&&h<20.5)||(h>=6.5&&h<6.8);const odm=run&&ven<3&&i%95<4;
+    const curve=39-0.7*ven+2*(21.6-room)+posun;
+    if(room>21.8)run=0;if(room<21.5)run=1;
+    const p=run&&!tuv?5000:0;ret+=run&&!tuv?(ret<curve+4?0.05:0):-0.08;ret=Math.max(26,ret);
+    room+=(p/1000-245*(room-ven)/1000)*0.0012+(h>11&&h<15?0.0015:0);
+    if(i%60===0&&run&&room<21.5)posun=Math.min(posun+0.2,2);
+    const pr=tuv?1900:(p?(odm?900:1050):0);const vy=tuv?6500:(p?(odm?3000:p):0);
+    const ts=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')+':00';
+    rows.push([ts,ven.toFixed(1),room.toFixed(1),'21.6',ret.toFixed(1),Math.max(curve,ret-1).toFixed(1),curve.toFixed(1),(ret+(p?3.8:0.2)).toFixed(1),'4700',pr,vy,run||tuv?1:0,tuv?1:0,odm?1:0,run?'běh':'pauza',run?1:0,posun.toFixed(2)].join(';').replace(/\./g,','));
+  }
+  load(rows.join('\n'),'ukázková data (vymyšlená)');
+}
+
+/* ---------- poslední export přímo z HA: ?csv=/local/mar_export/…csv ---------- */
+async function zOdkazu(){
+  const u=new URLSearchParams(location.search).get('csv');
+  if(!u)return false;
+  // jen soubory exportu MaR na stejném serveru (HA), nic jiného se nestahuje
+  if(!/^\/local\/mar_export\/[\w.\-]+\.csv$/.test(u)){$('#drop').innerHTML='<span class="err">Neplatný odkaz na export.</span>';return false}
+  $('#drop').textContent='Načítám poslední export…';
+  try{const r=await fetch(u,{cache:'no-store'});if(!r.ok)throw new Error(`Export se nepodařilo stáhnout (${r.status}) – udělej nový.`);
+    load(await r.text(),u.split('/').pop());return true}
+  catch(e){$('#drop').innerHTML=`<span class="err">${e.message}</span>`;return false}
+}
+
+/* ---------- ovládání ---------- */
+$('#open').onclick=()=>$('#file').click();
+const openF=f=>readFile(f).then(c=>load(c,f.name)).catch(e=>{$('#drop').innerHTML=`<span class="err">${e.message}</span>`});
+$('#file').onchange=e=>{const f=e.target.files[0];if(f)openF(f);e.target.value=''};
+$('#demo').onclick=demo;
+document.querySelectorAll('#rng button').forEach(b=>b.onclick=()=>setRange(+b.dataset.h));
+const dz=$('#drop');
+['dragenter','dragover'].forEach(ev=>document.addEventListener(ev,e=>{e.preventDefault();dz.classList.add('on')}));
+['dragleave','drop'].forEach(ev=>document.addEventListener(ev,e=>{e.preventDefault();if(ev==='drop'||e.target===document.documentElement)dz.classList.remove('on')}));
+document.addEventListener('drop',e=>{const f=e.dataTransfer.files[0];if(f)openF(f)});
+const rethemed=()=>{if(D)build()};
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',rethemed);
+new MutationObserver(rethemed).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+zOdkazu().then(ok=>{if(!ok&&!D&&!new URLSearchParams(location.search).has('csv'))demo()});
+}
+</script>
+</body>
+</html>
