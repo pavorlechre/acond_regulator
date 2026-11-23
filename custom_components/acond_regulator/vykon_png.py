@@ -10,7 +10,9 @@ plátno v poměru té plochy (VLOZKA) a málo čísel — na mobilu je malý.
   • COP (30029) tenkou čarou na pravé ose (jen když kompresor běží),
   • na konci čar hodnoty „teď“ (výkon, příkon v kW, COP) před osou COP,
     nahoře jen malé „kW“ a „COP“ nad osami, 12 h,
-  • ohřev TUV a odmrazování šedým pruhem s popiskem nad ním.
+  • ohřev TUV žlutým pruhem, odmrazování šedým (popisek nad pruhem); v odmrazu
+    se výkon, příkon ani COP nekreslí — Acond tam hlásí nesmyslné špičky
+    (tok tepla se obrací), proto mezera (Pavle 23. 11.).
 
 Čistá kreslicí funkce bez Home Assistantu; data skládá `VykonImage`.
 """
@@ -24,7 +26,9 @@ from io import BytesIO
 
 from PIL import Image, ImageDraw
 
-from .teploty_png import GRID, INK, MUT, _fmt, _font, popis_pasu, useky_pasu
+from .teploty_png import (
+    GRID, INK, MUT, PAS_TUV, _fmt, _font, bez_odmrazu, popis_pasu, useky_barev, useky_pasu,
+)
 
 # Plocha vložky v souřadnicích schématu 1200 × 700 (dashboard ji tam umístí)
 VLOZKA = (776, 319, 1180, 567)          # x0, y0, x1, y1
@@ -58,6 +62,10 @@ class VykonData:
 
 def vykresli(d: VykonData) -> bytes:
     n = len(d.casy)
+    # v odmrazu (a krok po něm) se nekreslí nic — špičky tam nemají smysl
+    d.vykon_kw = bez_odmrazu(d.vykon_kw, d.odmraz)
+    d.prikon_kw = bez_odmrazu(d.prikon_kw, d.odmraz)
+    d.cop = bez_odmrazu(d.cop, d.odmraz)
     # Kreslí se na NEPRŮHLEDNÉ plátno (poloprůhledné plochy se tak míchají
     # s pozadím); průhledné jsou jen zaoblené rohy — maska na konci.
     img = Image.new("RGB", (W * S, H * S), POZADI)
@@ -83,11 +91,16 @@ def vykresli(d: VykonData) -> bytes:
     text(12, 10, "Výkon · 12 h", INK, 13, True)
 
     # šedý pruh TUV / odmrazování (pod křivkami), popisek nahoře
-    pas = [a or b for a, b in zip(d.tuv or [False] * n, d.odmraz or [False] * n)]
+    # šedý pás i přes doběh po odmrazu — mezera v čarách pak leží celá v pásu
+    odmraz_pas = [v is None for v in bez_odmrazu([0] * n, d.odmraz)] if d.odmraz else [False] * n
+    pas = [a or b for a, b in zip(d.tuv or [False] * n, odmraz_pas)]
+    for od, do, je_odmraz in useky_barev(pas, odmraz_pas):
+        x0, x1 = round(X(od)), round(X(min(do, n - 1)))
+        g.rectangle([x0, T * S, max(x0 + S, x1 - 1), B * S],
+                    fill=PAS if je_odmraz else PAS_TUV)
     konec_popisku = -1e9
     for od, do in useky_pasu(pas):
         x0, x1 = round(X(od)), round(X(min(do, n - 1)))
-        g.rectangle([x0, T * S, max(x0 + S, x1 - 1), B * S], fill=PAS)
         # popisek nad pruh (uvnitř by ho zakryly plochy výkonu při ohřevu);
         # těsně za sebou jdoucí pruhy — jen první popisek, ať se nepřekrývají
         popis = popis_pasu(od, do, d.tuv, d.odmraz)

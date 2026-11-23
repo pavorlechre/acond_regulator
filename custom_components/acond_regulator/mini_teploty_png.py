@@ -10,8 +10,9 @@ legenda, jen křivky a barevné plochy za posledních 6 h a u pravé hrany
   • Dole VODA: výstup (červeně), skutečná zpátečka (modře), požadovaná
     zpátečka (oranžově). Mezera výstup–zpátečka je jemně červená: „chod“ —
     když kompresor běží, čáry se rozestoupí, když stojí, sejdou se.
-  • Ohřev TUV a odmrazování: šedý pruh, křivky vody v něm přerušené (výstup
-    60 °C by rozbil měřítko). Pod 19,5 °C (TČ stojí, čidla venku vychladnou)
+  • Ohřev TUV žlutý pruh, odmrazování šedý; křivky vody v nich přerušené
+    (výstup 60 °C by rozbil měřítko).
+  • Ve středové dělicí čáře mezi panely nápis „Teploty · 6 h“. Pod 19,5 °C (TČ stojí, čidla venku vychladnou)
     tečkovaně po spodním okraji, stejně jako ve velkém grafu.
 
 Plocha OKNO je v souřadnicích schématu 1200 × 700; zeď je v ní přerušená
@@ -24,14 +25,15 @@ podkladu schématu, takže obrázek nemá viditelný okraj.
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from io import BytesIO
 
 from PIL import Image, ImageDraw
 
 from .teploty_png import (
-    ACT, AMB, BLU, DOLNI_MEZ, RED, ROOM, TGT, TUV_POZADOVANA, _fmt, _font, _rozsah,
+    ACT, AMB, BLU, DOLNI_MEZ, MUT, PAS_TUV, RED, ROOM, TGT, TUV_POZADOVANA, _fmt, _font,
+    _rozsah, useky_barev,
 )
 
 # Plocha v souřadnicích schématu (x0, y0, x1, y1): mezi TČ (pravý okraj 304)
@@ -63,6 +65,7 @@ class MiniTeplotyData:
     pozadovana: list[float | None]      # 30008
     skutecna: list[float | None]        # 30009
     pas: list[bool]                     # TUV nebo odmrazování
+    odmraz: list[bool] = field(default_factory=list)    # kvůli barvě pruhu
 
 
 def vykresli(d: MiniTeplotyData) -> bytes:
@@ -155,9 +158,22 @@ def vykresli(d: MiniTeplotyData) -> bytes:
         horni.append((Y1(cil_ted) / S, _fmt(cil_ted), TGT))
 
     # ── voda ──
-    for i in range(n):                  # šedý pruh TUV / odmraz přes oba panely
-        if pas[i] and i < n - 1:
-            g.rectangle([round(X(i)), P1[0] * S, round(X(i + 1)) - 1, P2[1] * S], fill=PAS)
+    # pruh přes oba panely: TUV žlutě, odmrazování šedě
+    for od, do, je_odmraz in useky_barev(pas, d.odmraz):
+        if od >= n - 1:
+            continue
+        g.rectangle([round(X(od)), P1[0] * S, round(X(min(do, n - 1))) - 1, P2[1] * S],
+                    fill=PAS if je_odmraz else PAS_TUV[:3] + (40,))
+
+    # nápis ve středové dělicí čáře (mezi místností a vodou)
+    y_del = (P1[1] + P2[0]) / 2
+    f_del = _font(8.5, True)
+    napis = "Teploty · 6 h"
+    sirka = g.textlength(napis, font=f_del) / S
+    xm = (L + R) / 2
+    g.line([(L * S, y_del * S), ((xm - sirka / 2 - 4) * S, y_del * S)], fill=MUT + (90,), width=S)
+    g.line([((xm + sirka / 2 + 4) * S, y_del * S), (R * S, y_del * S)], fill=MUT + (90,), width=S)
+    g.text((xm * S, y_del * S), napis, fill=MUT, font=f_del, anchor="mm")
     lo2, hi2 = _rozsah(d.vystup, d.pozadovana, d.skutecna, pas=pas,
                        minimum=3.0, krok=1.0, dolni=DOLNI_MEZ)
     Y2 = Yf(P2, lo2, hi2)

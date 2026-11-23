@@ -13,7 +13,8 @@ Rozvržení (dohodnuté s Pavlem 29. 9. 2026):
     Značky osy míří doleva do grafu, aby se nepletly s mínusy u čísel.
   • Přídavek na místnost jako jemná výplň mezi ekvitermou a výpočtem MaR:
     červená přidává, modrá ubírá.
-  • TUV a odmrazování jako šedé pásy, křivky v nich přerušené, osy bez špiček.
+  • TUV jako žlutý pás, odmrazování šedý (Pavle 23. 11.), křivky v nich
+    přerušené, osy bez špiček.
   • Výstup topné vody (30018) červeně, bez výplně: v rozsahu osy plnou čarou,
     nad / pod ním čárkovaně po horním / dolním okraji; rozsah nezvětšuje.
   • Hodnoty „teď“ u zpátečky (požadovaná, skutečná, výstup, ekviterma bez
@@ -44,7 +45,11 @@ INK = (43, 49, 56); MUT = (107, 112, 117); GRID = (0, 0, 0, 24)
 RED = (226, 75, 74); BLU = (55, 138, 221); AMB = (196, 125, 20); ACT = (24, 95, 165)
 PUR = (83, 74, 183); TGT = (29, 158, 117); ROOM = (216, 90, 48)
 VODA = (224, 64, 44)               # výstup topné vody — barva červené trubky
-PAS = (0, 0, 0, 18)
+PAS = (0, 0, 0, 18)                # odmrazování — šedě
+# Ohřev TUV žlutě (Pavle 23. 11.): na první pohled se odliší od odmrazování.
+# Stejné barvy ve všech grafech schématu (Teploty, okno ve zdi, Výkon, Výkon 24 h).
+TUV_RGB = (239, 159, 39)
+PAS_TUV = TUV_RGB + (56,)
 POZADI = (250, 250, 251)
 
 # rozvržení v souřadnicích návrhu
@@ -128,6 +133,45 @@ def useky_pasu(pas: list[bool]) -> list[tuple[int, int]]:
     return out
 
 
+def useky_barev(pas: list[bool], odmraz: list[bool]) -> list[tuple[int, int, bool]]:
+    """Úseky pásu rozdělené podle druhu: (od, do, je_odmraz).
+
+    Odmrazování šedě, všechno ostatní v pásu (TUV, požadovaná 60 °C) žlutě.
+    Po bodech, takže TUV těsně za odmrazem dostane vlastní kus.
+    """
+    n = len(pas)
+    odm = list(odmraz) + [False] * (n - len(odmraz))
+    out, i = [], 0
+    while i < n:
+        if not pas[i]:
+            i += 1
+            continue
+        druh = bool(odm[i])
+        j = i
+        while j < n and pas[j] and bool(odm[j]) == druh:
+            j += 1
+        out.append((i, j, druh))
+        i = j
+    return out
+
+
+def bez_odmrazu(rada: list, odmraz: list[bool], dobeh: int = 1) -> list:
+    """Řada s mezerou v odmrazování a `dobeh` kroků mřížky po něm.
+
+    Acond v odmrazu hlásí výkon (a z něj COP) nesmyslně vysoký — tok tepla se
+    obrací; po skončení ještě chvíli doznívá. Takové body se nekreslí.
+    """
+    if not odmraz:
+        return list(rada)
+    out, zbyva = [], 0
+    for i, v in enumerate(rada):
+        if i < len(odmraz) and odmraz[i]:
+            zbyva = dobeh + 1
+        out.append(None if zbyva > 0 else v)
+        zbyva = max(0, zbyva - 1)
+    return out
+
+
 def popis_pasu(od: int, do: int, tuv: list[bool], odmraz: list[bool]) -> str:
     """Co bylo v pásu: „TUV“, „odmraz.“, nebo obojí. Bez údaje (pás jen
     z požadované 60 °C) je to TUV."""
@@ -198,17 +242,13 @@ def vykresli(d: TeplotyData) -> bytes:
                 g.line([(L * S, y), (R * S, y)], fill=GRID, width=S)
                 text(L - 10, y / S, _fmt(v) + " °C", anchor="rm")
 
-    def pasy(panel, barva=PAS):
-        i = 0
-        while i < n:
-            if d.pas[i]:
-                j = i
-                while j < n and d.pas[j]:
-                    j += 1
-                g.rectangle([X(i), panel[0] * S, X(min(j, n - 1)), panel[1] * S], fill=barva)
-                i = j
-            else:
-                i += 1
+    def pasy(panel, slabe=False):
+        # TUV žlutě, odmrazování šedě; v panelu místnosti jen slabě
+        for od, do, je_odmraz in useky_barev(d.pas, d.odmraz):
+            barva = PAS if je_odmraz else PAS_TUV
+            if slabe:
+                barva = barva[:3] + (barva[3] // 2,)
+            g.rectangle([X(od), panel[0] * S, X(min(do, n - 1)), panel[1] * S], fill=barva)
 
     def schody(rada, Y, lo=None, hi=None, pres_pas=False):
         useky, cur = [], []
@@ -299,7 +339,7 @@ def vykresli(d: TeplotyData) -> bytes:
     # ── panel 1: místnost ──
     cil_ted = posledni(d.cil)
     text(L, P1[0] - 26, "Místnost", INK, 16, True)
-    pasy(P1, (0, 0, 0, 8))      # ohřev TUV místnost neovlivní — jen slabé podbarvení
+    pasy(P1, slabe=True)        # ohřev TUV místnost neovlivní — jen slabé podbarvení
     if cil_ted is not None:
         lo1, hi1 = cil_ted - 1.0, cil_ted + 1.0
         Y1 = Yf(P1, lo1, hi1)
