@@ -6,6 +6,14 @@ verze podle [sémantického verzování](https://semver.org/lang/cs/).
 
 ## [Nevydáno]
 
+### Přidáno (0.18.0b30)
+- **Ouško Výkon 24 h** — velký graf výkonu za 24 h přes celé schéma (`image.mar_vykon_24_h`, volba „Výkon 24 h“ v `select.mar_vrstva`), hned vedle ouška Výkon. Nahoře souhrn: teplo a elektřina za 24 h integrované z okamžitých hodnot (platí i pro řadu PRO; teplo z odmrazu a 3 min po něm se nepočítá), COP z nich, počet startů kompresoru, odmrazů a ohřevů TUV. Výkon, příkon a COP na společné mřížce, horní okraj = nejvyšší hodnota + 10 %. Pod grafem pásek venkovní teploty a T ekv. Svislé čáry po 3 h, půlnoc plnou čarou. Klepnutí vrátí schéma, po 5 min se vrátí samo. Ouško Stroj (prázdné) vypadlo, zůstává jedno připravené (Ekviterma).
+
+### Změněno (0.18.0b30)
+- **TUV žlutě, odmrazování šedě** ve všech grafech schématu (Teploty, okno ve zdi, Výkon, Výkon 24 h) — na první pohled se odliší.
+- **Výkon (12 h) bez špiček v odmrazu:** výkon, příkon ani COP se během odmrazování a 5 min po něm nekreslí (Acond tam hlásí nesmyslný výkon až 12 kW a COP 12 — tok tepla se obrací), šedý pruh pokrývá i doběh.
+- **Okno ve zdi:** ve středové dělicí čáře nápis „Teploty · 6 h“.
+
 ### Změněno (0.18.0b29)
 - **R-Ekviterma: nové učení posunu křivky (pravidlo C).** Staré hodinové učení se v cyklování mýlilo jedním směrem (u testera +0,6 °C, vše omylem – z hodin po pauze, po výpadku, po vyvětrání). **Nahoru:** každou celou hodinu okno posledních 3 h (minuty TUV se nepočítají) – když v něm nebyla pauza ani stop kompresoru, místnost ani jednou nedosáhla cíle a průměr je pod cílem o víc než 0,1 °C, posun += k × (cíl − průměr); pak čeká celé nové okno. Krátký propad sníží průměr, ale ne maximum, takže se z něj neučí. **Dolů z hystereze:** vysoká křivka místnost nepřetopí (zastaví ji brzda na cíli, pak pauza), proto se dolů učí z pauzy pásma, před kterou R hodinu jela převážně nad minimem stropu (posun −= k × 0,2); pauza po běhu na minimu znamená silné čerpadlo, ne chybu křivky. Ne při výrobě FVE, 3 h po změně cíle se neučí. Zrušeno hodinové vyhodnocení, trend i „2 h souvislého běhu“. Ověřeno přehráním minutových dat testera 10.–21. 11. skutečným kódem (3 kroky ve studené noci 16. 11., žádný omyl, žádný krok dolů) a simulací uzavřené smyčky (cyklování, 3 týdny mrazu, mikroventilace, křivka vysoko, lehký i těžký dům). Posun naučený starým pravidlem se při aktualizaci jednou vynuluje.
 - **R-Ekviterma: ohřev TUV během pauzy naváže topením.** Když Acond v pauze R ohřívá vodu a místnost je nejvýš 0,1 °C nad startem, R pauzu ukončí kamenem Topit už během ohřevu (strop nemění – u PRO je na TUV uvolněný a po TUV se vrátí na minimum). Po TUV se topí dál jako po TUV za běhu, bez zastavení a nového startu (tester 21. 11.: stop po TUV v 10:15 a nový start v 10:24).

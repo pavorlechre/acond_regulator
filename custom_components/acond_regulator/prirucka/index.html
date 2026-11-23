@@ -380,7 +380,7 @@
       <li><strong>Časové programy</strong> — Zebra, Den/noc, Okna ± a Dovolená. Zelený je zapnutý.</li>
       <li><strong>FVE TUV a FVE topení</strong> — zapínání programů na přebytky.</li>
       <li><strong>Nastavení</strong> — okno s teplotami, otáčkami a nastavením programů, šipkou zpět na schéma.</li>
-      <li><strong>Okno ve zdi</strong> — malé teploty za posledních 6 hodin, bez čísel na osách. Nahoře místnost proti cíli (zelená čárkovaná), modře podbarvené, když je chladněji, červeně, když tepleji. Dole voda: výstup ze stroje červeně, zpátečka modře, požadovaná zpátečka oranžově. Růžová mezera mezi výstupem a zpátečkou znamená, že stroj topí; když stojí, čáry se sejdou. Šedý pruh je ohřev TUV nebo odmrazování, tečky u spodního okraje znamenají vodu pod 19,5 °C (stroj stojí a čidla venku vychladla). Čísla vpravo jsou hodnoty teď u všech pěti čar (místnost, cíl, výstup, požadovaná a skutečná zpátečka). Po rozjezdu či zastavení kompresoru, ohřevu TUV nebo odmrazování se okno překreslí do minuty, jinak každých 5 minut. Klepnutí otevře velký graf Teploty.</li>
+      <li><strong>Okno ve zdi</strong> — malé teploty za posledních 6 hodin (nápis „Teploty · 6 h“ ve středové čáře), bez čísel na osách. Nahoře místnost proti cíli (zelená čárkovaná), modře podbarvené, když je chladněji, červeně, když tepleji. Dole voda: výstup ze stroje červeně, zpátečka modře, požadovaná zpátečka oranžově. Růžová mezera mezi výstupem a zpátečkou znamená, že stroj topí; když stojí, čáry se sejdou. Žlutý pruh je ohřev TUV, šedý odmrazování, tečky u spodního okraje znamenají vodu pod 19,5 °C (stroj stojí a čidla venku vychladla). Čísla vpravo jsou hodnoty teď u všech pěti čar (místnost, cíl, výstup, požadovaná a skutečná zpátečka). Po rozjezdu či zastavení kompresoru, ohřevu TUV nebo odmrazování se okno překreslí do minuty, jinak každých 5 minut. Klepnutí otevře velký graf Teploty.</li>
     </ol>
     <p>Na kteroukoli hodnotu se dá klepnout a otevře se její detail s historií.</p>
     <p class="nahoru"><a href="#o-schema">&#8593; Obsah kapitoly</a> &nbsp;·&nbsp; <a href="#obsah">&#8593; Celkový obsah</a></p>
@@ -466,13 +466,14 @@
 
   <section id="schema-ouska">
     <h3>Ouška — grafy přes schéma</h3>
-    <p>Pod schématem je řada oušek jako v pořadači. Každé ouško přes schéma položí jeden graf, a když se chceš vrátit, klepneš na ouško <strong>Schéma</strong> nebo přímo na graf. Tmavé ouško je zapnuté. Dvě prázdná ouška vpravo jsou připravená pro další grafy a zatím nic nedělají.</p>
+    <p>Pod schématem je řada oušek jako v pořadači. Každé ouško přes schéma položí jeden graf, a když se chceš vrátit, klepneš na ouško <strong>Schéma</strong> nebo přímo na graf. Tmavé ouško je zapnuté. Prázdné ouško vpravo je připravené pro další graf a zatím nic nedělá.</p>
     <ul>
       <li><strong>Teploty</strong> — velký graf za posledních 12 hodin přes celé schéma.</li>
       <li><strong>Výkon</strong> — malý graf vložený přes topnou soustavu. Schéma zůstane vidět kolem něj.</li>
+      <li><strong>Výkon 24 h</strong> — velký graf výkonu za posledních 24 hodin přes celé schéma, se souhrnem a venkovní teplotou.</li>
       <li><strong>Počasí</strong> — 24 hodin zpátky a 24 hodin dopředu přes celé schéma.</li>
     </ul>
-    <p>Teploty a Počasí se po <strong>5 minutách</strong> samy vrátí na schéma. Volba je totiž společná pro všechna zařízení — kdyby ses podíval na graf v mobilu, zůstal by jinak viset i na tabletu na zdi. <strong>Výkon</strong> je jiný: zapíná a vypíná se klepnutím na ouško, pamatuje si stav a může svítit spolu s ostatními. Kdo ho chce mít ve schématu pořád, nechá ho zapnutý.</p>
+    <p>Teploty, Výkon 24 h a Počasí se po <strong>5 minutách</strong> samy vrátí na schéma. Volba je totiž společná pro všechna zařízení — kdyby ses podíval na graf v mobilu, zůstal by jinak viset i na tabletu na zdi. <strong>Výkon</strong> je jiný: zapíná a vypíná se klepnutím na ouško, pamatuje si stav a může svítit spolu s ostatními. Kdo ho chce mít ve schématu pořád, nechá ho zapnutý.</p>
 
     <h4>Výkon</h4>
     <figure id="obr-ousko-vykon">
@@ -483,7 +484,7 @@
       <li><strong>Červená plocha</strong> je tepelný výkon, <strong>modrá</strong> uvnitř ní elektrický příkon. Mezera mezi nimi je teplo, které stroj vzal ze vzduchu — čím větší, tím lépe.</li>
       <li><strong>Zelená čára</strong> je COP na pravé ose. Kreslí se, jen když kompresor běží; když stojí, ukáže se u ní 0,0.</li>
       <li><strong>Čísla na konci čar</strong> jsou hodnoty teď.</li>
-      <li><strong>Šedý pruh</strong> s popiskem nad ním je ohřev TUV nebo odmrazování.</li>
+      <li><strong>Žlutý pruh</strong> je ohřev TUV, <strong>šedý</strong> odmrazování; popisek je nad pruhem. Během odmrazování se výkon ani COP nekreslí — stroj tam hlásí nesmyslné špičky (tok tepla se obrací), proto je v čarách mezera.</li>
     </ul>
     <p>Klepnutí na graf ho vypne.</p>
 
@@ -500,9 +501,20 @@
       <li><strong>Hodnoty teď</strong> jsou ve sloupci vpravo vedle grafu, každá v barvě své čáry: požadovaná, skutečná, výstup a ekviterma bez přídavku. Hodnota se ukáže vždy, i když je čára mimo osu.</li>
       <li><strong>Ekviterma bez přídavku</strong> (fialová čárkovaná) je zpátečka jen podle křivky a venkovní teploty. Růžová nebo modrá plocha nad ní je <strong>přídavek na místnost</strong> — o kolik MaR zpátečku zvedá, když je v domě chladno, nebo snižuje, když je teplo.</li>
       <li>Vpravo je osa <strong>T ekv</strong>, teploty, podle které ekviterma jede, s fialovým štítkem její hodnoty teď.</li>
-      <li>Šedé pásy s popiskem TUV nebo odmraz. jsou ohřev vody a odmrazování.</li>
+      <li>Žluté pásy jsou ohřev TUV, šedé odmrazování (s popiskem, kam se vejde).</li>
     </ul>
     <p>Na tomhle grafu se nejlíp pozná, jestli je křivka nastavená dobře: když je místnost dlouho modrá a přídavek pořád růžový, křivka je nízko; viz <a href="#ekviterma">Ekviterma</a>.</p>
+
+    <h4>Výkon 24 h</h4>
+    <p>Velký bratříček ouška Výkon: celý den na jedné obrazovce.</p>
+    <ul>
+      <li><strong>Souhrn nahoře</strong> — teplo a elektřina za 24 hodin, COP z nich, kolikrát se rozjel kompresor, kolikrát odmrazoval a kolikrát ohříval TUV. Energie se počítá z okamžitého výkonu a příkonu, takže platí i u řady PRO, kde čítače energie stroje nesedí. Teplo z odmrazování se nepočítá.</li>
+      <li><strong>Hlavní graf</strong> — červená plocha je tepelný výkon, modrá uvnitř příkon, zelená čára COP. Číslo vlevo (kW) i vpravo (COP) leží na stejné čáře mřížky. Horní okraj se řídí nejvyšší hodnotou dne.</li>
+      <li><strong>Žlutý pás</strong> je ohřev TUV, <strong>šedý</strong> odmrazování. V odmrazu se čáry přeruší — špičky, které tam stroj hlásí, nemají vypovídací hodnotu.</li>
+      <li><strong>Pásek dole</strong> — venkovní teplota fialově a T ekv (průměrovaná teplota, podle které jede křivka) šedě čárkovaně. Je vidět, proč stroj přidává nebo ubírá.</li>
+      <li>Svislé čáry jsou po 3 hodinách, <strong>půlnoc</strong> plnou čarou. Hodnoty teď jsou v legendě.</li>
+    </ul>
+    <p>Klepnutí na graf vrátí schéma.</p>
 
     <h4>Počasí</h4>
     <figure id="obr-ousko-pocasi">
