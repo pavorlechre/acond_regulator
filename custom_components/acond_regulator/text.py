@@ -142,10 +142,8 @@ class ProfilNazevText(RestoreEntity, TextEntity):
         last = await self.async_get_last_state()
         if last is not None and last.state not in ("unknown", "unavailable", None):
             self._attr_native_value = last.state
-        elif self._default and not self._entita_existuje(self._default):
-            # První založení: předvyplnit jen to, co v HA opravdu je (GoodWe).
-            # Jinak by MaR u cizího střídače / bez FVE či baterie hádal, že je má.
-            self._attr_native_value = ""
+        # Jméno profilu se nepředvyplňuje (větev s _default patří jen FveSourceText;
+        # sem se omylem dostala v 0.18.0b14 a při první instalaci shodila entitu).
         self._profily.set_nazev(self._attr_native_value)
 
     async def async_set_value(self, value: str) -> None:

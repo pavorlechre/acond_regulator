@@ -6,6 +6,9 @@ verze podle [sémantického verzování](https://semver.org/lang/cs/).
 
 ## [Nevydáno]
 
+### Opraveno (0.18.0b32)
+- **Profily při nové instalaci:** `text.mar_profil_nazev` se při prvním založení nepřidala (`AttributeError: 'ProfilNazevText' object has no attribute '_default'`), takže profily byly trvale mimo provoz. Do `ProfilNazevText` se v 0.18.0b14 omylem dostala větev pro předvyplnění zdrojů FVE; spadla jen bez uloženého stavu, proto se stávajících instalací netýkala. Větev odstraněna. Po aktualizaci a plném restartu se entita vytvoří.
+
 ### Přidáno (0.18.0b31)
 - **Prohlížeč dat v repozitáři** (`prirucka/prohlizec.html`): stránka pro export dat po minutách — souhrn, průběhy se společnou časovou osou a tabulka po dnech. HA ji servíruje na `/mar-prirucka/prohlizec.html`, web příručky na `…/acond_regulator/prohlizec.html`. V okně exportu odkaz **Otevřít v prohlížeči dat** rovnou načte poslední export (`?csv=/local/mar_export/…`). V souhrnu nově **průměrný příkon a výkon** za období exportu.
 
