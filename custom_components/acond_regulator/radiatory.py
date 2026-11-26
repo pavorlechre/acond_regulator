@@ -15,8 +15,11 @@ JAK (zamčeno 9.–10. 11. 2026, viz const.py „R-Ekviterma")
 ----------------------------------------------------------
 - Výkon řídí STROP 40014 (zápis platí do minuty). Start vždy z minima.
 - Rampa: po R_PERIODA_S přidej krok, „když není brzda". Brzda = zpátečka dosáhla
-  křivky (mimo dotápění) nebo místnost dosáhla cíle -> uber 2 kroky. Jen rychlý
-  růst místnosti -> strop drž.
+  křivky (mimo dotápění) nebo místnost nad cílem (od cíl + 0,1) -> uber 2 kroky.
+  Místnost na cíli v souvislém topení nebo rychlý růst místnosti -> strop drž (0.18.0b33;
+  dřív brzda přímo na cíli srážela výkon na minimum a dům žil o 0,1 pod cílem). Na cíli
+  se brzdí postaru v hysterezi (pauza/stop v posledních 3 h), když místnost roste
+  (> 0,15 K/h) nebo svítí FVE.
 - 40008: při rampě nahoru návnada (skutečná + 1 -> Acond tlačí do stropu), při
   brzdě křivka. Vždy honička: nikdy pod skutečná − 1,5, takže Acond na +2 sám
   nevypne.
@@ -90,9 +93,12 @@ from .const import (
     MAX_RETURN,
     R_DOTAP,
     R_HONICKA_REZERVA,
+    R_DRZ_RUST,
+    R_DRZ_SOUVISLE_S,
     R_KROK_DOLU,
     R_KROK_NAHORU,
     R_MIN_BEH_S,
+    R_MIST_NAD,
     R_MIN_PAUZA_S,
     R_NAVNADA,
     R_ODMRAZ_DOBEH_S,
@@ -551,10 +557,29 @@ class RadiatoryController:
             tvrda.append("zpátečka na křivce")
         if ret >= MAX_RETURN - 1:
             tvrda.append("strop zpátečky")
-        if room >= cil:
-            tvrda.append("místnost v cíli")
-        mekka = self.rust is not None and self.rust > R_RUST_BRZDA
-        self.duvod = ", ".join(tvrda) if tvrda else ("růst místnosti" if mekka else None)
+        # místnost: v souvislém topení na cíli strop DRŽ (brzda přímo na cíli dělala strop –
+        # dům žil o 0,1 pod), tvrdě brzdi od cíl + R_MIST_NAD. Na cíli brzdi postaru v
+        # hysterezi (pauza/stop v posledních 3 h – držení by zkrátilo běh do pauzy a učilo
+        # posun falešně dolů), při úzkém pásmu, když místnost roste nebo svítí FVE.
+        drz = False
+        if room >= cil + R_MIST_NAD - 1e-6:
+            tvrda.append("místnost nad cílem")
+        elif room >= cil - 1e-6:
+            if self.pauza_nad <= R_MIST_NAD + 1e-6 or now - self._p_stop < R_DRZ_SOUVISLE_S:
+                tvrda.append("místnost v cíli")
+            elif self.rust is not None and self.rust > R_DRZ_RUST:
+                tvrda.append("místnost v cíli a roste")
+            elif self._fve_sviti():
+                tvrda.append("místnost v cíli, svítí FVE")
+            else:
+                drz = True
+        mekka = drz or (self.rust is not None and self.rust > R_RUST_BRZDA)
+        if tvrda:
+            self.duvod = ", ".join(tvrda)
+        elif drz:
+            self.duvod = "místnost v cíli – držím"
+        else:
+            self.duvod = "růst místnosti" if mekka else None
         self.stav = STAV_DOTAP if dot else STAV_BEH
 
         cap = self._num(ACOND_CAPACITY)
@@ -593,6 +618,16 @@ class RadiatoryController:
             return None
         t1, r1 = self._room[-1]
         return round((r1 - r0) * 3600 / (t1 - t0), 2) if t1 > t0 else None
+
+    def _fve_sviti(self) -> bool:
+        """Vyrábí FVE víc než R_POSUN_FVE_W (slunce hřeje i dům). Bez FVE False."""
+        if self.fve is None:
+            return False
+        try:
+            pv = self.fve.pv_value()
+        except Exception:  # noqa: BLE001
+            return False
+        return pv is not None and pv > R_POSUN_FVE_W
 
     def _rozsah(self) -> tuple[float | None, float | None]:
         return self._attr(ACOND_CAPACITY, "min"), self._attr(ACOND_CAPACITY, "max")
@@ -669,13 +704,7 @@ class RadiatoryController:
             te = self._num(ACOND_OUTDOOR)
             if sup is not None and te is not None:
                 k_vz = ((sup + ret) / 2 - room, room - te)
-        pv = None
-        if self.fve is not None:
-            try:
-                pv = self.fve.pv_value()
-            except Exception:  # noqa: BLE001
-                pv = None
-        fve = pv is not None and pv > R_POSUN_FVE_W
+        fve = self._fve_sviti()
         self._p_vzorky.append((now, room, tuv, topi, nad_min, fve, k_vz))
         while self._p_vzorky and now - self._p_vzorky[0][0] > R_POSUN_OKNO_S:
             self._p_vzorky.popleft()

@@ -1088,6 +1088,15 @@ R_POSUN_CIL_ZMRAZ_S = 3 * 3600  # po změně cíle místnosti 3 h neučit (útlu
 R_POSUN_FVE_W = 300.0       # vyrábí FVE -> přetopení je slunce, dolů neučit
 R_POSUN_VERZE = 2           # jiná uložená verze -> posun jednorázově vynulovat (b29: staré učení se mýlilo)
 R_TUV_NAVAZ = 0.1           # TUV v pauze R: místnost ≤ start + tohle -> pauzu ukončit už při TUV
+# Držení v cíli (Pavle 26. 11. 2026, 0.18.0b33): tvrdá brzda přímo na cíli fungovala jako strop
+# (tester 25. 11.: na 21,6 srazila výkon na minimum, 76 % času 21,5). V souvislém topení teď na
+# cíli strop drž, tvrdě brzdi až od cíl + R_MIST_NAD. Drží jen, když místnost neroste a nesvítí
+# FVE (ranní slunce by místnost dotlačilo do pauzy). V hysterezi (pauza/stop v posledních
+# R_DRZ_SOUVISLE_S) a při Pauza nad ≤ R_MIST_NAD postaru – v hysterezi by držení zkrátilo běh
+# do pauzy (víc startů u těžkého domu) a učilo posun falešně dolů.
+R_MIST_NAD = 0.1            # tvrdá brzda místnosti od cíl + tohle
+R_DRZ_RUST = 0.15           # K/h – rychlejší růst místnosti na cíli = brzdi jako dřív
+R_DRZ_SOUVISLE_S = 3 * 3600 # drž jen v souvislém topení: 3 h bez pauzy R / stopu kompresoru
 R_STORE_VERSION = 1
 
 
