@@ -6,6 +6,9 @@ verze podle [sémantického verzování](https://semver.org/lang/cs/).
 
 ## [Nevydáno]
 
+### Změněno (0.18.0b34)
+- **R-Ekviterma: po odmrazu a ohřevu vody nasadí průměrný výkon.** R dřív po odmrazu pokračovala ze stropu, na kterém byla před ním. Když odmraz přišel na dně pily brzdy křivky (strop na minimu), zpátečka se ke křivce vracela hodinu až hodinu a půl (tester 26. 11. při −2 °C: 16 odmrazů za den, místnost Ø 21,45 a posun šplhal 1,7 → 3,1). Nově R na konci odmrazu nastaví strop aspoň na průměr skutečného výkonu za posledních 90 minut běhu (bez odmrazů a TUV) + jeden krok rampy jako náhradu za teplo vzaté odmrazem; po TUV totéž po třech minutách dojezdu. Strop se tím nikdy nesnižuje, po pauze a startu (méně než 10 minut dat) se nic nemění. Ověřeno skutečným kódem R v uzavřené smyčce s modelem domu a odmrazováním: případ jako 26. 11. chybějící teplo −57 %, mráz −6 °C −14 %, −1 °C se sluncem −35 %, mírné počasí a těžký zateplený dům beze změny.
+
 ### Změněno (0.18.0b33)
 - **R-Ekviterma: v cíli drží, brzdí až nad cílem.** Tvrdá brzda místnosti byla přímo na cíli a fungovala jako strop: jakmile čidlo ukázalo cíl, srazila výkon po 10 % až na minimum, dům sklouzl o desetinu pod cíl a rampa ho zvedala hodiny (tester 25. 11. v mrazu: 76 % času 21,5 při cíli 21,6, posun to nevyřeší, cíle se dotkne v každém okně). Nově v souvislém topení (3 h bez pauzy R a stopu kompresoru) na cíli strop **drží** („místnost v cíli – držím“) a tvrdě brzdí až od cíl + 0,1 („místnost nad cílem“). Na cíli se brzdí postaru v hysterezi (pauza/stop v posledních 3 h), když místnost roste rychleji než 0,15 K/h, když FVE vyrábí přes 300 W a při Pauza nad 0,1. Pauza, start i učení posunu beze změny. Ověřeno skutečným kódem R v uzavřené smyčce s modelem domu: v mrazu −6 °C čidlo na 21,5 a níž z 78 na 61 % času, slunné mrazy a dny kolem nuly lépe, pravidelná hystereze a těžký zateplený dům beze změny (starty stejné), elektřina do +0,5 %.
 
