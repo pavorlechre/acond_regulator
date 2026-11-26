@@ -6,6 +6,9 @@ verze podle [sémantického verzování](https://semver.org/lang/cs/).
 
 ## [Nevydáno]
 
+### Změněno (0.18.0b33)
+- **R-Ekviterma: v cíli drží, brzdí až nad cílem.** Tvrdá brzda místnosti byla přímo na cíli a fungovala jako strop: jakmile čidlo ukázalo cíl, srazila výkon po 10 % až na minimum, dům sklouzl o desetinu pod cíl a rampa ho zvedala hodiny (tester 25. 11. v mrazu: 76 % času 21,5 při cíli 21,6, posun to nevyřeší, cíle se dotkne v každém okně). Nově v souvislém topení (3 h bez pauzy R a stopu kompresoru) na cíli strop **drží** („místnost v cíli – držím“) a tvrdě brzdí až od cíl + 0,1 („místnost nad cílem“). Na cíli se brzdí postaru v hysterezi (pauza/stop v posledních 3 h), když místnost roste rychleji než 0,15 K/h, když FVE vyrábí přes 300 W a při Pauza nad 0,1. Pauza, start i učení posunu beze změny. Ověřeno skutečným kódem R v uzavřené smyčce s modelem domu: v mrazu −6 °C čidlo na 21,5 a níž z 78 na 61 % času, slunné mrazy a dny kolem nuly lépe, pravidelná hystereze a těžký zateplený dům beze změny (starty stejné), elektřina do +0,5 %.
+
 ### Opraveno (0.18.0b32)
 - **Profily při nové instalaci:** `text.mar_profil_nazev` se při prvním založení nepřidala (`AttributeError: 'ProfilNazevText' object has no attribute '_default'`), takže profily byly trvale mimo provoz. Do `ProfilNazevText` se v 0.18.0b14 omylem dostala větev pro předvyplnění zdrojů FVE; spadla jen bez uloženého stavu, proto se stávajících instalací netýkala. Větev odstraněna. Po aktualizaci a plném restartu se entita vytvoří.
 
