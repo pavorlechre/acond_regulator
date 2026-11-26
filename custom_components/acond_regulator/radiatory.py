@@ -27,6 +27,9 @@ JAK (zamčeno 9.–10. 11. 2026, viz const.py „R-Ekviterma")
   Léto / Útlum – uživatel si tak volí i TUV a protáčení). Pod cíl − Start pod ->
   kámen Topit se stropem na minimu. Pauzu, kterou přebil jiný kámen (uživatel,
   Zebra, Den/noc), R nikdy sám neukončí.
+- Po odmrazu a TUV (0.18.0b34) strop aspoň na průměr skutečného výkonu za posledních
+  90 min běhu + krok – dřív R pokračovala ze stropu před odmrazem, a když odmraz přišel
+  na dně pily, zpátečka se ke křivce vracela přes hodinu.
 - Po odmrazu dál stejně (3 min bez brzdy zpátečky – zbytkové teplo). Po TUV ze
   stropu před TUV, v dotápění dvojnásobným krokem. Brzda zpátečky má hysterezi
   a návnada se mění jen při kroku, ať požadovaná nekmitá s čidlem.
@@ -99,6 +102,9 @@ from .const import (
     R_KROK_NAHORU,
     R_MIN_BEH_S,
     R_MIST_NAD,
+    R_NAS_MIN_VZORKU,
+    R_NAS_NAVIC,
+    R_NAS_OKNO_S,
     R_MIN_PAUZA_S,
     R_NAVNADA,
     R_ODMRAZ_DOBEH_S,
@@ -183,6 +189,8 @@ class RadiatoryController:
         self._honicka: float | None = None # honička platná do dalšího kroku
         self._room = deque()               # (monotonic, °C) za poslední hodinu
         self._tuv_konec = -1e9             # kdy skončil ohřev TUV
+        self._vykon = deque()              # (monotonic, skutečný výkon) běhu bez odmrazu/TUV, 90 min
+        self._nasadit = False              # po odmrazu/TUV nasaď průměrný výkon (0.18.0b34)
 
         # posun křivky (I složka, pravidlo C)
         self.posun = 0.0
@@ -357,6 +365,8 @@ class RadiatoryController:
     async def _krok(self) -> None:
         if not self._drzi():
             self._p_mimo = time.monotonic()
+            self._vykon.clear()
+            self._nasadit = False
             if self._held or self.coordinator.r_owns:
                 await self.async_release()
             else:
@@ -482,6 +492,7 @@ class RadiatoryController:
             self._frozen_tuv = False
             self._navnada = None
             self._honicka = None
+            self._nasadit = True        # v běhu (po TUV až po dojezdu, kdy už tuv_strop vrátil strop)
             if self._tuv_konec == now:
                 # zpátečkou teče zbytek z bojleru -> žádaná na maximum (Standard by
                 # jinak vypnul na zpátečka ≥ žádaná + 2), pak honička dolů za vodou
@@ -506,6 +517,8 @@ class RadiatoryController:
         if room >= cil + self.pauza_nad:
             if bezi and now - self._run_since >= R_MIN_BEH_S and not self.seq.busy:
                 await self._posun_pauza(now, cil)             # hystereze -> případně dolů
+                self._vykon.clear()
+                self._nasadit = False
                 self._paused = True
                 self._pause_since = now
                 self._was_running = None
@@ -523,6 +536,8 @@ class RadiatoryController:
 
         # --- kompresor stojí (po pauze, kámen, Acond sám): start z minima ---
         if not bezi:
+            self._vykon.clear()
+            self._nasadit = False
             self.stav = STAV_START
             if po_tuv:
                 # prodleva Acondu po TUV: strop před TUV nechat, jen lákat start
@@ -541,6 +556,25 @@ class RadiatoryController:
             self._honicka = None
             await self._write_target(self._clamp(MAX_RETURN))
             return
+
+        # --- nasazení po odmrazu / TUV: aspoň průměr běhu za 90 min + krok ---
+        akt = self._num(ACOND_RPM)
+        if akt is not None and 0 < akt <= hi and (
+                not self._vykon or now - self._vykon[-1][0] >= R_POSUN_VZOREK_S):
+            self._vykon.append((now, akt))
+        while self._vykon and now - self._vykon[0][0] > R_NAS_OKNO_S:
+            self._vykon.popleft()
+        if self._nasadit:
+            self._nasadit = False
+            cap0 = self._num(ACOND_CAPACITY)
+            if len(self._vykon) >= R_NAS_MIN_VZORKU and cap0 is not None:
+                prum = sum(v for _t, v in self._vykon) / len(self._vykon)
+                cil_cap = min(hi, prum + R_NAS_NAVIC * krok_up)
+                if cil_cap > cap0:
+                    await self._set_cap(cil_cap)
+                    self._last_step = now
+                    _LOGGER.info("R-Ekviterma: po odmrazu/TUV nasazuji strop %.0f (byl %.0f, Ø 90 min %.0f)",
+                                 cil_cap, cap0, prum)
 
         # --- běh: rampa stropu ---
         # brzda zpátečky s hysterezí: sepne na křivce, pustí až R_ZP_HYST pod ní

@@ -1097,6 +1097,14 @@ R_TUV_NAVAZ = 0.1           # TUV v pauze R: místnost ≤ start + tohle -> pauz
 R_MIST_NAD = 0.1            # tvrdá brzda místnosti od cíl + tohle
 R_DRZ_RUST = 0.15           # K/h – rychlejší růst místnosti na cíli = brzdi jako dřív
 R_DRZ_SOUVISLE_S = 3 * 3600 # drž jen v souvislém topení: 3 h bez pauzy R / stopu kompresoru
+# Nasazení po odmrazu a TUV (Pavle 27. 11. 2026, 0.18.0b34): R pokračovala ze stropu před
+# odmrazem – když odmraz přišel na dně pily brzdy křivky (strop na minimu), zpátečka se
+# ke křivce vracela 1–1,5 h (tester 26. 11.: 16 odmrazů/den, každých ~90 min). Po konci
+# odmrazu (a po dojezdu TUV) nasaď aspoň průměr skutečného výkonu za posledních
+# R_NAS_OKNO_S běhu (bez odmrazu/TUV) + R_NAS_NAVIC kroků (teplo vzaté odmrazem).
+R_NAS_OKNO_S = 90 * 60      # průměr skutečného výkonu (ACOND_RPM, u PRO W) za posledních 90 min běhu
+R_NAS_NAVIC = 1.0           # + kroky rampy navíc
+R_NAS_MIN_VZORKU = 10       # aspoň 10 minutových vzorků (po pauze/startu ne)
 R_STORE_VERSION = 1
 
 
