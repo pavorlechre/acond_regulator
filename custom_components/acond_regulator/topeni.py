@@ -113,6 +113,7 @@ from homeassistant.helpers.event import (
 from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util
 
+from . import slider
 from .const import (
     ACOND_BIT_DEFROST,
     ACOND_BIT_TUV,
@@ -916,8 +917,9 @@ class TopeniController:
     async def _cleanup(self) -> None:
         """Společná úklidová cesta: vrať slider 40014, uvolni ekvitermu (40008 se
         NEVRACÍ – jen zvedneme blokaci a ekviterma si zapíše správnou hodnotu)."""
-        if self._store_40014 is not None:
-            await self._set_number(ACOND_CAPACITY, self._store_40014)
+        await slider.async_vrat(
+            self.hass, ACOND_CAPACITY, self._store_40014, "FVE topení", nula_max=True, blocking=False,
+        )
         # návnada B: odhlas přání u správce (originál 40001 vrátí on, až se odhlásí
         # i Okna – proto se souběh nemůže navzájem přepsat)
         if self.pokojovka is not None:

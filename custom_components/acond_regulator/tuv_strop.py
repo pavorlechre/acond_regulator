@@ -31,6 +31,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.storage import Store
 
+from . import slider
 from .const import (
     ACOND_BIT_DEFROST,
     ACOND_BIT_TUV,
@@ -96,7 +97,8 @@ class TuvStropController:
         cur = self._num()
         if hi is None or (cur is not None and abs(cur - hi) < 1.0):
             return            # už je na maximu -> nepiš zbytečně (EEPROM)
-        await self._set(hi)
+        await slider.async_vrat(self.hass, ACOND_CAPACITY, hi, "TUV strop – odchod z MaR")
+        await self.coordinator.async_request_refresh()
         _LOGGER.debug("TUV strop: odchod z MaR, slider na maximum %s", hi)
 
     # ------------------------------------------------------------------ #
@@ -148,7 +150,8 @@ class TuvStropController:
             nas = self._max is not None and abs(cur - float(self._max)) < 1.0
             await self._zapomen()
             if nas and self._pod_mar():
-                await self._set(orig)
+                await slider.async_vrat(self.hass, ACOND_CAPACITY, orig, "TUV strop", nula_max=True)
+                await self.coordinator.async_request_refresh()
                 _LOGGER.debug("TUV strop: konec TUV, strop zpět na %s", orig)
             else:
                 _LOGGER.debug("TUV strop: konec TUV, slider změněn (%s) – nevracím", cur)

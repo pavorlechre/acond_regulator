@@ -77,6 +77,7 @@ from homeassistant.helpers.event import (
 from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util
 
+from . import slider
 from .const import (
     ACOND_BIT_DEFROST,
     ACOND_BIT_TUV,
@@ -320,8 +321,7 @@ class RadiatoryController:
         self._paused = False
         if self._held:
             self._held = False
-            if self._orig_cap is not None:
-                await self._set(ACOND_CAPACITY, self._orig_cap)
+            await slider.async_vrat(self.hass, ACOND_CAPACITY, self._orig_cap, "R-Ekviterma", nula_max=True)
             _LOGGER.debug("R-Ekviterma: odchod, slider vrácen na %s", self._orig_cap)
             self._orig_cap = None
             await self._save()

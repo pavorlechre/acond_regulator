@@ -6,6 +6,9 @@ verze podle [sémantického verzování](https://semver.org/lang/cs/).
 
 ## [Nevydáno]
 
+### Opraveno (0.18.0b35)
+- **Uvíznutí v Minimu (BOOSTu) hláškou „Hodnota 0 pro number.acond_40014_comp_capacity_max_set je mimo platný rozsah“.** Registr 40014, do kterého nikdo nikdy nezapsal, čte Acond jako 0. Minimum si tu nulu uložilo jako původní slider a při odchodu ji chtělo vrátit; Acond zápis odmítl a přepnutí strategie se zastavilo – nešlo odejít ani na Stálý, ani na Bez MaR (tester 27. 11.). Nově se uložená hodnota při vracení opraví: 0 u stropu výkonu = max (stroj bez limitu z Modbusu), jiná hodnota mimo rozsah se ořízne do rozsahu slideru. Když zápis přesto selže, jen se zaloguje a strategie se přepne. Platí pro Minimum/BOOST, R-Ekvitermu, FVE topení i TUV strop řady PRO (společný `slider.py`). Kdo už uvízl, nic neupravuje: po aktualizaci a plném restartu přepnutí projde a slider skončí na maximu.
+
 ### Změněno (0.18.0b34)
 - **R-Ekviterma: po odmrazu a ohřevu vody nasadí průměrný výkon.** R dřív po odmrazu pokračovala ze stropu, na kterém byla před ním. Když odmraz přišel na dně pily brzdy křivky (strop na minimu), zpátečka se ke křivce vracela hodinu až hodinu a půl (tester 26. 11. při −2 °C: 16 odmrazů za den, místnost Ø 21,45 a posun šplhal 1,7 → 3,1). Nově R na konci odmrazu nastaví strop aspoň na průměr skutečného výkonu za posledních 90 minut běhu (bez odmrazů a TUV) + jeden krok rampy jako náhradu za teplo vzaté odmrazem; po TUV totéž po třech minutách dojezdu. Strop se tím nikdy nesnižuje, po pauze a startu (méně než 10 minut dat) se nic nemění. Ověřeno skutečným kódem R v uzavřené smyčce s modelem domu a odmrazováním: případ jako 26. 11. chybějící teplo −57 %, mráz −6 °C −14 %, −1 °C se sluncem −35 %, mírné počasí a těžký zateplený dům beze změny.
 

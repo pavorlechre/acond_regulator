@@ -28,6 +28,7 @@ from homeassistant.helpers.event import (
 )
 from homeassistant.helpers.storage import Store
 
+from . import slider
 from .const import (
     ACOND_BIT_TUV,
     ACOND_CAPACITY,
@@ -162,10 +163,12 @@ class MinimumController:
         self.mode = None
         # vrať původní registry
         if self._orig is not None:
-            if self._orig.get("t40008") is not None:
-                await self._set_number(ACOND_TARGET, self._orig["t40008"])
-            if self._orig.get("t40014") is not None:
-                await self._set_number(ACOND_CAPACITY, self._orig["t40014"])
+            # přes slider.async_vrat: neplatný originál (0 z nezapsaného 40014) se
+            # opraví a chyba zápisu nezastaví přepnutí strategie
+            await slider.async_vrat(self.hass, ACOND_TARGET, self._orig.get("t40008"), "Minimum/BOOST")
+            await slider.async_vrat(
+                self.hass, ACOND_CAPACITY, self._orig.get("t40014"), "Minimum/BOOST", nula_max=True,
+            )
         self._orig = None
         self.coordinator.minimum_target = None
         await self._store.async_save({"active": False, "mode": None, "orig": None})
