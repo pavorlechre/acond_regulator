@@ -1616,6 +1616,15 @@ views:
 
 
         Profily leží v `config/mar_profily/` jako soubory `.csv` — dají se poslat mailem nebo do skupiny.'
+    - type: button
+      name: Načíst nastavení ze souboru (vše, i strategie a programy)
+      icon: mdi:file-upload-outline
+      show_name: true
+      show_icon: true
+      icon_height: 28px
+      tap_action:
+        action: navigate
+        navigation_path: /config/integrations/integration/acond_regulator
   - type: grid
     cards:
     - type: entities
@@ -4221,6 +4230,17 @@ views:
       tap_action:
         action: navigate
         navigation_path: /dashboard-pokus2/planovac
+    - type: button
+      name: Načíst nastavení ze souboru
+      icon: mdi:file-upload-outline
+      show_name: true
+      show_icon: true
+      icon_height: 32px
+      tap_action:
+        action: navigate
+        navigation_path: /config/integrations/integration/acond_regulator
+    - type: markdown
+      content: 'Otevře MaR v Nastavení HA → **Konfigurovat** → **Načíst nastavení ze souboru**. Nastaví vše ze souboru (a uloží zálohu, jde vrátit). [Příručka](/mar-prirucka/index.html#nacteni)'
 - type: panel
   title: Průběh 24 h
   path: prubeh

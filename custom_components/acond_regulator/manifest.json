@@ -10,6 +10,7 @@
   ],
   "config_flow": true,
   "dependencies": [
+    "file_upload",
     "http"
   ],
   "documentation": "https://github.com/pavorlechre/acond_regulator",
@@ -17,5 +18,5 @@
   "iot_class": "local_polling",
   "issue_tracker": "https://github.com/pavorlechre/acond_regulator/issues",
   "requirements": [],
-  "version": "0.18.0b35"
+  "version": "0.18.0b36"
 }

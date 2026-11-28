@@ -4,17 +4,53 @@
       "user": {
         "title": "Regulace (MaR)",
         "description": "Zadej polohu pro předpověď počasí (klikni do mapy).",
-        "data": { "location": "Poloha" }
+        "data": {
+          "location": "Poloha"
+        }
       }
     }
   },
   "options": {
     "step": {
       "init": {
+        "title": "MaR – nastavení",
+        "menu_options": {
+          "nacist": "Načíst nastavení ze souboru",
+          "vratit": "Vrátit stav před posledním načtením",
+          "poloha": "Poloha (předpověď počasí)"
+        }
+      },
+      "poloha": {
         "title": "Poloha",
         "description": "Přenastavení polohy pro předpověď.",
-        "data": { "location": "Poloha" }
+        "data": {
+          "location": "Poloha"
+        }
+      },
+      "nacist": {
+        "title": "Načíst nastavení ze souboru",
+        "description": "Vyber soubor .csv, který jsi dostal (např. od Pavla). MaR nastaví všechno, co v něm je – jen položky MaR a Aconda, tlačítka nikdy. Před zápisem uloží současný stav jako zálohu, takže jde vrátit.",
+        "data": {
+          "soubor": "Soubor s nastavením"
+        }
+      },
+      "vratit": {
+        "title": "Vrátit stav před posledním načtením",
+        "description": "Záloha obsahuje {pocet} položek ve stavu před posledním načtením. Potvrzením se vrátí."
+      },
+      "hotovo": {
+        "title": "Hotovo",
+        "description": "{vysledek}\n\nVýsledek je i v oznámeních HA (zvonek). Zaškrtni AI kontext: v oznámeních se objeví odkaz na soubor – stáhni ho a pošli ke kontrole.",
+        "data": {
+          "ai_kontext": "Vytvořit AI kontext ke kontrole"
+        }
       }
+    },
+    "error": {
+      "soubor_necitelny": "Soubor nejde přečíst. Je to .csv se středníky?"
+    },
+    "abort": {
+      "zadna_zaloha": "Zatím není žádná záloha – nic se ještě ze souboru nenačítalo."
     }
   }
 }

@@ -187,6 +187,7 @@
         <li><a href="#planovani-pozor">Na co dát pozor</a></li>
       </ol>
     </li>
+    <li><a href="#nacteni">Načtení nastavení ze souboru</a></li>
     <li><a href="#ekviterma">Ekviterma</a>
       <ol>
         <li><a href="#ekviterma-k-cemu">K čemu to je</a></li>
@@ -775,6 +776,50 @@
       <li><strong>Restart.</strong> Pokud Home Assistant v čase plánu neběží, změna se nemusí provést. Po restartu se podívej, jestli stav odpovídá.</li>
     </ul>
     <p class="nahoru"><a href="#o-planovani">&#8593; Obsah kapitoly</a> &nbsp;·&nbsp; <a href="#obsah">&#8593; Celkový obsah</a></p>
+  </section>
+</section>
+
+
+<!-- ================================================================= -->
+<!--  KAPITOLA — NAČTENÍ NASTAVENÍ ZE SOUBORU                          -->
+<!-- ================================================================= -->
+<section class="kapitola" id="nacteni">
+  <h2>Načtení nastavení ze souboru</h2>
+  <p class="lede">Dostal jsi soubor s nastavením (třeba od Pavla po rozboru tvých dat)? Nemusíš nic opisovat: MaR ho načte a nastaví sám — křivku, Zebru, strategii, otáčky, všechno, co v souboru je.</p>
+
+  <section id="nacteni-jak">
+    <h3>Jak na to</h3>
+    <ol>
+      <li>Ulož si soubor <code>.csv</code> do telefonu nebo počítače.</li>
+      <li>V Home Assistantu: <strong>Nastavení → Zařízení a služby → Acond Regulator (MaR) → Konfigurovat</strong> (ozubené kolečko). Rovnou tam vede tlačítko <strong>Načíst nastavení ze souboru</strong> dole v okně Nastavení a v okně Profily.</li>
+      <li>Vyber <strong>Načíst nastavení ze souboru</strong> → vyber soubor → <strong>Odeslat</strong>.</li>
+      <li>MaR ukáže, co nastavil. Nech zaškrtnuté <strong>Vytvořit AI kontext ke kontrole</strong> a potvrď. V oznámeních (zvonek) se objeví odkaz na soubor — stáhni ho a pošli zpátky ke kontrole.</li>
+    </ol>
+    <span class="cesta">Nastavení → Zařízení a služby → Acond Regulator (MaR) → Konfigurovat → Načíst nastavení ze souboru</span>
+  </section>
+
+  <section id="nacteni-co">
+    <h3>Co MaR udělá</h3>
+    <ul>
+      <li><strong>Nastaví všechno, co v souboru je</strong> — ale jen položky MaR a Aconda. Cizích věcí v Home Assistantu se nedotkne a tlačítka (Reset PLC, Potvrzení poruchy…) ze souboru nikdy nemačká.</li>
+      <li><strong>Ve správném pořadí</strong>, ať je v souboru jakékoli: nejdřív čísla a otáčky, pak přepínače, pak strategie a nakonec programy (Zebra, Den/noc…). Jinak by třeba přepnutí strategie vypnulo právě zapnutou Zebru.</li>
+      <li><strong>Co už platí, nepřepisuje.</strong></li>
+      <li><strong>Nejdřív zálohuje</strong> současný stav všeho, na co sahá. Když se něco nelíbí: Konfigurovat → <strong>Vrátit stav před posledním načtením</strong>.</li>
+      <li><strong>Řekne, co se nepovedlo:</strong> <em>přeskočeno</em> (položka, kterou v tvém HA nemáš), <em>odmítnuto</em> (hodnota mimo rozsah) a <em>nepřevzato</em> (MaR zápis nepřijal — třeba změnu strategie během Dovolené). Zbytek se nastaví.</li>
+    </ul>
+    <p>Kopie načtených souborů a zálohy leží v <code>config/mar_nastaveni/</code> (posledních 20).</p>
+  </section>
+
+  <section id="nacteni-soubor">
+    <h3>Jak soubor vypadá</h3>
+    <p>Obyčejná tabulka se středníky — otevře ji Excel i poznámkový blok. Řádek s <code>#</code> je poznámka, třetí sloupec je popisek jen pro lidi:</p>
+    <pre>entity_id;hodnota;popisek
+number.mar_bod_0;31,5;Bod křivky při 0 °C
+number.acond_40014_comp_capacity_max_set;2000;Výkon kompresoru
+select.mar_strategie;Ekviterma;Strategie
+switch.mar_zebra;zapnuto;Zebra</pre>
+    <p>Přepínače: <em>zapnuto / vypnuto</em>, desetinná čárka i tečka, časy <em>6:00</em>. Ve stejném formátu je i záloha.</p>
+    <p class="nahoru"><a href="#obsah">&#8593; Celkový obsah</a></p>
   </section>
 </section>
 

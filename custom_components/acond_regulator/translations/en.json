@@ -4,17 +4,53 @@
       "user": {
         "title": "Regulace (MaR)",
         "description": "Zadej polohu pro předpověď počasí (klikni do mapy).",
-        "data": { "location": "Poloha" }
+        "data": {
+          "location": "Poloha"
+        }
       }
     }
   },
   "options": {
     "step": {
       "init": {
-        "title": "Poloha",
-        "description": "Přenastavení polohy pro předpověď.",
-        "data": { "location": "Poloha" }
+        "title": "MaR – settings",
+        "menu_options": {
+          "nacist": "Load settings from file",
+          "vratit": "Restore state before last load",
+          "poloha": "Location (weather forecast)"
+        }
+      },
+      "poloha": {
+        "title": "Location",
+        "description": "Change the location used for the forecast.",
+        "data": {
+          "location": "Location"
+        }
+      },
+      "nacist": {
+        "title": "Load settings from file",
+        "description": "Pick the .csv file you received. MaR sets everything in it – only MaR and Acond items, never buttons. The current state is backed up first, so it can be restored.",
+        "data": {
+          "soubor": "Settings file"
+        }
+      },
+      "vratit": {
+        "title": "Restore state before last load",
+        "description": "The backup holds {pocet} items as they were before the last load. Confirm to restore."
+      },
+      "hotovo": {
+        "title": "Done",
+        "description": "{vysledek}\n\nThe result is also in HA notifications. Tick AI context: a download link appears in notifications – send the file for review.",
+        "data": {
+          "ai_kontext": "Create AI context for review"
+        }
       }
+    },
+    "error": {
+      "soubor_necitelny": "The file can't be read. Is it a semicolon .csv?"
+    },
+    "abort": {
+      "zadna_zaloha": "No backup yet – nothing has been loaded from a file."
     }
   }
 }
